@@ -7,436 +7,268 @@
   <link rel="stylesheet" href="../css/style.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
-    body { font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; }
+    body { font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; margin: 0; }
     h1, h2, h3, h4 { font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif; }
 
     /* ===== PASSWORD GATE ===== */
     .password-overlay {
-      position: fixed;
-      inset: 0;
-      background: #DAE1E4;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 20px;
+      position: fixed; inset: 0; background: #DAE1E4; z-index: 9999;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px;
     }
     .password-overlay.hidden { display: none; }
-    .password-overlay h2 {
-      font-size: 2rem;
-      text-transform: none;
-    }
+    .password-overlay h2 { font-size: 2rem; text-transform: none; }
     .password-overlay input {
-      padding: 14px 20px;
-      font-size: 1.1rem;
-      border: 1px solid #000;
-      background: #fff;
-      font-family: inherit;
-      text-align: center;
-      width: 250px;
-      letter-spacing: 0.3em;
+      padding: 14px 20px; font-size: 1.1rem; border: 1px solid #000; background: #fff;
+      font-family: inherit; text-align: center; width: 250px; letter-spacing: 0.3em;
     }
     .password-overlay button {
-      padding: 12px 30px;
-      background: #000;
-      color: #fff;
-      border: none;
-      font-family: inherit;
-      font-size: 1rem;
-      cursor: pointer;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+      padding: 12px 30px; background: #000; color: #fff; border: none;
+      font-family: inherit; font-size: 1rem; cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase;
     }
-    .password-overlay .error {
-      color: #c00;
-      font-size: 0.9rem;
-      min-height: 1.2em;
-    }
+    .password-overlay .error { color: #c00; font-size: 0.9rem; min-height: 1.2em; }
 
     /* ===== EDITOR TOOLBAR ===== */
     .editor-toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: #1a1a1a;
-      color: #fff;
-      padding: 10px 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: #1a1a1a; color: #fff; padding: 8px 16px;
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
     .toolbar-group {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 0 8px;
+      display: flex; align-items: center; gap: 3px; padding: 0 6px;
       border-right: 1px solid #444;
     }
     .toolbar-group:last-child { border-right: none; }
     .toolbar-btn {
-      background: transparent;
-      color: #fff;
-      border: 1px solid transparent;
-      padding: 6px 10px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      border-radius: 4px;
-      font-family: inherit;
-      transition: background 0.2s;
-      white-space: nowrap;
+      background: transparent; color: #fff; border: 1px solid transparent;
+      padding: 5px 9px; font-size: 0.8rem; cursor: pointer; border-radius: 4px;
+      font-family: inherit; transition: background 0.2s; white-space: nowrap;
     }
     .toolbar-btn:hover { background: #333; }
     .toolbar-btn.active { background: #555; border-color: #888; }
-    .toolbar-btn svg { width: 16px; height: 16px; fill: #fff; vertical-align: middle; }
-    .toolbar-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #888;
-      margin-right: 4px;
-    }
+    .toolbar-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin-right: 3px; }
     .toolbar-select {
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-      padding: 5px 8px;
-      font-size: 0.85rem;
-      border-radius: 4px;
-      font-family: inherit;
-      cursor: pointer;
+      background: #333; color: #fff; border: 1px solid #555; padding: 4px 6px;
+      font-size: 0.8rem; border-radius: 4px; font-family: inherit; cursor: pointer;
     }
-    .toolbar-color {
-      width: 28px;
-      height: 28px;
-      border: 2px solid #555;
-      border-radius: 4px;
-      cursor: pointer;
-      padding: 0;
-      background: transparent;
-    }
-    .publish-btn {
-      background: #2ea043 !important;
-      color: #fff !important;
-      font-weight: 600;
-      padding: 8px 18px !important;
-      border-radius: 6px !important;
-      margin-left: auto;
-    }
+    .publish-btn { background: #2ea043 !important; font-weight: 600; padding: 7px 16px !important; border-radius: 6px !important; margin-left: auto; }
     .publish-btn:hover { background: #238636 !important; }
-    .preview-btn {
-      background: #0969da !important;
-      color: #fff !important;
-      padding: 8px 14px !important;
-      border-radius: 6px !important;
-    }
-    .download-btn {
-      background: #555 !important;
-      padding: 8px 14px !important;
-      border-radius: 6px !important;
-    }
+    .preview-btn { background: #0969da !important; padding: 7px 12px !important; border-radius: 6px !important; }
+    .download-btn { background: #555 !important; padding: 7px 12px !important; border-radius: 6px !important; }
+    .grid-btn { padding: 7px 12px !important; border-radius: 6px !important; }
+    .grid-btn.active { background: #7c4dff !important; border-color: #b388ff !important; }
 
-    /* ===== EDITOR META FIELDS ===== */
+    /* ===== EDITOR META ===== */
     .editor-meta {
-      background: #ABA8A6;
-      padding: 60px 4vw 40px;
-      text-align: center;
+      background: #ABA8A6; padding: 60px 4vw 40px; text-align: center;
+      margin-top: 44px; /* toolbar height */
     }
     .editor-meta input {
-      display: block;
-      width: 100%;
-      max-width: 750px;
-      margin: 0 auto;
-      background: transparent;
-      border: none;
-      border-bottom: 2px dashed rgba(0,0,0,0.2);
-      text-align: center;
-      outline: none;
+      display: block; width: 100%; max-width: 750px; margin: 0 auto;
+      background: transparent; border: none; border-bottom: 2px dashed rgba(0,0,0,0.2);
+      text-align: center; outline: none;
       font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif;
     }
-    .editor-meta input:focus {
-      border-bottom-color: #000;
-      border-bottom-style: solid;
-    }
+    .editor-meta input:focus { border-bottom-color: #000; border-bottom-style: solid; }
     #postTitle {
-      font-size: 2.8rem;
-      font-weight: 400;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 15px;
-      padding: 10px;
+      font-size: 2.8rem; font-weight: 400; text-transform: uppercase;
+      letter-spacing: 0.04em; margin-bottom: 15px; padding: 10px;
     }
     #postTitle::placeholder { color: rgba(0,0,0,0.3); }
     .meta-row {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 15px;
-      max-width: 500px;
-      margin: 0 auto;
+      display: flex; justify-content: center; align-items: center; gap: 15px;
+      max-width: 500px; margin: 0 auto;
     }
     .meta-row input {
       font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
-      font-size: 0.95rem;
-      padding: 8px;
-      color: #555;
-      letter-spacing: 0.05em;
+      font-size: 0.95rem; padding: 8px; color: #555; letter-spacing: 0.05em;
     }
     .meta-row select {
-      font-family: inherit;
-      font-size: 0.95rem;
-      padding: 8px;
-      background: transparent;
-      border: none;
-      border-bottom: 2px dashed rgba(0,0,0,0.2);
-      outline: none;
-      cursor: pointer;
-      color: #555;
+      font-family: inherit; font-size: 0.95rem; padding: 8px;
+      background: transparent; border: none; border-bottom: 2px dashed rgba(0,0,0,0.2);
+      outline: none; cursor: pointer; color: #555;
     }
 
-    /* ===== EDITOR CONTENT AREA ===== */
+    /* ===== FREE-FORM CANVAS ===== */
     .editor-content-area {
-      background: #fff;
-      padding: 60px 4vw;
-      min-height: 500px;
+      background: #fff; min-height: 800px; position: relative;
+      overflow: visible;
     }
     .editor-canvas {
-      max-width: 750px;
-      margin: 0 auto;
-      position: relative;
+      position: relative; min-height: 800px;
+      max-width: 750px; margin: 0 auto;
+      padding: 40px 0;
     }
     .editor-canvas:empty::before {
-      content: 'Click "+ Text" or "+ Image" in the toolbar to start building your post...';
-      color: #bbb;
-      font-style: italic;
-      font-size: 1.1rem;
+      content: 'Click "+ Text" or "+ Image" to add blocks. Drag to position, resize handles to scale.';
+      color: #bbb; font-style: italic; font-size: 1.1rem;
+      position: absolute; top: 60px; left: 0; right: 0; text-align: center;
     }
 
-    /* Content blocks */
+    /* ===== GRIDLINES ===== */
+    .editor-canvas.show-grid {
+      background-image:
+        linear-gradient(to right, rgba(124,77,255,0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(124,77,255,0.08) 1px, transparent 1px);
+      background-size: 25px 25px;
+    }
+    .editor-canvas.show-grid::after {
+      content: '';
+      position: absolute; top: 0; bottom: 0;
+      left: 50%; width: 1px;
+      background: rgba(124,77,255,0.15);
+      pointer-events: none;
+    }
+    /* Column guides */
+    .editor-canvas.show-grid .grid-col-guides {
+      display: block;
+    }
+    .grid-col-guides {
+      display: none;
+      position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    }
+    .grid-col-guides div {
+      position: absolute; top: 0; bottom: 0; width: 1px;
+      background: rgba(124,77,255,0.1);
+    }
+
+    /* ===== CONTENT BLOCKS (Free-form) ===== */
     .content-block {
-      position: relative;
-      margin-bottom: 25px;
+      position: absolute;
       border: 2px solid transparent;
       border-radius: 4px;
-      transition: border-color 0.2s;
+      transition: border-color 0.15s;
+      cursor: move;
+      min-width: 80px;
+      min-height: 30px;
+      z-index: 1;
     }
-    .content-block:hover { border-color: #ddd; }
-    .content-block:focus-within { border-color: #0969da; }
-    .content-block .block-controls {
-      position: absolute;
-      top: -12px;
-      right: -12px;
-      display: none;
-      gap: 4px;
-    }
-    .content-block:hover .block-controls { display: flex; }
-    .block-ctrl-btn {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border: none;
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #eee;
-      color: #666;
-      transition: background 0.2s;
-    }
-    .block-ctrl-btn:hover { background: #ddd; }
-    .block-ctrl-btn.delete { background: #fee; color: #c00; }
-    .block-ctrl-btn.delete:hover { background: #fcc; }
+    .content-block:hover { border-color: rgba(9,105,218,0.4); z-index: 10; }
+    .content-block.selected { border-color: #0969da; z-index: 10; }
+    .content-block.dragging { opacity: 0.8; z-index: 100; border-color: #0969da; }
 
+    /* Block controls */
+    .content-block .block-controls {
+      position: absolute; top: -28px; right: 0;
+      display: none; gap: 3px; background: #1a1a1a;
+      padding: 3px 6px; border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .content-block:hover .block-controls,
+    .content-block.selected .block-controls { display: flex; }
+    .block-ctrl-btn {
+      width: 22px; height: 22px; border-radius: 4px; border: none;
+      font-size: 11px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; background: #333; color: #ccc; transition: background 0.2s;
+    }
+    .block-ctrl-btn:hover { background: #555; color: #fff; }
+    .block-ctrl-btn.delete { background: #5c1a1a; color: #f88; }
+    .block-ctrl-btn.delete:hover { background: #7a2020; }
+
+    /* Resize handles */
+    .resize-handle {
+      position: absolute; width: 10px; height: 10px;
+      background: #0969da; border-radius: 2px; z-index: 20; cursor: nwse-resize;
+    }
+    .resize-handle.br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+    .resize-handle.bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
+    .resize-handle.r { top: 50%; right: -5px; transform: translateY(-50%); cursor: ew-resize; height: 20px; width: 6px; border-radius: 3px; }
+    .resize-handle.b { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: ns-resize; width: 20px; height: 6px; border-radius: 3px; }
+    .content-block:not(:hover):not(.selected) .resize-handle { display: none; }
+
+    /* Editable content */
     .content-block [contenteditable] {
-      outline: none;
-      min-height: 1.5em;
-      padding: 4px;
+      outline: none; min-height: 1.2em; padding: 4px; cursor: text;
     }
-    .content-block p[contenteditable] {
-      font-size: 1.15rem;
-      line-height: 1.9;
-      color: #222;
-    }
-    .content-block h2[contenteditable] {
-      font-size: 2rem;
-      margin: 20px 0;
-      text-transform: none;
-    }
-    .content-block h3[contenteditable] {
-      font-size: 1.5rem;
-      margin: 15px 0;
-      text-transform: none;
-    }
+    .content-block p[contenteditable] { font-size: 1.15rem; line-height: 1.9; color: #222; }
+    .content-block h2[contenteditable] { font-size: 2rem; margin: 0; text-transform: none; }
+    .content-block h3[contenteditable] { font-size: 1.5rem; margin: 0; text-transform: none; }
     .content-block blockquote[contenteditable] {
-      border-left: 3px solid #000;
-      padding-left: 25px;
-      font-style: italic;
-      color: #444;
-      font-size: 1.15rem;
-      line-height: 1.9;
+      border-left: 3px solid #000; padding-left: 25px;
+      font-style: italic; color: #444; font-size: 1.15rem; line-height: 1.9; margin: 0;
     }
     .content-block ul[contenteditable],
-    .content-block ol[contenteditable] {
-      padding-left: 25px;
-    }
-    .content-block li {
-      font-size: 1.1rem;
-      line-height: 1.8;
-      margin-bottom: 8px;
-      list-style: disc;
-    }
+    .content-block ol[contenteditable] { padding-left: 25px; margin: 0; }
+    .content-block li { font-size: 1.1rem; line-height: 1.8; margin-bottom: 8px; list-style: disc; }
     .content-block ol li { list-style: decimal; }
-    .content-block img {
-      width: 100%;
-      margin: 10px 0;
-      cursor: pointer;
-    }
-    .image-block {
-      text-align: center;
-    }
+    .content-block img { width: 100%; display: block; pointer-events: none; }
     .image-block .caption {
-      font-size: 0.85rem;
-      color: #888;
-      font-style: italic;
-      text-align: center;
-      margin-top: 8px;
+      font-size: 0.85rem; color: #888; font-style: italic; text-align: center;
+      margin-top: 6px; cursor: text;
     }
+
+    /* Snap guide lines */
+    .snap-line {
+      position: absolute; background: #7c4dff; z-index: 50; pointer-events: none;
+    }
+    .snap-line.horizontal { height: 1px; left: 0; right: 0; }
+    .snap-line.vertical { width: 1px; top: 0; bottom: 0; }
 
     /* ===== FLOATING FORMAT BAR ===== */
     .format-bar {
-      position: fixed;
-      display: none;
-      background: #1a1a1a;
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      z-index: 200;
-      gap: 2px;
-      align-items: center;
+      position: fixed; display: none; background: #1a1a1a; color: #fff;
+      padding: 6px 10px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 200; gap: 2px; align-items: center;
     }
     .format-bar.visible { display: flex; }
     .format-bar button {
-      background: transparent;
-      color: #fff;
-      border: none;
-      padding: 6px 8px;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 14px;
-      font-family: inherit;
+      background: transparent; color: #fff; border: none; padding: 5px 7px;
+      cursor: pointer; border-radius: 4px; font-size: 13px; font-family: inherit;
     }
     .format-bar button:hover { background: #333; }
-    .format-bar .sep {
-      width: 1px;
-      height: 20px;
-      background: #444;
-      margin: 0 4px;
-    }
+    .format-bar .sep { width: 1px; height: 18px; background: #444; margin: 0 3px; }
     .format-bar select {
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-      padding: 3px 6px;
-      font-size: 12px;
-      border-radius: 4px;
-      font-family: inherit;
+      background: #333; color: #fff; border: 1px solid #555; padding: 2px 5px;
+      font-size: 11px; border-radius: 4px; font-family: inherit;
     }
-    .format-bar input[type="color"] {
-      width: 24px;
-      height: 24px;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-      background: transparent;
-    }
+    .format-bar input[type="color"] { width: 22px; height: 22px; border: none; padding: 0; cursor: pointer; background: transparent; }
 
     /* ===== PUBLISH MODAL ===== */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 500;
-      display: none;
-      align-items: center;
-      justify-content: center;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500;
+      display: none; align-items: center; justify-content: center;
     }
     .modal-overlay.visible { display: flex; }
     .modal {
-      background: #fff;
-      padding: 40px;
-      border-radius: 12px;
-      max-width: 500px;
-      width: 90%;
-      text-align: center;
+      background: #fff; padding: 40px; border-radius: 12px; max-width: 500px; width: 90%; text-align: center;
     }
-    .modal h3 {
-      font-size: 1.6rem;
-      margin-bottom: 20px;
-      text-transform: none;
-    }
-    .modal p {
-      font-size: 1rem;
-      color: #555;
-      margin-bottom: 15px;
-    }
+    .modal h3 { font-size: 1.6rem; margin-bottom: 20px; text-transform: none; }
+    .modal p { font-size: 1rem; color: #555; margin-bottom: 15px; }
     .modal input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ccc;
-      font-family: inherit;
-      font-size: 1rem;
-      margin-bottom: 15px;
-      outline: none;
+      width: 100%; padding: 12px; border: 1px solid #ccc; font-family: inherit;
+      font-size: 1rem; margin-bottom: 15px; outline: none; box-sizing: border-box;
     }
     .modal input:focus { border-color: #000; }
-    .modal .btn-row {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 20px;
-    }
+    .modal .btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
     .modal .btn-row button {
-      padding: 12px 24px;
-      font-family: inherit;
-      font-size: 0.95rem;
-      cursor: pointer;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background: #fff;
+      padding: 12px 24px; font-family: inherit; font-size: 0.95rem; cursor: pointer;
+      border-radius: 6px; border: 1px solid #ccc; background: #fff;
     }
-    .modal .btn-row .btn-primary {
-      background: #2ea043;
-      color: #fff;
-      border-color: #2ea043;
-    }
+    .modal .btn-row .btn-primary { background: #2ea043; color: #fff; border-color: #2ea043; }
     .modal .btn-row .btn-primary:hover { background: #238636; }
-    .status-msg {
-      margin-top: 15px;
-      font-size: 0.9rem;
-      min-height: 1.2em;
-    }
+    .status-msg { margin-top: 15px; font-size: 0.9rem; min-height: 1.2em; }
     .status-msg.success { color: #2ea043; }
     .status-msg.error { color: #c00; }
     .status-msg.loading { color: #0969da; }
 
     /* Preview mode */
-    body.preview-mode .content-block { border-color: transparent !important; }
-    body.preview-mode .content-block .block-controls { display: none !important; }
+    body.preview-mode .content-block {
+      border-color: transparent !important; cursor: default !important;
+    }
+    body.preview-mode .content-block .block-controls,
+    body.preview-mode .resize-handle,
+    body.preview-mode .snap-line,
+    body.preview-mode .grid-col-guides { display: none !important; }
     body.preview-mode .editor-toolbar { display: none; }
     body.preview-mode .editor-meta input,
-    body.preview-mode .editor-meta select {
-      border-bottom-color: transparent;
-      pointer-events: none;
-    }
+    body.preview-mode .editor-meta select { border-bottom-color: transparent; pointer-events: none; }
+    body.preview-mode .editor-canvas { background-image: none !important; }
+    body.preview-mode .editor-canvas::after { display: none !important; }
   </style>
 </head>
 <body>
 
-  <!-- ===== PASSWORD GATE ===== -->
+  <!-- PASSWORD GATE -->
   <div class="password-overlay" id="passwordGate">
     <h2>Blog Editor</h2>
     <p>Enter password to continue</p>
@@ -446,20 +278,23 @@
     <div class="error" id="passwordError"></div>
   </div>
 
-  <!-- ===== EDITOR TOOLBAR ===== -->
+  <!-- TOOLBAR -->
   <div class="editor-toolbar" id="editorToolbar">
     <div class="toolbar-group">
       <span class="toolbar-label">Add</span>
-      <button class="toolbar-btn" onclick="addBlock('p')" title="Add paragraph">+ Text</button>
-      <button class="toolbar-btn" onclick="addBlock('h2')" title="Add heading">+ H2</button>
-      <button class="toolbar-btn" onclick="addBlock('h3')" title="Add subheading">+ H3</button>
-      <button class="toolbar-btn" onclick="addBlock('blockquote')" title="Add blockquote">+ Quote</button>
-      <button class="toolbar-btn" onclick="addBlock('ul')" title="Add list">+ List</button>
-      <button class="toolbar-btn" onclick="addBlock('ol')" title="Add numbered list">+ Num List</button>
+      <button class="toolbar-btn" onclick="addBlock('p')">+ Text</button>
+      <button class="toolbar-btn" onclick="addBlock('h2')">+ H2</button>
+      <button class="toolbar-btn" onclick="addBlock('h3')">+ H3</button>
+      <button class="toolbar-btn" onclick="addBlock('blockquote')">+ Quote</button>
+      <button class="toolbar-btn" onclick="addBlock('ul')">+ List</button>
+      <button class="toolbar-btn" onclick="addBlock('ol')">+ Num List</button>
     </div>
     <div class="toolbar-group">
-      <button class="toolbar-btn" onclick="triggerImageUpload()" title="Upload image">+ Image</button>
+      <button class="toolbar-btn" onclick="triggerImageUpload()">+ Image</button>
       <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+    </div>
+    <div class="toolbar-group">
+      <button class="toolbar-btn grid-btn" onclick="toggleGrid(this)" id="gridBtn" title="Toggle alignment grid">Grid</button>
     </div>
     <div class="toolbar-group">
       <button class="toolbar-btn preview-btn" onclick="togglePreview()" id="previewBtn">Preview</button>
@@ -468,7 +303,7 @@
     </div>
   </div>
 
-  <!-- ===== EDITOR META (mirrors post-header) ===== -->
+  <!-- META -->
   <section class="editor-meta">
     <input type="text" id="postTitle" placeholder="Your Post Title">
     <div class="meta-row">
@@ -481,14 +316,20 @@
     </div>
   </section>
 
-  <!-- ===== EDITOR CONTENT (mirrors post-body > post-content) ===== -->
+  <!-- FREE-FORM CANVAS -->
   <section class="editor-content-area">
     <div class="editor-canvas" id="editorCanvas">
-      <!-- Content blocks will be added here -->
+      <div class="grid-col-guides">
+        <div style="left:25%"></div>
+        <div style="left:33.33%"></div>
+        <div style="left:50%"></div>
+        <div style="left:66.66%"></div>
+        <div style="left:75%"></div>
+      </div>
     </div>
   </section>
 
-  <!-- ===== FLOATING FORMAT BAR ===== -->
+  <!-- FORMAT BAR -->
   <div class="format-bar" id="formatBar">
     <button onclick="formatCmd('bold')" title="Bold"><strong>B</strong></button>
     <button onclick="formatCmd('italic')" title="Italic"><em>I</em></button>
@@ -496,8 +337,8 @@
     <div class="sep"></div>
     <select onchange="formatCmd('fontName', this.value); this.selectedIndex=0;" title="Font">
       <option value="">Font</option>
-      <option value="Cormorant Garamond" style="font-family:'Cormorant Garamond'">Cormorant Garamond</option>
-      <option value="EB Garamond" style="font-family:'EB Garamond'">EB Garamond</option>
+      <option value="Cormorant Garamond">Cormorant Garamond</option>
+      <option value="EB Garamond">EB Garamond</option>
       <option value="Georgia">Georgia</option>
       <option value="Arial">Arial</option>
       <option value="Helvetica">Helvetica</option>
@@ -514,10 +355,10 @@
     <div class="sep"></div>
     <input type="color" value="#222222" onchange="formatCmd('foreColor', this.value)" title="Text Color">
     <div class="sep"></div>
-    <button onclick="insertLink()" title="Insert Link">&#128279;</button>
+    <button onclick="insertLink()" title="Link">&#128279;</button>
   </div>
 
-  <!-- ===== PUBLISH MODAL ===== -->
+  <!-- PUBLISH MODAL -->
   <div class="modal-overlay" id="publishModal">
     <div class="modal">
       <h3>Publish Post</h3>
@@ -537,12 +378,18 @@
   </div>
 
   <script>
-    // ===== CONFIG =====
     const GITHUB_REPO = 'irive033/isabella-sofia-website';
     const GITHUB_BRANCH = 'main';
     const PASSWORD = '2626';
+    const GRID_SIZE = 25;
+    const SNAP_THRESHOLD = 8;
 
-    // ===== PASSWORD GATE =====
+    let gridEnabled = false;
+    let blockCounter = 0;
+    let selectedBlock = null;
+    let nextY = 20; // tracks vertical placement for new blocks
+
+    // ===== PASSWORD =====
     function checkPassword() {
       const input = document.getElementById('passwordInput');
       if (input.value === PASSWORD) {
@@ -554,74 +401,270 @@
         input.focus();
       }
     }
-    // Auto-login if already authenticated this session
     if (sessionStorage.getItem('blog_editor_auth') === 'true') {
       document.getElementById('passwordGate').classList.add('hidden');
     }
 
-    // ===== BLOCK MANAGEMENT =====
-    let blockCounter = 0;
+    // ===== GRID TOGGLE =====
+    function toggleGrid(btn) {
+      gridEnabled = !gridEnabled;
+      btn.classList.toggle('active', gridEnabled);
+      document.getElementById('editorCanvas').classList.toggle('show-grid', gridEnabled);
+    }
 
-    function addBlock(type, content = '', afterEl = null) {
+    function snapToGrid(val) {
+      if (!gridEnabled) return val;
+      return Math.round(val / GRID_SIZE) * GRID_SIZE;
+    }
+
+    // ===== ADD BLOCKS =====
+    function addBlock(type, content = '') {
+      const canvas = document.getElementById('editorCanvas');
       const block = document.createElement('div');
       block.className = 'content-block';
       block.dataset.blockId = ++blockCounter;
 
+      // Default size
+      let w = 700, h = 'auto';
+      if (type === 'image') w = 700;
+
       const controls = `
         <div class="block-controls">
-          <button class="block-ctrl-btn" onclick="moveBlock(this.closest('.content-block'), -1)" title="Move up">&uarr;</button>
-          <button class="block-ctrl-btn" onclick="moveBlock(this.closest('.content-block'), 1)" title="Move down">&darr;</button>
-          <button class="block-ctrl-btn delete" onclick="deleteBlock(this.closest('.content-block'))" title="Delete">&times;</button>
+          <button class="block-ctrl-btn" onclick="event.stopPropagation(); duplicateBlock(this.closest('.content-block'))" title="Duplicate">&#9851;</button>
+          <button class="block-ctrl-btn" onclick="event.stopPropagation(); bringForward(this.closest('.content-block'))" title="Bring forward">&#8679;</button>
+          <button class="block-ctrl-btn" onclick="event.stopPropagation(); sendBack(this.closest('.content-block'))" title="Send back">&#8681;</button>
+          <button class="block-ctrl-btn delete" onclick="event.stopPropagation(); deleteBlock(this.closest('.content-block'))" title="Delete">&times;</button>
         </div>
+        <div class="resize-handle br" data-dir="br"></div>
+        <div class="resize-handle r" data-dir="r"></div>
+        <div class="resize-handle b" data-dir="b"></div>
       `;
 
       if (type === 'ul' || type === 'ol') {
         block.innerHTML = controls + `<${type} contenteditable="true"><li>${content || 'List item'}</li></${type}>`;
       } else if (type === 'image') {
         block.classList.add('image-block');
-        block.innerHTML = controls + `<img src="${content}" alt="Blog image"><div class="caption" contenteditable="true" data-placeholder="Add caption (optional)"></div>`;
+        block.innerHTML = controls + `<img src="${content}" alt="Blog image"><div class="caption" contenteditable="true">Add caption</div>`;
       } else {
-        block.innerHTML = controls + `<${type} contenteditable="true">${content || ''}</${type}>`;
+        const placeholder = type === 'p' ? 'Start typing...' : (type === 'h2' ? 'Heading' : (type === 'h3' ? 'Subheading' : 'Type here...'));
+        block.innerHTML = controls + `<${type} contenteditable="true">${content || placeholder}</${type}>`;
       }
 
-      const canvas = document.getElementById('editorCanvas');
-      if (afterEl && afterEl.parentNode === canvas) {
-        afterEl.after(block);
-      } else {
-        canvas.appendChild(block);
-      }
+      // Position
+      const x = snapToGrid(25);
+      const y = snapToGrid(nextY);
+      block.style.left = x + 'px';
+      block.style.top = y + 'px';
+      block.style.width = w + 'px';
 
-      // Focus the new editable element
+      canvas.appendChild(block);
+
+      // Update nextY for the next block
+      requestAnimationFrame(() => {
+        nextY = y + block.offsetHeight + 20;
+        expandCanvas();
+      });
+
+      // Select it
+      selectBlock(block);
+
+      // Focus editable
       const editable = block.querySelector('[contenteditable]');
       if (editable && type !== 'image') {
         editable.focus();
-        // Place cursor at end
-        const range = document.createRange();
-        range.selectNodeContents(editable);
-        range.collapse(false);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
+        if (editable.textContent === 'Start typing...' || editable.textContent === 'Heading' || editable.textContent === 'Subheading' || editable.textContent === 'Type here...') {
+          document.execCommand('selectAll');
+        }
       }
 
+      // Setup drag & resize
+      setupBlockInteraction(block);
       return block;
     }
 
     function deleteBlock(block) {
       if (confirm('Delete this block?')) {
         block.remove();
+        if (selectedBlock === block) selectedBlock = null;
       }
     }
 
-    function moveBlock(block, direction) {
-      const sibling = direction === -1 ? block.previousElementSibling : block.nextElementSibling;
-      if (sibling && sibling.classList.contains('content-block')) {
-        if (direction === -1) {
-          block.parentNode.insertBefore(block, sibling);
-        } else {
-          block.parentNode.insertBefore(sibling, block);
+    function duplicateBlock(block) {
+      const clone = block.cloneNode(true);
+      clone.dataset.blockId = ++blockCounter;
+      clone.style.left = (parseInt(block.style.left) + 20) + 'px';
+      clone.style.top = (parseInt(block.style.top) + 20) + 'px';
+      block.parentNode.appendChild(clone);
+      setupBlockInteraction(clone);
+      selectBlock(clone);
+    }
+
+    function bringForward(block) {
+      const max = Math.max(...[...document.querySelectorAll('.content-block')].map(b => parseInt(b.style.zIndex || 1)));
+      block.style.zIndex = max + 1;
+    }
+
+    function sendBack(block) {
+      block.style.zIndex = 0;
+    }
+
+    function selectBlock(block) {
+      if (selectedBlock) selectedBlock.classList.remove('selected');
+      selectedBlock = block;
+      if (block) block.classList.add('selected');
+    }
+
+    function expandCanvas() {
+      const canvas = document.getElementById('editorCanvas');
+      const blocks = canvas.querySelectorAll('.content-block');
+      let maxBottom = 800;
+      blocks.forEach(b => {
+        const bottom = b.offsetTop + b.offsetHeight + 60;
+        if (bottom > maxBottom) maxBottom = bottom;
+      });
+      canvas.style.minHeight = maxBottom + 'px';
+    }
+
+    // ===== DRAG & RESIZE =====
+    function setupBlockInteraction(block) {
+      let isDragging = false, isResizing = false, resizeDir = '';
+      let startX, startY, startLeft, startTop, startW, startH;
+
+      block.addEventListener('mousedown', (e) => {
+        // Check if clicking a resize handle
+        const handle = e.target.closest('.resize-handle');
+        if (handle) {
+          isResizing = true;
+          resizeDir = handle.dataset.dir;
+          startX = e.clientX;
+          startY = e.clientY;
+          startW = block.offsetWidth;
+          startH = block.offsetHeight;
+          e.preventDefault();
+          e.stopPropagation();
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+          return;
+        }
+
+        // Check if clicking editable content or controls
+        const editable = e.target.closest('[contenteditable]');
+        const ctrl = e.target.closest('.block-ctrl-btn');
+        if (editable || ctrl) {
+          selectBlock(block);
+          return; // Let contenteditable handle it
+        }
+
+        // Drag the block
+        isDragging = true;
+        block.classList.add('dragging');
+        selectBlock(block);
+        startX = e.clientX;
+        startY = e.clientY;
+        startLeft = block.offsetLeft;
+        startTop = block.offsetTop;
+        e.preventDefault();
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+
+      function onMouseMove(e) {
+        if (isDragging) {
+          let newLeft = startLeft + (e.clientX - startX);
+          let newTop = startTop + (e.clientY - startY);
+
+          // Snap
+          newLeft = snapToGrid(Math.max(0, newLeft));
+          newTop = snapToGrid(Math.max(0, newTop));
+
+          // Snap to other blocks if grid enabled
+          if (gridEnabled) {
+            showSnapLines(block, newLeft, newTop);
+          }
+
+          block.style.left = newLeft + 'px';
+          block.style.top = newTop + 'px';
+          expandCanvas();
+        }
+        if (isResizing) {
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+
+          if (resizeDir === 'br') {
+            block.style.width = snapToGrid(Math.max(80, startW + dx)) + 'px';
+            // Height is auto for text, but for images constrain
+            if (block.classList.contains('image-block')) {
+              block.style.height = snapToGrid(Math.max(40, startH + dy)) + 'px';
+              const img = block.querySelector('img');
+              if (img) img.style.height = '100%';
+            }
+          } else if (resizeDir === 'r') {
+            block.style.width = snapToGrid(Math.max(80, startW + dx)) + 'px';
+          } else if (resizeDir === 'b') {
+            if (block.classList.contains('image-block')) {
+              block.style.height = snapToGrid(Math.max(40, startH + dy)) + 'px';
+              const img = block.querySelector('img');
+              if (img) img.style.height = '100%';
+            }
+          }
+          expandCanvas();
         }
       }
+
+      function onMouseUp() {
+        isDragging = false;
+        isResizing = false;
+        block.classList.remove('dragging');
+        clearSnapLines();
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+    }
+
+    // ===== SNAP LINES =====
+    function showSnapLines(dragBlock, x, y) {
+      clearSnapLines();
+      const canvas = document.getElementById('editorCanvas');
+      const blocks = canvas.querySelectorAll('.content-block');
+      const dragRight = x + dragBlock.offsetWidth;
+      const dragCenterX = x + dragBlock.offsetWidth / 2;
+      const dragBottom = y + dragBlock.offsetHeight;
+      const dragCenterY = y + dragBlock.offsetHeight / 2;
+
+      blocks.forEach(b => {
+        if (b === dragBlock) return;
+        const bx = b.offsetLeft, by = b.offsetTop;
+        const bRight = bx + b.offsetWidth, bBottom = by + b.offsetHeight;
+        const bCenterX = bx + b.offsetWidth / 2;
+        const bCenterY = by + b.offsetHeight / 2;
+
+        // Horizontal alignment checks
+        if (Math.abs(y - by) < SNAP_THRESHOLD) addSnapLine('horizontal', by);
+        if (Math.abs(y - bBottom) < SNAP_THRESHOLD) addSnapLine('horizontal', bBottom);
+        if (Math.abs(dragBottom - by) < SNAP_THRESHOLD) addSnapLine('horizontal', by);
+        if (Math.abs(dragBottom - bBottom) < SNAP_THRESHOLD) addSnapLine('horizontal', bBottom);
+        if (Math.abs(dragCenterY - bCenterY) < SNAP_THRESHOLD) addSnapLine('horizontal', bCenterY);
+
+        // Vertical alignment checks
+        if (Math.abs(x - bx) < SNAP_THRESHOLD) addSnapLine('vertical', bx);
+        if (Math.abs(x - bRight) < SNAP_THRESHOLD) addSnapLine('vertical', bRight);
+        if (Math.abs(dragRight - bx) < SNAP_THRESHOLD) addSnapLine('vertical', bx);
+        if (Math.abs(dragRight - bRight) < SNAP_THRESHOLD) addSnapLine('vertical', bRight);
+        if (Math.abs(dragCenterX - bCenterX) < SNAP_THRESHOLD) addSnapLine('vertical', bCenterX);
+      });
+    }
+
+    function addSnapLine(type, pos) {
+      const canvas = document.getElementById('editorCanvas');
+      const line = document.createElement('div');
+      line.className = 'snap-line ' + type;
+      if (type === 'horizontal') line.style.top = pos + 'px';
+      else line.style.left = pos + 'px';
+      canvas.appendChild(line);
+    }
+
+    function clearSnapLines() {
+      document.querySelectorAll('.snap-line').forEach(l => l.remove());
     }
 
     // ===== IMAGE UPLOAD =====
@@ -632,47 +675,37 @@
     function handleImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
-      reader.onload = function(e) {
-        addBlock('image', e.target.result);
-      };
+      reader.onload = (e) => addBlock('image', e.target.result);
       reader.readAsDataURL(file);
-      event.target.value = ''; // Reset for next upload
+      event.target.value = '';
     }
 
     // ===== FORMAT BAR =====
     function formatCmd(command, value = null) {
       document.execCommand(command, false, value);
     }
-
     function insertLink() {
       const url = prompt('Enter URL:');
-      if (url) {
-        document.execCommand('createLink', false, url);
-      }
+      if (url) document.execCommand('createLink', false, url);
     }
 
-    // Show/hide format bar on text selection
     document.addEventListener('mouseup', updateFormatBar);
     document.addEventListener('keyup', updateFormatBar);
 
     function updateFormatBar() {
       const sel = window.getSelection();
       const bar = document.getElementById('formatBar');
-
       if (sel.rangeCount > 0 && !sel.isCollapsed) {
         const range = sel.getRangeAt(0);
         const container = range.commonAncestorContainer;
-        // Only show in editable areas
         const editable = container.nodeType === 3
           ? container.parentElement.closest('[contenteditable]')
           : container.closest('[contenteditable]');
-
         if (editable && document.querySelector('.editor-canvas').contains(editable)) {
           const rect = range.getBoundingClientRect();
           bar.style.top = (rect.top + window.scrollY - 50) + 'px';
-          bar.style.left = (rect.left + rect.width / 2 - 150) + 'px';
+          bar.style.left = Math.max(10, rect.left + rect.width / 2 - 140) + 'px';
           bar.classList.add('visible');
           return;
         }
@@ -680,27 +713,30 @@
       bar.classList.remove('visible');
     }
 
-    // Hide format bar on click outside
     document.addEventListener('mousedown', (e) => {
       if (!document.getElementById('formatBar').contains(e.target)) {
-        // Small delay so selection-based actions can complete
         setTimeout(() => {
           const sel = window.getSelection();
-          if (sel.isCollapsed) {
-            document.getElementById('formatBar').classList.remove('visible');
-          }
+          if (sel.isCollapsed) document.getElementById('formatBar').classList.remove('visible');
         }, 200);
       }
     });
 
-    // ===== PREVIEW MODE =====
+    // Click canvas to deselect
+    document.getElementById('editorCanvas').addEventListener('mousedown', (e) => {
+      if (e.target === document.getElementById('editorCanvas')) {
+        selectBlock(null);
+      }
+    });
+
+    // ===== PREVIEW =====
     function togglePreview() {
       document.body.classList.toggle('preview-mode');
-      const btn = document.getElementById('previewBtn');
-      btn.textContent = document.body.classList.contains('preview-mode') ? 'Edit' : 'Preview';
+      document.getElementById('previewBtn').textContent =
+        document.body.classList.contains('preview-mode') ? 'Edit' : 'Preview';
     }
 
-    // ===== GENERATE HTML =====
+    // ===== GENERATE HTML (no gridlines, no editor chrome) =====
     function generatePostHTML() {
       const title = document.getElementById('postTitle').value || 'Untitled Post';
       const author = document.getElementById('postAuthor').value || 'Isabella Rivera';
@@ -709,32 +745,51 @@
       const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       const isoDate = now.toISOString();
 
-      // Build content from blocks
+      // Collect blocks sorted by top position, then left
+      const blocks = [...document.querySelectorAll('#editorCanvas .content-block')];
+      blocks.sort((a, b) => {
+        const dy = a.offsetTop - b.offsetTop;
+        return dy !== 0 ? dy : a.offsetLeft - b.offsetLeft;
+      });
+
       let contentHTML = '';
-      const blocks = document.querySelectorAll('#editorCanvas .content-block');
       blocks.forEach(block => {
+        const left = block.offsetLeft;
+        const top = block.offsetTop;
+        const width = block.offsetWidth;
+        // Build inline style for positioning
+        const style = `position:absolute; left:${left}px; top:${top}px; width:${width}px;`;
+
         const img = block.querySelector('img');
         if (img) {
           const caption = block.querySelector('.caption');
           const captionText = caption ? caption.textContent.trim() : '';
-          contentHTML += `        <img src="${img.src}" alt="${captionText || title}">\n`;
-          if (captionText) {
-            contentHTML += `        <p style="font-size:0.85rem; color:#888; font-style:italic; text-align:center;">${captionText}</p>\n`;
+          const h = block.style.height ? ` height:${block.style.height};` : '';
+          contentHTML += `        <div style="${style}${h}">\n`;
+          contentHTML += `          <img src="${img.src}" alt="${captionText || title}" style="width:100%;${block.style.height ? 'height:100%; object-fit:cover;' : ''}">\n`;
+          if (captionText && captionText !== 'Add caption') {
+            contentHTML += `          <p style="font-size:0.85rem; color:#888; font-style:italic; text-align:center; margin-top:6px;">${captionText}</p>\n`;
           }
-          contentHTML += '\n';
+          contentHTML += `        </div>\n\n`;
         } else {
           const editable = block.querySelector('[contenteditable]');
           if (editable) {
             const tag = editable.tagName.toLowerCase();
             const html = editable.innerHTML.trim();
-            if (html) {
-              contentHTML += `        <${tag}>${html}</${tag}>\n\n`;
+            if (html && html !== 'Start typing...' && html !== 'Heading' && html !== 'Subheading' && html !== 'Type here...') {
+              contentHTML += `        <${tag} style="${style}">${html}</${tag}>\n\n`;
             }
           }
         }
       });
 
-      // Determine nav paths based on category
+      // Calculate canvas height
+      let canvasHeight = 800;
+      blocks.forEach(b => {
+        const bottom = b.offsetTop + b.offsetHeight + 40;
+        if (bottom > canvasHeight) canvasHeight = bottom;
+      });
+
       const navPrefix = '../../pages/';
 
       return `<!DOCTYPE html>
@@ -782,7 +837,7 @@
       </div>
     </section>
     <section class="post-body">
-      <div class="post-content">
+      <div class="post-content" style="position:relative; min-height:${canvasHeight}px;">
 ${contentHTML}
       </div>
     </section>
@@ -813,25 +868,18 @@ ${contentHTML}
     }
 
     function slugify(text) {
-      return text.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .substring(0, 60);
+      return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 60);
     }
 
-    // ===== PUBLISH TO GITHUB =====
+    // ===== PUBLISH =====
     function showPublishModal() {
       const title = document.getElementById('postTitle').value || 'untitled';
       document.getElementById('publishFilename').value = slugify(title);
-      // Load saved token
       const savedToken = localStorage.getItem('github_token');
-      if (savedToken) {
-        document.getElementById('githubToken').value = savedToken;
-      }
+      if (savedToken) document.getElementById('githubToken').value = savedToken;
       document.getElementById('publishStatus').textContent = '';
       document.getElementById('publishModal').classList.add('visible');
     }
-
     function closePublishModal() {
       document.getElementById('publishModal').classList.remove('visible');
     }
@@ -841,58 +889,29 @@ ${contentHTML}
       const token = document.getElementById('githubToken').value.trim();
       const filename = document.getElementById('publishFilename').value.trim();
       const category = document.getElementById('postCategory').value;
-
-      if (!token) {
-        status.textContent = 'Please enter your GitHub token';
-        status.className = 'status-msg error';
-        return;
-      }
-      if (!filename) {
-        status.textContent = 'Please enter a filename';
-        status.className = 'status-msg error';
-        return;
-      }
-
-      // Save token for future use
+      if (!token) { status.textContent = 'Please enter your GitHub token'; status.className = 'status-msg error'; return; }
+      if (!filename) { status.textContent = 'Please enter a filename'; status.className = 'status-msg error'; return; }
       localStorage.setItem('github_token', token);
-
       const html = generatePostHTML();
       const filePath = `posts/${category}/${filename}.html`;
-      const content = btoa(unescape(encodeURIComponent(html))); // Base64 encode
-
+      const content = btoa(unescape(encodeURIComponent(html)));
       status.textContent = 'Publishing...';
       status.className = 'status-msg loading';
-
       try {
-        // Check if file already exists
         let sha = null;
         try {
           const checkResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`, {
             headers: { 'Authorization': `token ${token}` }
           });
-          if (checkResp.ok) {
-            const existing = await checkResp.json();
-            sha = existing.sha;
-          }
-        } catch (e) { /* File doesn't exist, that's fine */ }
-
-        // Create or update file
-        const body = {
-          message: `Publish: ${document.getElementById('postTitle').value || filename}`,
-          content: content,
-          branch: GITHUB_BRANCH
-        };
+          if (checkResp.ok) { sha = (await checkResp.json()).sha; }
+        } catch (e) {}
+        const body = { message: `Publish: ${document.getElementById('postTitle').value || filename}`, content, branch: GITHUB_BRANCH };
         if (sha) body.sha = sha;
-
         const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`, {
           method: 'PUT',
-          headers: {
-            'Authorization': `token ${token}`,
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         });
-
         if (resp.ok) {
           const result = await resp.json();
           status.innerHTML = `Published! <a href="${result.content.html_url}" target="_blank" style="color:#0969da;">View on GitHub</a><br>Vercel will auto-deploy shortly.`;
@@ -910,39 +929,19 @@ ${contentHTML}
 
     // ===== KEYBOARD SHORTCUTS =====
     document.addEventListener('keydown', (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-        e.preventDefault();
-        formatCmd('bold');
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
-        e.preventDefault();
-        formatCmd('italic');
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'u') {
-        e.preventDefault();
-        formatCmd('underline');
-      }
-      // Enter in a content block: add a new paragraph after
-      if (e.key === 'Enter' && !e.shiftKey) {
-        const sel = window.getSelection();
-        if (sel.rangeCount > 0) {
-          const node = sel.anchorNode;
-          const editable = node.nodeType === 3
-            ? node.parentElement.closest('[contenteditable]')
-            : node.closest('[contenteditable]');
-          if (editable) {
-            const tag = editable.tagName.toLowerCase();
-            // For headings and blockquotes, Enter creates a new paragraph block
-            if (['h2', 'h3', 'blockquote'].includes(tag)) {
-              e.preventDefault();
-              const block = editable.closest('.content-block');
-              addBlock('p', '', block);
-            }
-          }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') { e.preventDefault(); formatCmd('bold'); }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'i') { e.preventDefault(); formatCmd('italic'); }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'u') { e.preventDefault(); formatCmd('underline'); }
+      // Delete selected block
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedBlock) {
+        const active = document.activeElement;
+        const isEditing = active && active.closest && active.closest('[contenteditable]');
+        if (!isEditing) {
+          e.preventDefault();
+          deleteBlock(selectedBlock);
         }
       }
     });
   </script>
-
 </body>
 </html>
