@@ -1,0 +1,1050 @@
+/* ============================================
+   Isabella Sofia - Main Stylesheet
+   Fonts: Minerva Modern (headings), Adobe Garamond Pro (body/nav)
+   ============================================ */
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #000;
+  background-color: #DAE1E4;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+/* --- Typography --- */
+h1, h2, h3, h4 {
+  font-family: 'minerva-modern', 'Didot', 'Georgia', serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+
+h1 {
+  font-size: 3rem;
+}
+
+h2 {
+  font-size: 2.8rem;
+}
+
+h3 {
+  font-size: 1.8rem;
+}
+
+h4 {
+  font-size: 1.4rem;
+}
+
+p {
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #000;
+}
+
+/* --- Layout --- */
+.site-wrapper {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 4vw;
+}
+
+.section {
+  width: 100%;
+  position: relative;
+}
+
+.section-full {
+  padding: 80px 4vw;
+}
+
+/* --- Header --- */
+.site-header {
+  background: #fff;
+  padding: 30px 4vw;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid #eee;
+}
+
+.header-inner {
+  max-width: 1500px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.social-icons {
+  display: flex;
+  gap: 12px;
+  position: absolute;
+  left: 0;
+}
+
+.social-icons a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #000;
+  transition: opacity 0.3s;
+}
+
+.social-icons a:hover {
+  opacity: 0.6;
+}
+
+.social-icons svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.site-title {
+  font-family: 'minerva-modern', 'Didot', 'Georgia', serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.site-title a {
+  color: #000;
+}
+
+.main-nav {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 5px;
+}
+
+.main-nav a {
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.01em;
+  color: #000;
+  transition: opacity 0.3s;
+  white-space: nowrap;
+}
+
+.main-nav a:hover {
+  opacity: 0.6;
+}
+
+.main-nav a.active {
+  border-bottom: 1px solid #000;
+}
+
+/* Mobile menu toggle */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  right: 0;
+  font-size: 1.5rem;
+}
+
+/* --- Hero Section --- */
+.hero {
+  width: 100%;
+  height: 70vh;
+  min-height: 500px;
+  position: relative;
+  overflow: hidden;
+  background-color: #ABA8A6;
+}
+
+.hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #ABA8A6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.2rem;
+  font-style: italic;
+}
+
+/* --- Tagline Section --- */
+.tagline-section {
+  background: #fff;
+  padding: 80px 4vw;
+  text-align: center;
+}
+
+.tagline-section h3 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: #000;
+}
+
+.tagline-section h2 {
+  font-size: 2.8rem;
+  color: #000;
+}
+
+/* --- Featured Post (Dark BG) --- */
+.featured-post {
+  background: #000;
+  color: #fff;
+  position: relative;
+  min-height: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.featured-post .bg-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+}
+
+.featured-post .content-overlay {
+  position: relative;
+  z-index: 2;
+  padding: 60px 4vw;
+}
+
+.featured-post h3 {
+  color: #fff;
+  margin-bottom: 25px;
+}
+
+/* --- Buttons --- */
+.btn {
+  display: inline-block;
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+}
+
+.btn:hover {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.btn-white {
+  color: #fff;
+  border-color: #fff;
+}
+
+.btn-white:hover {
+  background: #fff;
+  color: #000;
+}
+
+/* --- Blog Preview Cards (From the Blog) --- */
+.blog-preview-section {
+  background: #fff;
+  padding: 80px 4vw;
+}
+
+.section-label {
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.blog-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.blog-card {
+  text-align: left;
+}
+
+.blog-card h2 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+  line-height: 1.2;
+}
+
+.blog-card p {
+  font-size: 1.2rem;
+  color: #444;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.blog-card .read-more {
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #000;
+  padding-bottom: 2px;
+}
+
+/* --- Wellness / Sustainability Section --- */
+.wellness-section {
+  background: #fff;
+  padding: 100px 4vw;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: start;
+}
+
+.wellness-image {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  background-color: #ABA8A6;
+}
+
+.wellness-image-placeholder {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background-color: #ABA8A6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-style: italic;
+}
+
+.wellness-content h3 {
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+}
+
+.wellness-content h2 {
+  font-size: 2.4rem;
+  margin-bottom: 25px;
+}
+
+.wellness-content .definition {
+  font-style: italic;
+  font-size: 1rem;
+  margin-bottom: 15px;
+  color: #444;
+}
+
+.wellness-content .definition .word-type {
+  display: block;
+  font-weight: 600;
+  font-style: italic;
+  margin-bottom: 5px;
+}
+
+.wellness-content p {
+  margin-bottom: 30px;
+}
+
+/* --- Blog Summary Carousel --- */
+.blog-carousel-section {
+  padding: 80px 4vw;
+  background: #DAE1E4;
+}
+
+.blog-carousel-section.white-bg {
+  background: #fff;
+}
+
+.blog-carousel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.blog-carousel-header h2 {
+  font-size: 2rem;
+}
+
+.carousel-nav-label {
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.blog-carousel {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  overflow-x: auto;
+}
+
+.carousel-item {
+  min-width: 200px;
+}
+
+.carousel-item img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.carousel-item-placeholder {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background-color: #c5cacd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+  color: #666;
+  text-align: center;
+  padding: 10px;
+}
+
+.carousel-item .date {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 5px;
+}
+
+.carousel-item h4 {
+  font-size: 1rem;
+  text-transform: none;
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* --- Newsletter --- */
+.newsletter-section {
+  padding: 60px 4vw;
+  text-align: center;
+  background: #DAE1E4;
+}
+
+.newsletter-section h3 {
+  font-size: 1.8rem;
+  margin-bottom: 25px;
+  text-transform: none;
+}
+
+.newsletter-form {
+  display: flex;
+  gap: 0;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.newsletter-form input[type="email"] {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #000;
+  background: transparent;
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 1rem;
+  outline: none;
+}
+
+.newsletter-form button {
+  padding: 12px 24px;
+  background: #000;
+  color: #fff;
+  border: 1px solid #000;
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.newsletter-form button:hover {
+  opacity: 0.8;
+}
+
+/* --- Blog Post Detail --- */
+.post-header {
+  background: #ABA8A6;
+  padding: 80px 4vw 60px;
+  text-align: center;
+}
+
+.post-header h1 {
+  font-size: 2.8rem;
+  margin-bottom: 15px;
+}
+
+.post-meta {
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 0.95rem;
+  color: #555;
+  letter-spacing: 0.05em;
+}
+
+.post-meta .author {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.85rem;
+}
+
+.post-meta .date {
+  margin-left: 10px;
+}
+
+.post-body {
+  background: #fff;
+  padding: 60px 4vw;
+}
+
+.post-content {
+  max-width: 750px;
+  margin: 0 auto;
+}
+
+.post-content p {
+  font-size: 1.15rem;
+  line-height: 1.9;
+  margin-bottom: 25px;
+  color: #222;
+}
+
+.post-content h2 {
+  font-size: 2rem;
+  margin: 50px 0 20px;
+  text-transform: none;
+}
+
+.post-content h3 {
+  font-size: 1.5rem;
+  margin: 40px 0 15px;
+  text-transform: none;
+}
+
+.post-content img {
+  width: 100%;
+  margin: 30px 0;
+}
+
+.post-content ul, .post-content ol {
+  padding-left: 25px;
+  margin-bottom: 25px;
+}
+
+.post-content li {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 8px;
+  list-style: disc;
+}
+
+.post-content ol li {
+  list-style: decimal;
+}
+
+.post-content blockquote {
+  border-left: 3px solid #000;
+  padding-left: 25px;
+  margin: 30px 0;
+  font-style: italic;
+  color: #444;
+}
+
+.post-content a {
+  border-bottom: 1px solid #000;
+  transition: opacity 0.3s;
+}
+
+.post-content a:hover {
+  opacity: 0.6;
+}
+
+.post-image-placeholder {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #c5cacd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-style: italic;
+  margin: 30px 0;
+  font-size: 0.9rem;
+}
+
+.post-nav {
+  display: flex;
+  justify-content: space-between;
+  max-width: 750px;
+  margin: 0 auto;
+  padding: 40px 0;
+  border-top: 1px solid #eee;
+}
+
+.post-nav a {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid #000;
+}
+
+/* --- Footer --- */
+.site-footer {
+  background: #DAE1E4;
+  padding: 20px 4vw 40px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* =========================================
+   PAGE-SPECIFIC STYLES
+   ========================================= */
+
+/* --- Blog Listing Pages (Style, Beauty, Wellness) --- */
+.page-hero {
+  background: #ABA8A6;
+  padding: 80px 4vw;
+  text-align: center;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-hero h1 {
+  color: #000;
+  font-size: 3rem;
+}
+
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 40px;
+  padding: 60px 4vw;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.blog-grid-item {
+  background: #fff;
+  overflow: hidden;
+}
+
+.blog-grid-item .thumb {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #c5cacd;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-style: italic;
+}
+
+.blog-grid-item .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.blog-grid-item .post-info {
+  padding: 25px;
+}
+
+.blog-grid-item h3 {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+  text-transform: none;
+  font-family: 'minerva-modern', 'Didot', 'Georgia', serif;
+}
+
+.blog-grid-item .meta {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.blog-grid-item p {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+/* --- Product Grid (Skin Safe Product List) --- */
+.product-intro {
+  background: #fff;
+  padding: 60px 4vw;
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.product-intro p {
+  font-size: 1.1rem;
+  color: #444;
+}
+
+.category-nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 30px 4vw;
+  background: #fff;
+}
+
+.category-nav a {
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  border: 1px solid #ddd;
+  transition: all 0.3s;
+}
+
+.category-nav a:hover,
+.category-nav a.active {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 30px;
+  padding: 40px 4vw 80px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.product-card {
+  background: #fff;
+  text-align: center;
+  overflow: hidden;
+}
+
+.product-card .product-image {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #f0eded;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-style: italic;
+  font-size: 0.9rem;
+  overflow: hidden;
+}
+
+.product-card .product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card .product-info {
+  padding: 20px 15px;
+}
+
+.product-card h4 {
+  font-size: 1rem;
+  text-transform: none;
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  margin-bottom: 8px;
+}
+
+.product-card .price {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+/* --- About Page --- */
+.about-section {
+  background: #fff;
+  padding: 80px 4vw;
+}
+
+.about-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.about-content p {
+  font-size: 1.15rem;
+  line-height: 1.9;
+  margin-bottom: 25px;
+}
+
+.about-content h2 {
+  margin-bottom: 30px;
+}
+
+.about-content h3 {
+  margin: 40px 0 15px;
+  font-size: 1.5rem;
+}
+
+.criteria-section {
+  background: #f5f5f5;
+  padding: 60px 4vw;
+}
+
+.criteria-grid {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.criteria-item h4 {
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  font-family: 'minerva-modern', 'Didot', 'Georgia', serif;
+}
+
+.criteria-item ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.criteria-item li {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+/* --- Contact Page --- */
+.contact-section {
+  background: #fff;
+  padding: 80px 4vw;
+}
+
+.contact-grid {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: start;
+}
+
+.contact-info h2 {
+  margin-bottom: 20px;
+}
+
+.contact-info p {
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.contact-form label {
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #333;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+  font-size: 1rem;
+  background: transparent;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: #000;
+}
+
+.contact-form textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.contact-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* --- Utility --- */
+.text-center {
+  text-align: center;
+}
+
+.mt-40 {
+  margin-top: 40px;
+}
+
+.mb-40 {
+  margin-bottom: 40px;
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 1024px) {
+  .blog-carousel {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .main-nav {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 20px 0;
+  }
+
+  .main-nav.open {
+    display: flex;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .header-inner {
+    justify-content: space-between;
+  }
+
+  .social-icons {
+    position: static;
+  }
+
+  .site-title {
+    font-size: 1.4rem;
+  }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.8rem; }
+  h3 { font-size: 1.3rem; }
+
+  .tagline-section h2 {
+    font-size: 1.8rem;
+  }
+
+  .blog-preview-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .wellness-section {
+    grid-template-columns: 1fr;
+  }
+
+  .blog-carousel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .blog-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .criteria-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .blog-carousel {
+    grid-template-columns: 1fr;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+}
