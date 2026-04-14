@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Editor — Isabella Sofia</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
+    body { font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; margin: 0; }
+    h1, h2, h3, h4 { font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif; }
+
+    /* ===== PASSWORD GATE ===== */
+    .password-overlay {
+      position: fixed; inset: 0; background: #DAE1E4; z-index: 9999;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px;
+    }
+    .password-overlay.hidden { display: none; }
+    .password-overlay h2 { font-size: 2rem; text-transform: none; }
+    .password-overlay input {
+      padding: 14px 20px; font-size: 1.1rem; border: 1px solid #000; background: #fff;
+      font-family: inherit; text-align: center; width: 250px; letter-spacing: 0.3em;
+    }
+    .password-overlay button {
+      padding: 12px 30px; background: #000; color: #fff; border: none;
+      font-family: inherit; font-size: 1rem; cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .password-overlay .error { color: #c00; font-size: 0.9rem; min-height: 1.2em; }
+
+    /* ===== TOOLBAR ===== */
+    .editor-toolbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #1a1a1a; color: #fff; padding: 12px 20px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .toolbar-title {
+      font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; letter-spacing: 0.05em;
+    }
+    .toolbar-status {
+      font-size: 0.85rem; color: #888; margin-left: 8px;
+    }
+    .toolbar-status.dirty { color: #f5a623; }
+    .toolbar-btn {
+      background: transparent; color: #fff; border: 1px solid transparent;
+      padding: 8px 14px; font-size: 0.9rem; cursor: pointer; border-radius: 6px;
+      font-family: inherit; transition: background 0.2s; white-space: nowrap;
+    }
+    .toolbar-btn:hover { background: #333; }
+    .publish-btn { background: #2ea043 !important; font-weight: 600; margin-left: auto; }
+    .publish-btn:hover { background: #238636 !important; }
+    .publish-btn:disabled { background: #555 !important; cursor: not-allowed; }
+    .reload-btn { background: #555 !important; }
+    .reload-btn:hover { background: #666 !important; }
+
+    /* ===== EDITOR PAGE LAYOUT ===== */
+    .editor-hero {
+      background: #ABA8A6; padding: 50px 4vw 30px; text-align: center;
+    }
+    .editor-hero h1 {
+      font-size: 2.4rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px;
+    }
+    .editor-hero p {
+      font-size: 0.95rem; color: #333; margin: 0;
+    }
+
+    .editor-category-nav {
+      display: flex; justify-content: center; gap: 30px; padding: 25px 20px;
+      background: #f4f1ee; font-size: 0.95rem; flex-wrap: wrap;
+    }
+    .editor-category-nav a {
+      color: #555; text-decoration: none; cursor: pointer; padding: 6px 2px;
+      border-bottom: 2px solid transparent; transition: all 0.2s;
+      text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.85rem;
+    }
+    .editor-category-nav a:hover { color: #000; }
+    .editor-category-nav a.active { color: #000; border-bottom-color: #000; }
+
+    /* ===== EDITOR PRODUCT GRID (matches shop page exactly) ===== */
+    .editor-product-area {
+      background: #fff; padding: 40px 4vw 80px;
+    }
+    .editor-product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 30px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    /* Mirror the exact .product-card look but add edit affordances */
+    .editor-product-card {
+      background: #fff;
+      text-align: center;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .editor-product-card:hover {
+      border-color: #0969da;
+      transform: translateY(-2px);
+    }
+    .editor-product-card .product-image {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #f0eded;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #aaa;
+      font-style: italic;
+      font-size: 0.9rem;
+      overflow: hidden;
+    }
+    .editor-product-card .product-image img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .editor-product-card .product-info { padding: 20px 15px; }
+    .editor-product-card h4 {
+      font-size: 1rem; text-transform: none;
+      font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
+      font-weight: 400; letter-spacing: 0; margin: 0 0 8px;
+    }
+    .editor-product-card .price {
+      font-size: 0.95rem; color: #666;
+    }
+    .editor-product-card .edit-badge {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(9, 105, 218, 0.9); color: #fff;
+      font-size: 0.7rem; padding: 4px 8px; border-radius: 12px;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .editor-product-card:hover .edit-badge { opacity: 1; }
+    .editor-product-card .card-category-tag {
+      position: absolute; top: 8px; left: 8px;
+      background: rgba(0,0,0,0.55); color: #fff;
+      font-size: 0.65rem; padding: 3px 8px; border-radius: 10px;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .editor-product-card.new-marker::after {
+      content: 'NEW'; position: absolute; top: 8px; left: 8px;
+      background: #2ea043; color: #fff; font-size: 0.65rem;
+      padding: 3px 8px; border-radius: 10px;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+
+    .add-product-card {
+      background: #fafafa;
+      border: 2px dashed #ccc;
+      aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      cursor: pointer; color: #999; transition: all 0.2s;
+    }
+    .add-product-card:hover {
+      border-color: #0969da; color: #0969da; background: #f0f7ff;
+    }
+    .add-product-card .plus { font-size: 3rem; font-weight: 200; line-height: 1; }
+    .add-product-card .label { font-size: 0.85rem; margin-top: 6px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal {
+      background: #fff; padding: 30px; border-radius: 12px;
+      max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto;
+    }
+    .modal h3 {
+      font-size: 1.8rem; margin: 0 0 6px; text-transform: none;
+      font-family: 'Cormorant Garamond', serif;
+    }
+    .modal .modal-sub { font-size: 0.9rem; color: #777; margin-bottom: 20px; }
+
+    .fetch-row {
+      display: flex; gap: 8px; margin-bottom: 8px;
+    }
+    .fetch-row input {
+      flex: 1; padding: 11px 14px; border: 1px solid #ccc; font-family: inherit;
+      font-size: 0.95rem; outline: none; border-radius: 6px;
+    }
+    .fetch-row input:focus { border-color: #000; }
+    .fetch-row button {
+      padding: 11px 20px; background: #0969da; color: #fff; border: none;
+      font-family: inherit; font-size: 0.9rem; cursor: pointer; border-radius: 6px;
+      white-space: nowrap;
+    }
+    .fetch-row button:hover { background: #0552b3; }
+    .fetch-row button:disabled { background: #888; cursor: not-allowed; }
+
+    .fetch-status {
+      font-size: 0.85rem; min-height: 1.3em; margin-bottom: 16px;
+    }
+    .fetch-status.loading { color: #0969da; }
+    .fetch-status.success { color: #2ea043; }
+    .fetch-status.error { color: #c00; }
+    .fetch-status.warn { color: #b8860b; }
+
+    .preview-row {
+      display: grid; grid-template-columns: 150px 1fr; gap: 18px; align-items: start;
+    }
+    .preview-image {
+      width: 150px; height: 150px; background: #f0eded;
+      display: flex; align-items: center; justify-content: center;
+      color: #aaa; font-style: italic; font-size: 0.8rem; overflow: hidden;
+      border-radius: 6px;
+    }
+    .preview-image img { width: 100%; height: 100%; object-fit: cover; }
+
+    .fields { display: flex; flex-direction: column; gap: 10px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #666;
+    }
+    .field input, .field select {
+      padding: 9px 12px; border: 1px solid #ccc; font-family: inherit;
+      font-size: 0.92rem; outline: none; border-radius: 4px;
+      background: #fff;
+    }
+    .field input:focus, .field select:focus { border-color: #000; }
+    .field-full { grid-column: 1 / -1; }
+
+    .modal .btn-row {
+      display: flex; gap: 10px; justify-content: space-between; margin-top: 22px;
+      padding-top: 20px; border-top: 1px solid #eee;
+    }
+    .modal .btn-row .left-btns { display: flex; gap: 10px; }
+    .modal .btn-row .right-btns { display: flex; gap: 10px; }
+    .modal .btn-row button {
+      padding: 10px 20px; font-family: inherit; font-size: 0.9rem; cursor: pointer;
+      border-radius: 6px; border: 1px solid #ccc; background: #fff;
+    }
+    .modal .btn-row button:hover { background: #f4f4f4; }
+    .modal .btn-row .btn-primary {
+      background: #2ea043; color: #fff; border-color: #2ea043;
+    }
+    .modal .btn-row .btn-primary:hover { background: #238636; }
+    .modal .btn-row .btn-danger {
+      background: #fff; color: #c00; border-color: #e8b4b4;
+    }
+    .modal .btn-row .btn-danger:hover { background: #ffeaea; }
+
+    /* Publish modal */
+    .publish-field { text-align: left; margin-bottom: 12px; }
+    .publish-field label {
+      display: block; font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #666; margin-bottom: 4px;
+    }
+    .publish-field input {
+      width: 100%; padding: 10px 12px; border: 1px solid #ccc; font-family: inherit;
+      font-size: 0.92rem; outline: none; border-radius: 4px; box-sizing: border-box;
+    }
+    .status-msg { margin-top: 12px; font-size: 0.88rem; min-height: 1.3em; }
+    .status-msg.success { color: #2ea043; }
+    .status-msg.error { color: #c00; }
+    .status-msg.loading { color: #0969da; }
+
+    .loading-screen {
+      min-height: 200px; display: flex; align-items: center; justify-content: center;
+      color: #888; font-style: italic; font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PASSWORD GATE -->
+  <div class="password-overlay" id="passwordGate">
+    <h2>Product Editor</h2>
+    <p>Enter password to continue</p>
+    <input type="password" id="passwordInput" placeholder="****" autofocus
+           onkeydown="if(event.key==='Enter') checkPassword()">
+    <button onclick="checkPassword()">Enter</button>
+    <div class="error" id="passwordError"></div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="editor-toolbar">
+    <span class="toolbar-title">Skin Safe Product List — Editor</span>
+    <span class="toolbar-status" id="toolbarStatus">Loading&hellip;</span>
+    <button class="toolbar-btn reload-btn" onclick="reloadProducts()" title="Discard changes and reload from site">Reload</button>
+    <button class="toolbar-btn publish-btn" id="publishBtn" onclick="showPublishModal()" disabled>Publish Changes</button>
+  </div>
+
+  <!-- HERO -->
+  <section class="editor-hero">
+    <h1>Skin Safe Product List</h1>
+    <p>Click a product card to edit. Paste a URL to auto-fetch image, title, and price.</p>
+  </section>
+
+  <!-- CATEGORY FILTER -->
+  <nav class="editor-category-nav" id="categoryNav">
+    <a data-filter="all" class="active" onclick="filterBy('all', this)">All</a>
+    <a data-filter="skincare" onclick="filterBy('skincare', this)">Skincare</a>
+    <a data-filter="body" onclick="filterBy('body', this)">Body</a>
+    <a data-filter="makeup" onclick="filterBy('makeup', this)">Makeup</a>
+    <a data-filter="tools" onclick="filterBy('tools', this)">Tools</a>
+    <a data-filter="fragrance" onclick="filterBy('fragrance', this)">Fragrance</a>
+  </nav>
+
+  <!-- PRODUCT GRID -->
+  <section class="editor-product-area">
+    <div class="editor-product-grid" id="editorProductGrid">
+      <div class="loading-screen">Loading products from shop.html&hellip;</div>
+    </div>
+  </section>
+
+  <!-- EDIT MODAL -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h3 id="modalTitle">Edit Product</h3>
+      <p class="modal-sub">Paste a product URL and click Fetch. Image, title, and price will be pulled from the source site.</p>
+
+      <div class="fetch-row">
+        <input type="url" id="fetchUrl" placeholder="https://www.sephora.com/product/..." onkeydown="if(event.key==='Enter'){event.preventDefault(); fetchProductData();}">
+        <button id="fetchBtn" onclick="fetchProductData()">Fetch</button>
+      </div>
+      <div class="fetch-status" id="fetchStatus"></div>
+
+      <div class="preview-row">
+        <div class="preview-image" id="previewImage">No image</div>
+        <div class="fields">
+          <div class="field">
+            <label>Product name</label>
+            <input type="text" id="editTitle" placeholder="The Ordinary Squalane Cleanser">
+          </div>
+          <div class="field">
+            <label>Price</label>
+            <input type="text" id="editPrice" placeholder="$21.00">
+          </div>
+          <div class="field">
+            <label>Category</label>
+            <select id="editCategory">
+              <option value="skincare">Skincare</option>
+              <option value="body">Body</option>
+              <option value="makeup">Makeup</option>
+              <option value="tools">Tools</option>
+              <option value="fragrance">Fragrance</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field field-full" style="margin-top:12px;">
+        <label>Image URL</label>
+        <input type="url" id="editImage" placeholder="https://..." oninput="updatePreviewImage()">
+      </div>
+
+      <div class="field field-full" style="margin-top:10px;">
+        <label>Subcategory label <span style="text-transform:none; font-size:0.75rem; color:#999;">(shown only when no image — e.g. Cleanser, Moisturizer)</span></label>
+        <input type="text" id="editSubcategory" placeholder="Cleanser">
+      </div>
+
+      <div class="btn-row">
+        <div class="left-btns">
+          <button class="btn-danger" id="deleteBtn" onclick="deleteCurrentProduct()">Delete</button>
+        </div>
+        <div class="right-btns">
+          <button onclick="closeEditModal()">Cancel</button>
+          <button class="btn-primary" onclick="saveProductFromModal()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PUBLISH MODAL -->
+  <div class="modal-overlay" id="publishModal">
+    <div class="modal" style="max-width: 480px;">
+      <h3>Publish Changes</h3>
+      <p class="modal-sub">This will commit the updated product list to GitHub. Vercel will auto-deploy shortly after.</p>
+
+      <div class="publish-field">
+        <label>GitHub Token <span style="font-size:0.7rem; color:#999; text-transform:none;">(stored locally, never uploaded)</span></label>
+        <input type="password" id="githubToken" placeholder="ghp_xxxx or gho_xxxx">
+      </div>
+
+      <div class="btn-row">
+        <div class="left-btns"></div>
+        <div class="right-btns">
+          <button onclick="closePublishModal()">Cancel</button>
+          <button class="btn-primary" id="publishNowBtn" onclick="publishChanges()">Publish Now</button>
+        </div>
+      </div>
+      <div class="status-msg" id="publishStatus"></div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const GITHUB_REPO = 'irive033/isabella-sofia-website';
+    const GITHUB_BRANCH = 'main';
+    const SHOP_FILE_PATH = 'pages/shop.html';
+    const PASSWORD = '2626';
+    const CORS_PROXY = 'https://corsproxy.io/?';
+    const MICROLINK_API = 'https://api.microlink.io/?url=';
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let products = [];          // [{id, category, subcategory, title, price, image, sourceUrl}]
+    let originalProducts = [];  // snapshot for dirty detection
+    let shopHtmlCache = '';     // raw shop.html from initial load
+    let editingId = null;       // id of product being edited (null = adding new)
+    let currentFilter = 'all';
+    let nextLocalId = 0;
+
+    // ============================================================
+    // PASSWORD
+    // ============================================================
+    function checkPassword() {
+      const input = document.getElementById('passwordInput');
+      if (input.value === PASSWORD) {
+        document.getElementById('passwordGate').classList.add('hidden');
+        sessionStorage.setItem('blog_editor_auth', 'true');
+        loadProducts();
+      } else {
+        document.getElementById('passwordError').textContent = 'Incorrect password';
+        input.value = '';
+        input.focus();
+      }
+    }
+    if (sessionStorage.getItem('blog_editor_auth') === 'true') {
+      document.getElementById('passwordGate').classList.add('hidden');
+      loadProducts();
+    }
+
+    // ============================================================
+    // LOAD + PARSE shop.html
+    // ============================================================
+    async function loadProducts() {
+      setStatus('Loading...');
+      try {
+        // Try same-directory fetch first (works on live site + local preview)
+        const resp = await fetch('shop.html?_=' + Date.now());
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const html = await resp.text();
+        shopHtmlCache = html;
+        products = parseProductsFromHtml(html);
+        originalProducts = JSON.parse(JSON.stringify(products));
+        nextLocalId = products.length;
+        renderGrid();
+        setStatus(`${products.length} products loaded`);
+        markClean();
+      } catch (e) {
+        setStatus('Failed to load: ' + e.message, true);
+        document.getElementById('editorProductGrid').innerHTML =
+          `<div class="loading-screen">Could not load shop.html — ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    function reloadProducts() {
+      if (isDirty() && !confirm('Discard unsaved changes and reload?')) return;
+      loadProducts();
+    }
+
+    function parseProductsFromHtml(html) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const grid = doc.getElementById('productGrid');
+      if (!grid) return [];
+      const cards = grid.querySelectorAll('.product-card');
+      return Array.from(cards).map((card, i) => {
+        const category = card.dataset.category || '';
+        const sourceUrl = card.dataset.sourceUrl || '';
+        const subcategoryAttr = card.dataset.subcategory || '';
+        const imageEl = card.querySelector('.product-image');
+        const img = imageEl ? imageEl.querySelector('img') : null;
+        const image = img ? img.getAttribute('src') : '';
+        // If no image, the .product-image text content is the subcategory label ("Cleanser", etc.)
+        const subcategory = subcategoryAttr ||
+          (!image && imageEl ? imageEl.textContent.trim() : '');
+        const h4 = card.querySelector('h4');
+        const priceEl = card.querySelector('.price');
+        return {
+          id: i,
+          category,
+          subcategory,
+          title: h4 ? h4.textContent.trim() : '',
+          price: priceEl ? priceEl.textContent.trim() : '',
+          image,
+          sourceUrl
+        };
+      });
+    }
+
+    // ============================================================
+    // RENDER GRID
+    // ============================================================
+    function renderGrid() {
+      const grid = document.getElementById('editorProductGrid');
+      const visible = products.filter(p =>
+        currentFilter === 'all' || p.category === currentFilter
+      );
+      const cardsHtml = visible.map(p => renderEditorCard(p)).join('');
+      const addCardHtml = `
+        <div class="add-product-card" onclick="openAddModal()">
+          <div class="plus">+</div>
+          <div class="label">Add Product</div>
+        </div>`;
+      grid.innerHTML = cardsHtml + addCardHtml;
+    }
+
+    function renderEditorCard(p) {
+      const imageHtml = p.image
+        ? `<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.title)}" onerror="this.remove();">`
+        : escapeHtml(p.subcategory || 'No image');
+      const categoryTag = p.category
+        ? `<div class="card-category-tag">${escapeHtml(p.category)}</div>` : '';
+      return `
+        <div class="editor-product-card" onclick="openEditModal(${p.id})">
+          ${categoryTag}
+          <div class="edit-badge">Edit</div>
+          <div class="product-image">${imageHtml}</div>
+          <div class="product-info">
+            <h4>${escapeHtml(p.title || 'Untitled')}</h4>
+            <div class="price">${escapeHtml(p.price || '')}</div>
+          </div>
+        </div>`;
+    }
+
+    function filterBy(category, el) {
+      currentFilter = category;
+      document.querySelectorAll('.editor-category-nav a').forEach(a => a.classList.remove('active'));
+      if (el) el.classList.add('active');
+      renderGrid();
+    }
+
+    // ============================================================
+    // EDIT / ADD MODAL
+    // ============================================================
+    function openEditModal(id) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      editingId = id;
+      document.getElementById('modalTitle').textContent = 'Edit Product';
+      document.getElementById('fetchUrl').value = p.sourceUrl || '';
+      document.getElementById('editTitle').value = p.title || '';
+      document.getElementById('editPrice').value = p.price || '';
+      document.getElementById('editCategory').value = p.category || 'skincare';
+      document.getElementById('editImage').value = p.image || '';
+      document.getElementById('editSubcategory').value = p.subcategory || '';
+      document.getElementById('fetchStatus').textContent = '';
+      document.getElementById('fetchStatus').className = 'fetch-status';
+      document.getElementById('deleteBtn').style.display = '';
+      updatePreviewImage();
+      document.getElementById('editModal').classList.add('visible');
+    }
+
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'Add Product';
+      document.getElementById('fetchUrl').value = '';
+      document.getElementById('editTitle').value = '';
+      document.getElementById('editPrice').value = '';
+      document.getElementById('editCategory').value = 'skincare';
+      document.getElementById('editImage').value = '';
+      document.getElementById('editSubcategory').value = '';
+      document.getElementById('fetchStatus').textContent = '';
+      document.getElementById('fetchStatus').className = 'fetch-status';
+      document.getElementById('deleteBtn').style.display = 'none';
+      updatePreviewImage();
+      document.getElementById('editModal').classList.add('visible');
+      document.getElementById('fetchUrl').focus();
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('visible');
+      editingId = null;
+    }
+
+    function updatePreviewImage() {
+      const url = document.getElementById('editImage').value.trim();
+      const preview = document.getElementById('previewImage');
+      if (url) {
+        preview.innerHTML = `<img src="${escapeAttr(url)}" alt="preview" onerror="this.parentElement.innerHTML='Image failed to load';">`;
+      } else {
+        preview.textContent = 'No image';
+      }
+    }
+
+    function saveProductFromModal() {
+      const title = document.getElementById('editTitle').value.trim();
+      const price = document.getElementById('editPrice').value.trim();
+      const category = document.getElementById('editCategory').value;
+      const image = document.getElementById('editImage').value.trim();
+      const subcategory = document.getElementById('editSubcategory').value.trim();
+      const sourceUrl = document.getElementById('fetchUrl').value.trim();
+
+      if (!title) {
+        document.getElementById('fetchStatus').textContent = 'Product name is required.';
+        document.getElementById('fetchStatus').className = 'fetch-status error';
+        return;
+      }
+
+      if (editingId === null) {
+        // Adding new
+        const newProduct = {
+          id: nextLocalId++,
+          category, subcategory, title, price, image, sourceUrl
+        };
+        products.push(newProduct);
+      } else {
+        // Editing existing
+        const idx = products.findIndex(x => x.id === editingId);
+        if (idx >= 0) {
+          products[idx] = { ...products[idx], category, subcategory, title, price, image, sourceUrl };
+        }
+      }
+      closeEditModal();
+      renderGrid();
+      markDirty();
+    }
+
+    function deleteCurrentProduct() {
+      if (editingId === null) return;
+      if (!confirm('Delete this product? You can still undo by clicking Reload before publishing.')) return;
+      products = products.filter(x => x.id !== editingId);
+      closeEditModal();
+      renderGrid();
+      markDirty();
+    }
+
+    // ============================================================
+    // FETCH PRODUCT DATA FROM URL
+    // ============================================================
+    async function fetchProductData() {
+      const url = document.getElementById('fetchUrl').value.trim();
+      const status = document.getElementById('fetchStatus');
+      const btn = document.getElementById('fetchBtn');
+      if (!url) {
+        status.textContent = 'Please paste a product URL first.';
+        status.className = 'fetch-status error';
+        return;
+      }
+      if (!/^https?:\/\//i.test(url)) {
+        status.textContent = 'URL must start with http:// or https://';
+        status.className = 'fetch-status error';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Fetching...';
+      status.textContent = 'Fetching product info (this may take 5-10s)...';
+      status.className = 'fetch-status loading';
+
+      try {
+        // Parallel: Microlink (og:image + og:title) + CORS proxy (JSON-LD for price)
+        const [microResult, htmlResult] = await Promise.allSettled([
+          fetch(MICROLINK_API + encodeURIComponent(url)).then(r => r.json()),
+          fetch(CORS_PROXY + encodeURIComponent(url)).then(r => r.text())
+        ]);
+
+        let gotTitle = '', gotImage = '', gotPrice = '';
+        const sources = [];
+        let blocked = false;
+
+        // Microlink
+        if (microResult.status === 'fulfilled' &&
+            microResult.value &&
+            microResult.value.status === 'success') {
+          const d = microResult.value.data || {};
+          const title = d.title || '';
+          if (looksBlocked(title)) {
+            blocked = true;
+          } else {
+            if (title) gotTitle = title;
+            if (d.image && d.image.url) gotImage = d.image.url;
+            if (title || d.image) sources.push('Microlink');
+          }
+        }
+
+        // JSON-LD / OG via CORS proxy
+        if (htmlResult.status === 'fulfilled' && htmlResult.value) {
+          const html = htmlResult.value;
+          // Detect blocked HTML (Access Denied pages are usually tiny)
+          if (html.length < 3000 && /access denied|forbidden|robot|captcha/i.test(html)) {
+            blocked = true;
+          } else {
+            const parsed = parseJsonLdProduct(html);
+            if (parsed) {
+              if (!gotTitle && parsed.title && !looksBlocked(parsed.title)) gotTitle = parsed.title;
+              if (!gotImage && parsed.image) gotImage = parsed.image;
+              if (parsed.price) gotPrice = parsed.price;
+              sources.push('JSON-LD');
+            } else {
+              // Fallback: parse OG tags from raw HTML
+              const og = parseOgTags(html);
+              if (!gotTitle && og.title && !looksBlocked(og.title)) gotTitle = og.title;
+              if (!gotImage && og.image) gotImage = og.image;
+              if (!gotPrice && og.price) gotPrice = og.price;
+              if (og.title || og.image || og.price) sources.push('OG tags');
+            }
+          }
+        }
+
+        // Fill fields with whatever we got
+        if (gotTitle) document.getElementById('editTitle').value = gotTitle;
+        if (gotImage) {
+          document.getElementById('editImage').value = gotImage;
+          updatePreviewImage();
+        }
+        if (gotPrice) document.getElementById('editPrice').value = gotPrice;
+
+        // Auto-detect subcategory from title if empty
+        if (!document.getElementById('editSubcategory').value.trim()) {
+          const guess = guessSubcategory(gotTitle || document.getElementById('editTitle').value);
+          if (guess) document.getElementById('editSubcategory').value = guess;
+        }
+
+        const fields = [];
+        if (gotTitle) fields.push('title');
+        if (gotImage) fields.push('image');
+        if (gotPrice) fields.push('price');
+
+        if (fields.length === 0) {
+          if (blocked) {
+            status.innerHTML = 'This retailer blocks auto-fetch (Sephora, Nordstrom, Amazon etc. use bot protection). <b>Workaround:</b> right-click the product image on the source page, choose "Copy image address", and paste it into the Image URL field below. Type the title and price manually.';
+          } else {
+            status.innerHTML = 'Could not extract any data from this URL. You can fill in fields manually, or try pasting the image URL directly.';
+          }
+          status.className = 'fetch-status warn';
+        } else if (blocked && fields.length < 3) {
+          status.innerHTML = `Partial data: ${fields.join(', ')}. Some of this retailer's data is blocked — fill in the rest manually.`;
+          status.className = 'fetch-status warn';
+        } else {
+          status.textContent = `Got ${fields.join(', ')} (${sources.join(' + ')}). Edit as needed, then Save.`;
+          status.className = 'fetch-status success';
+        }
+      } catch (e) {
+        status.textContent = 'Fetch failed: ' + e.message + '. Please fill in fields manually.';
+        status.className = 'fetch-status error';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Fetch';
+      }
+    }
+
+    // Detect common bot-block / error page titles or URL-fallback titles
+    function looksBlocked(title) {
+      if (!title) return false;
+      const t = title.toLowerCase().trim();
+      // Common bot-block / error titles
+      const patterns = [
+        'access denied', 'forbidden', 'page not found', '404', 'not found',
+        'error', 'blocked', 'captcha', 'security check', 'robot check',
+        'are you a human', 'pardon our interruption', 'just a moment'
+      ];
+      if (patterns.some(p => t === p || t.startsWith(p) || t.endsWith(p))) return true;
+      // URL-fragment fallback (e.g. "the-ordinary-squalane-cleanser-P444718?skuId=2278091")
+      // Real product titles have spaces; URL-derived titles don't and contain slug chars.
+      if (title.includes('?') || title.includes('=')) return true;
+      if (!title.includes(' ') && /-/.test(title) && title.length > 12) return true;
+      return false;
+    }
+
+    // JSON-LD Product schema parser
+    function parseJsonLdProduct(html) {
+      try {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
+        for (const script of scripts) {
+          const text = script.textContent.trim();
+          if (!text) continue;
+          let data;
+          try { data = JSON.parse(text); } catch (e) { continue; }
+          const product = findProductSchema(data);
+          if (product) {
+            return {
+              title: product.name || '',
+              image: getImageFromProduct(product),
+              price: getPriceFromProduct(product)
+            };
+          }
+        }
+      } catch (e) { /* ignore */ }
+      return null;
+    }
+
+    function findProductSchema(node) {
+      if (!node || typeof node !== 'object') return null;
+      if (node['@type'] === 'Product') return node;
+      if (Array.isArray(node['@type']) && node['@type'].includes('Product')) return node;
+      if (Array.isArray(node)) {
+        for (const item of node) {
+          const r = findProductSchema(item);
+          if (r) return r;
+        }
+      }
+      if (node['@graph']) {
+        const r = findProductSchema(node['@graph']);
+        if (r) return r;
+      }
+      // Some sites nest Product inside other types
+      for (const key of Object.keys(node)) {
+        if (key.startsWith('@')) continue;
+        const val = node[key];
+        if (val && typeof val === 'object') {
+          const r = findProductSchema(val);
+          if (r) return r;
+        }
+      }
+      return null;
+    }
+
+    function getImageFromProduct(product) {
+      if (!product.image) return '';
+      if (typeof product.image === 'string') return product.image;
+      if (Array.isArray(product.image)) {
+        const first = product.image[0];
+        if (typeof first === 'string') return first;
+        if (first && first.url) return first.url;
+      }
+      if (product.image.url) return product.image.url;
+      return '';
+    }
+
+    function getPriceFromProduct(product) {
+      if (!product.offers) return '';
+      const offers = Array.isArray(product.offers) ? product.offers[0] : product.offers;
+      if (!offers || typeof offers !== 'object') return '';
+      const price = offers.price || offers.lowPrice || offers.highPrice;
+      if (!price) return '';
+      const currency = offers.priceCurrency || 'USD';
+      return formatPrice(price, currency);
+    }
+
+    function formatPrice(price, currency) {
+      const num = parseFloat(price);
+      if (isNaN(num)) return String(price);
+      const symbol = { USD: '$', EUR: '€', GBP: '£', CAD: 'C$', AUD: 'A$' }[currency] || '';
+      return symbol + num.toFixed(2);
+    }
+
+    // Fallback OG tag parser
+    function parseOgTags(html) {
+      try {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const get = (prop) => {
+          const el = doc.querySelector(`meta[property="${prop}"], meta[name="${prop}"]`);
+          return el ? el.getAttribute('content') || '' : '';
+        };
+        let price = '';
+        const priceAmt = get('og:price:amount') || get('product:price:amount');
+        const priceCur = get('og:price:currency') || get('product:price:currency') || 'USD';
+        if (priceAmt) price = formatPrice(priceAmt, priceCur);
+        return {
+          title: get('og:title'),
+          image: get('og:image:secure_url') || get('og:image'),
+          price
+        };
+      } catch (e) { return { title: '', image: '', price: '' }; }
+    }
+
+    function guessSubcategory(title) {
+      if (!title) return '';
+      const t = title.toLowerCase();
+      const map = [
+        ['cleanser', 'Cleanser'], ['wash', 'Cleanser'], ['balm', 'Cleanser'],
+        ['moisturizer', 'Moisturizer'], ['moisturiser', 'Moisturizer'], ['cream', 'Moisturizer'], ['lotion', 'Moisturizer'],
+        ['sunscreen', 'Sunscreen'], ['spf', 'Sunscreen'], ['sun ', 'Sunscreen'],
+        ['serum', 'Serum'], ['essence', 'Essence'], ['toner', 'Toner'],
+        ['foundation', 'Foundation'], ['tint', 'Tint'], ['concealer', 'Concealer'],
+        ['mascara', 'Mascara'], ['blush', 'Blush'], ['bronzer', 'Bronzer'],
+        ['lipstick', 'Lipstick'], ['lip balm', 'Lip Balm'], ['gloss', 'Lip Gloss'],
+        ['eyeshadow', 'Eyeshadow'], ['eye liner', 'Eyeliner'], ['eyeliner', 'Eyeliner'],
+        ['deodorant', 'Deodorant'], ['perfume', 'Fragrance'], ['eau de', 'Fragrance'],
+      ];
+      for (const [k, v] of map) if (t.includes(k)) return v;
+      return '';
+    }
+
+    // ============================================================
+    // DIRTY TRACKING
+    // ============================================================
+    function isDirty() {
+      return JSON.stringify(products) !== JSON.stringify(originalProducts);
+    }
+    function markDirty() {
+      const s = document.getElementById('toolbarStatus');
+      s.textContent = `${products.length} products • unsaved changes`;
+      s.classList.add('dirty');
+      document.getElementById('publishBtn').disabled = false;
+    }
+    function markClean() {
+      const s = document.getElementById('toolbarStatus');
+      s.textContent = `${products.length} products loaded`;
+      s.classList.remove('dirty');
+      document.getElementById('publishBtn').disabled = true;
+    }
+    function setStatus(msg, isError) {
+      const s = document.getElementById('toolbarStatus');
+      s.textContent = msg;
+      s.classList.toggle('dirty', !!isError);
+    }
+
+    // ============================================================
+    // GENERATE NEW GRID HTML
+    // ============================================================
+    function generateGridHtml(products) {
+      // Group by category for cleaner diffs
+      const order = ['skincare', 'body', 'makeup', 'tools', 'fragrance'];
+      const grouped = {};
+      products.forEach(p => {
+        const cat = p.category || 'skincare';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(p);
+      });
+      const lines = [];
+      for (const cat of order) {
+        if (!grouped[cat] || grouped[cat].length === 0) continue;
+        lines.push(`        <!-- ${capitalize(cat)} -->`);
+        grouped[cat].forEach(p => lines.push(renderCardHtml(p)));
+      }
+      // Any remaining categories not in the ordered list
+      for (const cat of Object.keys(grouped)) {
+        if (order.includes(cat)) continue;
+        lines.push(`        <!-- ${capitalize(cat)} -->`);
+        grouped[cat].forEach(p => lines.push(renderCardHtml(p)));
+      }
+      return lines.join('\n');
+    }
+
+    function renderCardHtml(p) {
+      const dataAttrs = [
+        `data-category="${escapeAttr(p.category || '')}"`
+      ];
+      if (p.subcategory) dataAttrs.push(`data-subcategory="${escapeAttr(p.subcategory)}"`);
+      if (p.sourceUrl) dataAttrs.push(`data-source-url="${escapeAttr(p.sourceUrl)}"`);
+
+      const imageInner = p.image
+        ? `<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.title)}">`
+        : escapeHtml(p.subcategory || '');
+
+      return `        <div class="product-card" ${dataAttrs.join(' ')}>
+          <div class="product-image">${imageInner}</div>
+          <div class="product-info">
+            <h4>${escapeHtml(p.title || '')}</h4>
+            <div class="price">${escapeHtml(p.price || '')}</div>
+          </div>
+        </div>`;
+    }
+
+    function updateShopHtml(shopHtml, newGridInnerHtml) {
+      const openMarker = '<div class="product-grid" id="productGrid">';
+      const openIdx = shopHtml.indexOf(openMarker);
+      if (openIdx === -1) throw new Error('Could not find product grid in shop.html');
+      const contentStart = openIdx + openMarker.length;
+      // The grid closes with a </div> right before </section>
+      const sectionEnd = shopHtml.indexOf('</section>', contentStart);
+      if (sectionEnd === -1) throw new Error('Could not find section close');
+      const gridClose = shopHtml.lastIndexOf('</div>', sectionEnd);
+      if (gridClose === -1 || gridClose < contentStart) {
+        throw new Error('Could not find grid closing div');
+      }
+      const before = shopHtml.slice(0, contentStart);
+      const after = shopHtml.slice(gridClose);
+      return before + '\n' + newGridInnerHtml + '\n      ' + after;
+    }
+
+    // ============================================================
+    // PUBLISH
+    // ============================================================
+    function showPublishModal() {
+      if (!isDirty()) {
+        alert('No changes to publish.');
+        return;
+      }
+      const savedToken = localStorage.getItem('github_token');
+      if (savedToken) document.getElementById('githubToken').value = savedToken;
+      document.getElementById('publishStatus').textContent = '';
+      document.getElementById('publishStatus').className = 'status-msg';
+      document.getElementById('publishModal').classList.add('visible');
+    }
+    function closePublishModal() {
+      document.getElementById('publishModal').classList.remove('visible');
+    }
+
+    async function publishChanges() {
+      const status = document.getElementById('publishStatus');
+      const btn = document.getElementById('publishNowBtn');
+      const token = document.getElementById('githubToken').value.trim();
+      if (!token) {
+        status.textContent = 'Please enter your GitHub token.';
+        status.className = 'status-msg error';
+        return;
+      }
+      localStorage.setItem('github_token', token);
+
+      btn.disabled = true;
+      status.textContent = 'Fetching latest shop.html from GitHub...';
+      status.className = 'status-msg loading';
+
+      try {
+        // 1. Get current shop.html + SHA
+        const getResp = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/${SHOP_FILE_PATH}?ref=${GITHUB_BRANCH}`,
+          { headers: { 'Authorization': `token ${token}` } }
+        );
+        if (!getResp.ok) {
+          const err = await getResp.json().catch(() => ({}));
+          throw new Error(err.message || `HTTP ${getResp.status}`);
+        }
+        const getJson = await getResp.json();
+        const sha = getJson.sha;
+        const currentHtml = decodeBase64(getJson.content);
+
+        // 2. Update the product grid section
+        status.textContent = 'Updating product grid...';
+        const newGridHtml = generateGridHtml(products);
+        const newShopHtml = updateShopHtml(currentHtml, newGridHtml);
+
+        // 3. Commit
+        status.textContent = 'Committing to GitHub...';
+        const commitResp = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/${SHOP_FILE_PATH}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: `Update Skin Safe Product List (${products.length} products)`,
+              content: encodeBase64(newShopHtml),
+              branch: GITHUB_BRANCH,
+              sha
+            })
+          }
+        );
+
+        if (commitResp.ok) {
+          const result = await commitResp.json();
+          status.innerHTML = `Published! <a href="${result.content.html_url}" target="_blank" style="color:#0969da;">View on GitHub</a><br>Vercel will auto-deploy in ~30s.`;
+          status.className = 'status-msg success';
+          // Update snapshot — changes are now "saved"
+          originalProducts = JSON.parse(JSON.stringify(products));
+          markClean();
+        } else {
+          const err = await commitResp.json().catch(() => ({}));
+          status.textContent = `Error: ${err.message || 'Failed to commit'}`;
+          status.className = 'status-msg error';
+        }
+      } catch (e) {
+        status.textContent = `Failed: ${e.message}`;
+        status.className = 'status-msg error';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ============================================================
+    // UTILITIES
+    // ============================================================
+    function escapeHtml(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    function escapeAttr(str) {
+      if (str == null) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    }
+    function capitalize(s) { return s ? s[0].toUpperCase() + s.slice(1) : ''; }
+
+    function encodeBase64(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+    function decodeBase64(str) {
+      return decodeURIComponent(escape(atob(str.replace(/\s/g, ''))));
+    }
+
+    // Warn before leaving with unsaved changes
+    window.addEventListener('beforeunload', (e) => {
+      if (isDirty()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+  </script>
+</body>
+</html>
