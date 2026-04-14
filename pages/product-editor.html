@@ -517,9 +517,20 @@
           <div class="product-image">${imageHtml}</div>
           <div class="product-info">
             <h4>${escapeHtml(p.title || 'Untitled')}</h4>
-            <div class="price">${escapeHtml(p.price || '')}</div>
+            <div class="price">${escapeHtml(formatPriceDisplay(p.price))}</div>
           </div>
         </div>`;
+    }
+
+    // Matches the auto-$ prefixing in shop.html so the editor grid shows what the live page will show.
+    // State still stores raw input (e.g. "21.00"); display shows "$21.00".
+    function formatPriceDisplay(price) {
+      if (!price) return '';
+      const trimmed = String(price).trim();
+      if (!trimmed) return '';
+      if (/^[$€£¥]/.test(trimmed)) return trimmed;
+      if (/^[\d.]/.test(trimmed)) return '$' + trimmed;
+      return trimmed;
     }
 
     function filterBy(category, el) {

@@ -683,6 +683,14 @@
       document.querySelectorAll('.category-nav a').forEach(a => a.classList.remove('active'));
       if (clickedEl) clickedEl.classList.add('active');
     }
+
+    // Auto-prepend $ to numeric prices (so raw numbers like "21.00" display as "$21.00")
+    document.querySelectorAll('.product-card .price').forEach(el => {
+      const text = el.textContent.trim();
+      if (!text) return;                     // empty prices stay empty
+      if (/^[$€£¥]/.test(text)) return;      // already has a currency symbol
+      if (/^[\d.]/.test(text)) el.textContent = '$' + text;
+    });
   </script>
 
 </body>
