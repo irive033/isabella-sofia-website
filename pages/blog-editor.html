@@ -27,41 +27,33 @@
     }
     .password-overlay .error { color: #c00; font-size: 0.9rem; min-height: 1.2em; }
 
-    /* ===== EDITOR TOOLBAR ===== */
+    /* ===== TOOLBAR ===== */
     .editor-toolbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: #1a1a1a; color: #fff; padding: 8px 16px;
-      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      position: sticky; top: 0; z-index: 100;
+      background: #1a1a1a; color: #fff; padding: 10px 20px;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
     .toolbar-group {
-      display: flex; align-items: center; gap: 3px; padding: 0 6px;
+      display: flex; align-items: center; gap: 4px; padding: 0 8px;
       border-right: 1px solid #444;
     }
     .toolbar-group:last-child { border-right: none; }
     .toolbar-btn {
       background: transparent; color: #fff; border: 1px solid transparent;
-      padding: 5px 9px; font-size: 0.8rem; cursor: pointer; border-radius: 4px;
+      padding: 6px 10px; font-size: 0.85rem; cursor: pointer; border-radius: 4px;
       font-family: inherit; transition: background 0.2s; white-space: nowrap;
     }
     .toolbar-btn:hover { background: #333; }
-    .toolbar-btn.active { background: #555; border-color: #888; }
-    .toolbar-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin-right: 3px; }
-    .toolbar-select {
-      background: #333; color: #fff; border: 1px solid #555; padding: 4px 6px;
-      font-size: 0.8rem; border-radius: 4px; font-family: inherit; cursor: pointer;
-    }
-    .publish-btn { background: #2ea043 !important; font-weight: 600; padding: 7px 16px !important; border-radius: 6px !important; margin-left: auto; }
+    .toolbar-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin-right: 4px; }
+    .publish-btn { background: #2ea043 !important; font-weight: 600; padding: 8px 18px !important; border-radius: 6px !important; margin-left: auto; }
     .publish-btn:hover { background: #238636 !important; }
-    .preview-btn { background: #0969da !important; padding: 7px 12px !important; border-radius: 6px !important; }
-    .download-btn { background: #555 !important; padding: 7px 12px !important; border-radius: 6px !important; }
-    .grid-btn { padding: 7px 12px !important; border-radius: 6px !important; }
-    .grid-btn.active { background: #7c4dff !important; border-color: #b388ff !important; }
+    .preview-btn { background: #0969da !important; padding: 8px 14px !important; border-radius: 6px !important; }
+    .download-btn { background: #555 !important; padding: 8px 14px !important; border-radius: 6px !important; }
 
-    /* ===== EDITOR META ===== */
+    /* ===== META FIELDS ===== */
     .editor-meta {
       background: #ABA8A6; padding: 60px 4vw 40px; text-align: center;
-      margin-top: 44px; /* toolbar height */
     }
     .editor-meta input {
       display: block; width: 100%; max-width: 750px; margin: 0 auto;
@@ -89,73 +81,37 @@
       outline: none; cursor: pointer; color: #555;
     }
 
-    /* ===== FREE-FORM CANVAS ===== */
+    /* ===== VERTICAL CANVAS ===== */
     .editor-content-area {
-      background: #fff; min-height: 800px; position: relative;
-      overflow: visible;
+      background: #fff; padding: 60px 4vw; min-height: 500px;
     }
     .editor-canvas {
-      position: relative; min-height: 800px;
       max-width: 750px; margin: 0 auto;
-      padding: 40px 0;
     }
     .editor-canvas:empty::before {
-      content: 'Click "+ Text" or "+ Image" to add blocks. Drag to position, resize handles to scale.';
+      content: 'Click a toolbar button to start building your post...';
       color: #bbb; font-style: italic; font-size: 1.1rem;
-      position: absolute; top: 60px; left: 0; right: 0; text-align: center;
     }
 
-    /* ===== GRIDLINES ===== */
-    .editor-canvas.show-grid {
-      background-image:
-        linear-gradient(to right, rgba(124,77,255,0.08) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(124,77,255,0.08) 1px, transparent 1px);
-      background-size: 25px 25px;
-    }
-    .editor-canvas.show-grid::after {
-      content: '';
-      position: absolute; top: 0; bottom: 0;
-      left: 50%; width: 1px;
-      background: rgba(124,77,255,0.15);
-      pointer-events: none;
-    }
-    /* Column guides */
-    .editor-canvas.show-grid .grid-col-guides {
-      display: block;
-    }
-    .grid-col-guides {
-      display: none;
-      position: absolute; inset: 0; pointer-events: none; z-index: 0;
-    }
-    .grid-col-guides div {
-      position: absolute; top: 0; bottom: 0; width: 1px;
-      background: rgba(124,77,255,0.1);
-    }
-
-    /* ===== CONTENT BLOCKS (Free-form) ===== */
+    /* Content blocks */
     .content-block {
-      position: absolute;
+      position: relative;
+      margin-bottom: 25px;
       border: 2px solid transparent;
       border-radius: 4px;
-      transition: border-color 0.15s;
-      cursor: move;
-      min-width: 80px;
-      min-height: 30px;
-      z-index: 1;
+      transition: border-color 0.2s;
+      padding: 4px;
     }
-    .content-block:hover { border-color: rgba(9,105,218,0.4); z-index: 10; }
-    .content-block.selected { border-color: #0969da; z-index: 10; }
-    .content-block.dragging { opacity: 0.8; z-index: 100; border-color: #0969da; }
+    .content-block:hover { border-color: #ddd; }
+    .content-block:focus-within { border-color: #0969da; }
 
-    /* Block controls */
     .content-block .block-controls {
-      position: absolute; top: -28px; right: 0;
-      display: none; gap: 3px; background: #1a1a1a;
+      position: absolute; top: -14px; right: 0;
+      display: none; gap: 4px; background: #1a1a1a;
       padding: 3px 6px; border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 5;
     }
-    .content-block:hover .block-controls,
-    .content-block.selected .block-controls { display: flex; }
+    .content-block:hover .block-controls { display: flex; }
     .block-ctrl-btn {
       width: 22px; height: 22px; border-radius: 4px; border: none;
       font-size: 11px; cursor: pointer; display: flex; align-items: center;
@@ -165,44 +121,112 @@
     .block-ctrl-btn.delete { background: #5c1a1a; color: #f88; }
     .block-ctrl-btn.delete:hover { background: #7a2020; }
 
-    /* Resize handles */
-    .resize-handle {
-      position: absolute; width: 10px; height: 10px;
-      background: #0969da; border-radius: 2px; z-index: 20; cursor: nwse-resize;
-    }
-    .resize-handle.br { bottom: -5px; right: -5px; cursor: nwse-resize; }
-    .resize-handle.bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
-    .resize-handle.r { top: 50%; right: -5px; transform: translateY(-50%); cursor: ew-resize; height: 20px; width: 6px; border-radius: 3px; }
-    .resize-handle.b { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: ns-resize; width: 20px; height: 6px; border-radius: 3px; }
-    .content-block:not(:hover):not(.selected) .resize-handle { display: none; }
-
-    /* Editable content */
+    /* Editable text */
     .content-block [contenteditable] {
-      outline: none; min-height: 1.2em; padding: 4px; cursor: text;
+      outline: none; min-height: 1.5em; padding: 4px;
     }
     .content-block p[contenteditable] { font-size: 1.15rem; line-height: 1.9; color: #222; }
-    .content-block h2[contenteditable] { font-size: 2rem; margin: 0; text-transform: none; }
-    .content-block h3[contenteditable] { font-size: 1.5rem; margin: 0; text-transform: none; }
+    .content-block h2[contenteditable] { font-size: 2rem; margin: 20px 0; text-transform: none; }
+    .content-block h3[contenteditable] { font-size: 1.5rem; margin: 15px 0; text-transform: none; }
     .content-block blockquote[contenteditable] {
       border-left: 3px solid #000; padding-left: 25px;
-      font-style: italic; color: #444; font-size: 1.15rem; line-height: 1.9; margin: 0;
+      font-style: italic; color: #444; font-size: 1.15rem; line-height: 1.9;
     }
     .content-block ul[contenteditable],
-    .content-block ol[contenteditable] { padding-left: 25px; margin: 0; }
+    .content-block ol[contenteditable] { padding-left: 25px; }
     .content-block li { font-size: 1.1rem; line-height: 1.8; margin-bottom: 8px; list-style: disc; }
     .content-block ol li { list-style: decimal; }
-    .content-block img { width: 100%; display: block; pointer-events: none; }
+
+    /* ===== SINGLE IMAGE BLOCK (proportional) ===== */
+    .image-block { text-align: center; }
+    .image-block .img-container {
+      position: relative; display: inline-block; max-width: 100%;
+    }
+    .image-block img {
+      display: block;
+      max-width: 100%;
+      height: auto; /* ← key: aspect ratio preserved */
+      margin: 0 auto;
+    }
+    .image-block .image-toolbar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 12px; background: #f4f4f4; border-radius: 6px;
+      margin-top: 10px; font-size: 0.85rem;
+    }
+    .image-block .image-toolbar label { color: #555; }
+    .image-block .image-toolbar input[type="range"] { flex: 1; }
+    .image-block .align-buttons { display: flex; gap: 2px; }
+    .image-block .align-buttons button {
+      background: #fff; border: 1px solid #ccc; padding: 4px 10px;
+      cursor: pointer; font-size: 0.8rem; border-radius: 3px;
+    }
+    .image-block .align-buttons button.active { background: #0969da; color: #fff; border-color: #0969da; }
     .image-block .caption {
-      font-size: 0.85rem; color: #888; font-style: italic; text-align: center;
-      margin-top: 6px; cursor: text;
+      font-size: 0.85rem; color: #888; font-style: italic;
+      text-align: center; margin-top: 8px;
     }
 
-    /* Snap guide lines */
-    .snap-line {
-      position: absolute; background: #7c4dff; z-index: 50; pointer-events: none;
+    /* ===== GALLERY BLOCK ===== */
+    .gallery-block .gallery-row {
+      display: flex; gap: 10px; width: 100%;
     }
-    .snap-line.horizontal { height: 1px; left: 0; right: 0; }
-    .snap-line.vertical { width: 1px; top: 0; bottom: 0; }
+    .gallery-block .gallery-item {
+      flex: 1 1 0; min-width: 0; position: relative;
+      height: 250px; background: #f0eded;
+      display: flex; align-items: center; justify-content: center;
+      color: #aaa; font-style: italic;
+    }
+    .gallery-block .gallery-item img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .gallery-block .gallery-item .remove-img {
+      position: absolute; top: 5px; right: 5px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(0,0,0,0.7); color: #fff; border: none;
+      cursor: pointer; display: none; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .gallery-block .gallery-item:hover .remove-img { display: flex; }
+    .gallery-block .add-gallery-img {
+      flex: 0 0 80px; height: 250px; border: 2px dashed #ccc;
+      background: #fafafa; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      color: #999; font-size: 1.5rem;
+    }
+    .gallery-block .add-gallery-img:hover { border-color: #0969da; color: #0969da; }
+    .gallery-block .caption {
+      font-size: 0.85rem; color: #888; font-style: italic;
+      text-align: center; margin-top: 8px;
+    }
+
+    /* ===== HERO BLOCK ===== */
+    .hero-block .hero-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
+    }
+    .hero-block.ratio-60-40 .hero-grid { grid-template-columns: 3fr 2fr; }
+    .hero-block.ratio-40-60 .hero-grid { grid-template-columns: 2fr 3fr; }
+    .hero-block .hero-image-slot {
+      width: 100%; height: 400px; background: #f0eded;
+      display: flex; align-items: center; justify-content: center;
+      color: #aaa; font-style: italic; cursor: pointer; position: relative;
+      overflow: hidden;
+    }
+    .hero-block .hero-image-slot img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .hero-block .hero-image-slot .slot-hint { pointer-events: none; }
+    .hero-block .hero-image-slot img + .slot-hint { display: none; }
+    .hero-block .hero-text h2[contenteditable],
+    .hero-block .hero-text h3[contenteditable] { margin-top: 0; }
+    .hero-block .hero-options {
+      display: flex; gap: 8px; padding: 8px 12px; background: #f4f4f4;
+      border-radius: 6px; margin-top: 10px; font-size: 0.85rem; align-items: center;
+    }
+    .hero-block .hero-options label { color: #555; }
+    .hero-block .hero-options select {
+      background: #fff; border: 1px solid #ccc; padding: 4px 8px;
+      border-radius: 3px; font-family: inherit; font-size: 0.8rem;
+    }
 
     /* ===== FLOATING FORMAT BAR ===== */
     .format-bar {
@@ -223,7 +247,7 @@
     }
     .format-bar input[type="color"] { width: 22px; height: 22px; border: none; padding: 0; cursor: pointer; background: transparent; }
 
-    /* ===== PUBLISH MODAL ===== */
+    /* ===== MODAL ===== */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500;
       display: none; align-items: center; justify-content: center;
@@ -251,19 +275,15 @@
     .status-msg.error { color: #c00; }
     .status-msg.loading { color: #0969da; }
 
-    /* Preview mode */
-    body.preview-mode .content-block {
-      border-color: transparent !important; cursor: default !important;
-    }
-    body.preview-mode .content-block .block-controls,
-    body.preview-mode .resize-handle,
-    body.preview-mode .snap-line,
-    body.preview-mode .grid-col-guides { display: none !important; }
+    /* ===== PREVIEW MODE ===== */
+    body.preview-mode .content-block { border-color: transparent !important; padding: 0; }
+    body.preview-mode .content-block .block-controls { display: none !important; }
+    body.preview-mode .image-block .image-toolbar,
+    body.preview-mode .hero-block .hero-options,
+    body.preview-mode .gallery-block .add-gallery-img { display: none !important; }
     body.preview-mode .editor-toolbar { display: none; }
     body.preview-mode .editor-meta input,
     body.preview-mode .editor-meta select { border-bottom-color: transparent; pointer-events: none; }
-    body.preview-mode .editor-canvas { background-image: none !important; }
-    body.preview-mode .editor-canvas::after { display: none !important; }
   </style>
 </head>
 <body>
@@ -290,11 +310,13 @@
       <button class="toolbar-btn" onclick="addBlock('ol')">+ Num List</button>
     </div>
     <div class="toolbar-group">
+      <span class="toolbar-label">Media</span>
       <button class="toolbar-btn" onclick="triggerImageUpload()">+ Image</button>
+      <button class="toolbar-btn" onclick="addBlock('gallery')">+ Gallery</button>
+      <button class="toolbar-btn" onclick="addBlock('hero')">+ Image Hero</button>
       <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
-    </div>
-    <div class="toolbar-group">
-      <button class="toolbar-btn grid-btn" onclick="toggleGrid(this)" id="gridBtn" title="Toggle alignment grid">Grid</button>
+      <input type="file" id="galleryInput" accept="image/*" multiple style="display:none" onchange="handleGalleryUpload(event)">
+      <input type="file" id="heroInput" accept="image/*" style="display:none" onchange="handleHeroUpload(event)">
     </div>
     <div class="toolbar-group">
       <button class="toolbar-btn preview-btn" onclick="togglePreview()" id="previewBtn">Preview</button>
@@ -316,17 +338,9 @@
     </div>
   </section>
 
-  <!-- FREE-FORM CANVAS -->
+  <!-- CANVAS -->
   <section class="editor-content-area">
-    <div class="editor-canvas" id="editorCanvas">
-      <div class="grid-col-guides">
-        <div style="left:25%"></div>
-        <div style="left:33.33%"></div>
-        <div style="left:50%"></div>
-        <div style="left:66.66%"></div>
-        <div style="left:75%"></div>
-      </div>
-    </div>
+    <div class="editor-canvas" id="editorCanvas"></div>
   </section>
 
   <!-- FORMAT BAR -->
@@ -381,13 +395,9 @@
     const GITHUB_REPO = 'irive033/isabella-sofia-website';
     const GITHUB_BRANCH = 'main';
     const PASSWORD = '2626';
-    const GRID_SIZE = 25;
-    const SNAP_THRESHOLD = 8;
 
-    let gridEnabled = false;
     let blockCounter = 0;
-    let selectedBlock = null;
-    let nextY = 20; // tracks vertical placement for new blocks
+    let pendingHeroBlock = null; // reference to hero block awaiting image upload
 
     // ===== PASSWORD =====
     function checkPassword() {
@@ -405,269 +415,88 @@
       document.getElementById('passwordGate').classList.add('hidden');
     }
 
-    // ===== GRID TOGGLE =====
-    function toggleGrid(btn) {
-      gridEnabled = !gridEnabled;
-      btn.classList.toggle('active', gridEnabled);
-      document.getElementById('editorCanvas').classList.toggle('show-grid', gridEnabled);
+    // ===== BLOCK CONTROLS TEMPLATE =====
+    function controlsHTML() {
+      return `
+        <div class="block-controls">
+          <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlock(this.closest('.content-block'), -1)" title="Move up">&uarr;</button>
+          <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlock(this.closest('.content-block'), 1)" title="Move down">&darr;</button>
+          <button class="block-ctrl-btn delete" onclick="event.stopPropagation(); deleteBlock(this.closest('.content-block'))" title="Delete">&times;</button>
+        </div>
+      `;
     }
 
-    function snapToGrid(val) {
-      if (!gridEnabled) return val;
-      return Math.round(val / GRID_SIZE) * GRID_SIZE;
-    }
-
-    // ===== ADD BLOCKS =====
+    // ===== ADD BLOCK =====
     function addBlock(type, content = '') {
       const canvas = document.getElementById('editorCanvas');
       const block = document.createElement('div');
       block.className = 'content-block';
+      block.dataset.blockType = type;
       block.dataset.blockId = ++blockCounter;
 
-      // Default size
-      let w = 700, h = 'auto';
-      if (type === 'image') w = 700;
-
-      const controls = `
-        <div class="block-controls">
-          <button class="block-ctrl-btn" onclick="event.stopPropagation(); duplicateBlock(this.closest('.content-block'))" title="Duplicate">&#9851;</button>
-          <button class="block-ctrl-btn" onclick="event.stopPropagation(); bringForward(this.closest('.content-block'))" title="Bring forward">&#8679;</button>
-          <button class="block-ctrl-btn" onclick="event.stopPropagation(); sendBack(this.closest('.content-block'))" title="Send back">&#8681;</button>
-          <button class="block-ctrl-btn delete" onclick="event.stopPropagation(); deleteBlock(this.closest('.content-block'))" title="Delete">&times;</button>
-        </div>
-        <div class="resize-handle br" data-dir="br"></div>
-        <div class="resize-handle r" data-dir="r"></div>
-        <div class="resize-handle b" data-dir="b"></div>
-      `;
-
       if (type === 'ul' || type === 'ol') {
-        block.innerHTML = controls + `<${type} contenteditable="true"><li>${content || 'List item'}</li></${type}>`;
-      } else if (type === 'image') {
-        block.classList.add('image-block');
-        block.innerHTML = controls + `<img src="${content}" alt="Blog image"><div class="caption" contenteditable="true">Add caption</div>`;
+        block.innerHTML = controlsHTML() + `<${type} contenteditable="true"><li>${content || 'List item'}</li></${type}>`;
+      } else if (type === 'gallery') {
+        block.classList.add('gallery-block');
+        block.innerHTML = controlsHTML() + `
+          <div class="gallery-row">
+            <div class="add-gallery-img" onclick="addGalleryImage(this)">+</div>
+          </div>
+          <div class="caption" contenteditable="true" data-placeholder="Add caption (optional)">Add caption</div>
+        `;
+      } else if (type === 'hero') {
+        block.classList.add('hero-block');
+        block.innerHTML = controlsHTML() + `
+          <div class="hero-grid">
+            <div class="hero-image-slot" onclick="triggerHeroUpload(this.closest('.content-block'))">
+              <span class="slot-hint">Click to upload image</span>
+            </div>
+            <div class="hero-text">
+              <h2 contenteditable="true">Your heading</h2>
+              <p contenteditable="true">Write a description here.</p>
+            </div>
+          </div>
+          <div class="hero-options">
+            <label>Layout:</label>
+            <select onchange="setHeroRatio(this)">
+              <option value="50-50">50 / 50</option>
+              <option value="60-40">60 / 40</option>
+              <option value="40-60">40 / 60</option>
+            </select>
+          </div>
+        `;
       } else {
-        const placeholder = type === 'p' ? 'Start typing...' : (type === 'h2' ? 'Heading' : (type === 'h3' ? 'Subheading' : 'Type here...'));
-        block.innerHTML = controls + `<${type} contenteditable="true">${content || placeholder}</${type}>`;
+        const placeholder = type === 'p' ? 'Start typing...' : (type === 'h2' ? 'Heading' : (type === 'h3' ? 'Subheading' : ''));
+        block.innerHTML = controlsHTML() + `<${type} contenteditable="true">${content || placeholder}</${type}>`;
       }
-
-      // Position
-      const x = snapToGrid(25);
-      const y = snapToGrid(nextY);
-      block.style.left = x + 'px';
-      block.style.top = y + 'px';
-      block.style.width = w + 'px';
 
       canvas.appendChild(block);
 
-      // Update nextY for the next block
-      requestAnimationFrame(() => {
-        nextY = y + block.offsetHeight + 20;
-        expandCanvas();
-      });
-
-      // Select it
-      selectBlock(block);
-
-      // Focus editable
+      // Focus first editable
       const editable = block.querySelector('[contenteditable]');
-      if (editable && type !== 'image') {
+      if (editable && type !== 'gallery' && type !== 'hero') {
         editable.focus();
-        if (editable.textContent === 'Start typing...' || editable.textContent === 'Heading' || editable.textContent === 'Subheading' || editable.textContent === 'Type here...') {
+        if (['Start typing...', 'Heading', 'Subheading'].includes(editable.textContent)) {
           document.execCommand('selectAll');
         }
       }
 
-      // Setup drag & resize
-      setupBlockInteraction(block);
       return block;
     }
 
     function deleteBlock(block) {
-      if (confirm('Delete this block?')) {
-        block.remove();
-        if (selectedBlock === block) selectedBlock = null;
+      if (confirm('Delete this block?')) block.remove();
+    }
+
+    function moveBlock(block, direction) {
+      const sibling = direction === -1 ? block.previousElementSibling : block.nextElementSibling;
+      if (sibling && sibling.classList.contains('content-block')) {
+        if (direction === -1) block.parentNode.insertBefore(block, sibling);
+        else block.parentNode.insertBefore(sibling, block);
       }
     }
 
-    function duplicateBlock(block) {
-      const clone = block.cloneNode(true);
-      clone.dataset.blockId = ++blockCounter;
-      clone.style.left = (parseInt(block.style.left) + 20) + 'px';
-      clone.style.top = (parseInt(block.style.top) + 20) + 'px';
-      block.parentNode.appendChild(clone);
-      setupBlockInteraction(clone);
-      selectBlock(clone);
-    }
-
-    function bringForward(block) {
-      const max = Math.max(...[...document.querySelectorAll('.content-block')].map(b => parseInt(b.style.zIndex || 1)));
-      block.style.zIndex = max + 1;
-    }
-
-    function sendBack(block) {
-      block.style.zIndex = 0;
-    }
-
-    function selectBlock(block) {
-      if (selectedBlock) selectedBlock.classList.remove('selected');
-      selectedBlock = block;
-      if (block) block.classList.add('selected');
-    }
-
-    function expandCanvas() {
-      const canvas = document.getElementById('editorCanvas');
-      const blocks = canvas.querySelectorAll('.content-block');
-      let maxBottom = 800;
-      blocks.forEach(b => {
-        const bottom = b.offsetTop + b.offsetHeight + 60;
-        if (bottom > maxBottom) maxBottom = bottom;
-      });
-      canvas.style.minHeight = maxBottom + 'px';
-    }
-
-    // ===== DRAG & RESIZE =====
-    function setupBlockInteraction(block) {
-      let isDragging = false, isResizing = false, resizeDir = '';
-      let startX, startY, startLeft, startTop, startW, startH;
-
-      block.addEventListener('mousedown', (e) => {
-        // Check if clicking a resize handle
-        const handle = e.target.closest('.resize-handle');
-        if (handle) {
-          isResizing = true;
-          resizeDir = handle.dataset.dir;
-          startX = e.clientX;
-          startY = e.clientY;
-          startW = block.offsetWidth;
-          startH = block.offsetHeight;
-          e.preventDefault();
-          e.stopPropagation();
-          document.addEventListener('mousemove', onMouseMove);
-          document.addEventListener('mouseup', onMouseUp);
-          return;
-        }
-
-        // Check if clicking editable content or controls
-        const editable = e.target.closest('[contenteditable]');
-        const ctrl = e.target.closest('.block-ctrl-btn');
-        if (editable || ctrl) {
-          selectBlock(block);
-          return; // Let contenteditable handle it
-        }
-
-        // Drag the block
-        isDragging = true;
-        block.classList.add('dragging');
-        selectBlock(block);
-        startX = e.clientX;
-        startY = e.clientY;
-        startLeft = block.offsetLeft;
-        startTop = block.offsetTop;
-        e.preventDefault();
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-      });
-
-      function onMouseMove(e) {
-        if (isDragging) {
-          let newLeft = startLeft + (e.clientX - startX);
-          let newTop = startTop + (e.clientY - startY);
-
-          // Snap
-          newLeft = snapToGrid(Math.max(0, newLeft));
-          newTop = snapToGrid(Math.max(0, newTop));
-
-          // Snap to other blocks if grid enabled
-          if (gridEnabled) {
-            showSnapLines(block, newLeft, newTop);
-          }
-
-          block.style.left = newLeft + 'px';
-          block.style.top = newTop + 'px';
-          expandCanvas();
-        }
-        if (isResizing) {
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-
-          if (resizeDir === 'br') {
-            block.style.width = snapToGrid(Math.max(80, startW + dx)) + 'px';
-            // Height is auto for text, but for images constrain
-            if (block.classList.contains('image-block')) {
-              block.style.height = snapToGrid(Math.max(40, startH + dy)) + 'px';
-              const img = block.querySelector('img');
-              if (img) img.style.height = '100%';
-            }
-          } else if (resizeDir === 'r') {
-            block.style.width = snapToGrid(Math.max(80, startW + dx)) + 'px';
-          } else if (resizeDir === 'b') {
-            if (block.classList.contains('image-block')) {
-              block.style.height = snapToGrid(Math.max(40, startH + dy)) + 'px';
-              const img = block.querySelector('img');
-              if (img) img.style.height = '100%';
-            }
-          }
-          expandCanvas();
-        }
-      }
-
-      function onMouseUp() {
-        isDragging = false;
-        isResizing = false;
-        block.classList.remove('dragging');
-        clearSnapLines();
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-      }
-    }
-
-    // ===== SNAP LINES =====
-    function showSnapLines(dragBlock, x, y) {
-      clearSnapLines();
-      const canvas = document.getElementById('editorCanvas');
-      const blocks = canvas.querySelectorAll('.content-block');
-      const dragRight = x + dragBlock.offsetWidth;
-      const dragCenterX = x + dragBlock.offsetWidth / 2;
-      const dragBottom = y + dragBlock.offsetHeight;
-      const dragCenterY = y + dragBlock.offsetHeight / 2;
-
-      blocks.forEach(b => {
-        if (b === dragBlock) return;
-        const bx = b.offsetLeft, by = b.offsetTop;
-        const bRight = bx + b.offsetWidth, bBottom = by + b.offsetHeight;
-        const bCenterX = bx + b.offsetWidth / 2;
-        const bCenterY = by + b.offsetHeight / 2;
-
-        // Horizontal alignment checks
-        if (Math.abs(y - by) < SNAP_THRESHOLD) addSnapLine('horizontal', by);
-        if (Math.abs(y - bBottom) < SNAP_THRESHOLD) addSnapLine('horizontal', bBottom);
-        if (Math.abs(dragBottom - by) < SNAP_THRESHOLD) addSnapLine('horizontal', by);
-        if (Math.abs(dragBottom - bBottom) < SNAP_THRESHOLD) addSnapLine('horizontal', bBottom);
-        if (Math.abs(dragCenterY - bCenterY) < SNAP_THRESHOLD) addSnapLine('horizontal', bCenterY);
-
-        // Vertical alignment checks
-        if (Math.abs(x - bx) < SNAP_THRESHOLD) addSnapLine('vertical', bx);
-        if (Math.abs(x - bRight) < SNAP_THRESHOLD) addSnapLine('vertical', bRight);
-        if (Math.abs(dragRight - bx) < SNAP_THRESHOLD) addSnapLine('vertical', bx);
-        if (Math.abs(dragRight - bRight) < SNAP_THRESHOLD) addSnapLine('vertical', bRight);
-        if (Math.abs(dragCenterX - bCenterX) < SNAP_THRESHOLD) addSnapLine('vertical', bCenterX);
-      });
-    }
-
-    function addSnapLine(type, pos) {
-      const canvas = document.getElementById('editorCanvas');
-      const line = document.createElement('div');
-      line.className = 'snap-line ' + type;
-      if (type === 'horizontal') line.style.top = pos + 'px';
-      else line.style.left = pos + 'px';
-      canvas.appendChild(line);
-    }
-
-    function clearSnapLines() {
-      document.querySelectorAll('.snap-line').forEach(l => l.remove());
-    }
-
-    // ===== IMAGE UPLOAD =====
+    // ===== SINGLE IMAGE UPLOAD =====
     function triggerImageUpload() {
       document.getElementById('imageInput').click();
     }
@@ -676,9 +505,122 @@
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (e) => addBlock('image', e.target.result);
+      reader.onload = (e) => createImageBlock(e.target.result);
       reader.readAsDataURL(file);
       event.target.value = '';
+    }
+
+    function createImageBlock(dataUrl) {
+      const canvas = document.getElementById('editorCanvas');
+      const block = document.createElement('div');
+      block.className = 'content-block image-block';
+      block.dataset.blockType = 'image';
+      block.dataset.blockId = ++blockCounter;
+      block.dataset.width = '100';
+      block.dataset.align = 'center';
+      block.innerHTML = controlsHTML() + `
+        <div class="img-container" style="width:100%;">
+          <img src="${dataUrl}" alt="Blog image">
+        </div>
+        <div class="image-toolbar">
+          <label>Width</label>
+          <input type="range" min="20" max="100" value="100" oninput="updateImageWidth(this)">
+          <span class="width-label">100%</span>
+          <div class="align-buttons">
+            <button onclick="setImageAlign(this, 'left')">L</button>
+            <button class="active" onclick="setImageAlign(this, 'center')">C</button>
+            <button onclick="setImageAlign(this, 'right')">R</button>
+          </div>
+        </div>
+        <div class="caption" contenteditable="true">Add caption</div>
+      `;
+      canvas.appendChild(block);
+      applyImageAlignment(block);
+    }
+
+    function updateImageWidth(slider) {
+      const block = slider.closest('.content-block');
+      const container = block.querySelector('.img-container');
+      const label = block.querySelector('.width-label');
+      container.style.width = slider.value + '%';
+      label.textContent = slider.value + '%';
+      block.dataset.width = slider.value;
+    }
+
+    function setImageAlign(btn, align) {
+      const block = btn.closest('.content-block');
+      block.dataset.align = align;
+      block.querySelectorAll('.align-buttons button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyImageAlignment(block);
+    }
+
+    function applyImageAlignment(block) {
+      const align = block.dataset.align || 'center';
+      block.style.textAlign = align;
+      const container = block.querySelector('.img-container');
+      if (align === 'left') container.style.margin = '0';
+      else if (align === 'right') container.style.margin = '0 0 0 auto';
+      else container.style.margin = '0 auto';
+    }
+
+    // ===== GALLERY =====
+    let activeGalleryRow = null;
+
+    function addGalleryImage(plusBtn) {
+      activeGalleryRow = plusBtn.closest('.gallery-row');
+      document.getElementById('galleryInput').click();
+    }
+
+    function handleGalleryUpload(event) {
+      const files = Array.from(event.target.files);
+      if (!files.length || !activeGalleryRow) return;
+      const plusBtn = activeGalleryRow.querySelector('.add-gallery-img');
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const item = document.createElement('div');
+          item.className = 'gallery-item';
+          item.innerHTML = `
+            <img src="${e.target.result}" alt="Gallery image">
+            <button class="remove-img" onclick="event.stopPropagation(); this.closest('.gallery-item').remove()">&times;</button>
+          `;
+          activeGalleryRow.insertBefore(item, plusBtn);
+        };
+        reader.readAsDataURL(file);
+      });
+      event.target.value = '';
+    }
+
+    // ===== HERO =====
+    function triggerHeroUpload(block) {
+      pendingHeroBlock = block;
+      document.getElementById('heroInput').click();
+    }
+
+    function handleHeroUpload(event) {
+      const file = event.target.files[0];
+      if (!file || !pendingHeroBlock) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const slot = pendingHeroBlock.querySelector('.hero-image-slot');
+        const existing = slot.querySelector('img');
+        if (existing) existing.remove();
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.alt = 'Hero image';
+        slot.insertBefore(img, slot.firstChild);
+        pendingHeroBlock = null;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function setHeroRatio(select) {
+      const block = select.closest('.content-block');
+      block.classList.remove('ratio-60-40', 'ratio-40-60');
+      if (select.value === '60-40') block.classList.add('ratio-60-40');
+      else if (select.value === '40-60') block.classList.add('ratio-40-60');
     }
 
     // ===== FORMAT BAR =====
@@ -722,13 +664,6 @@
       }
     });
 
-    // Click canvas to deselect
-    document.getElementById('editorCanvas').addEventListener('mousedown', (e) => {
-      if (e.target === document.getElementById('editorCanvas')) {
-        selectBlock(null);
-      }
-    });
-
     // ===== PREVIEW =====
     function togglePreview() {
       document.body.classList.toggle('preview-mode');
@@ -736,7 +671,7 @@
         document.body.classList.contains('preview-mode') ? 'Edit' : 'Preview';
     }
 
-    // ===== GENERATE HTML (no gridlines, no editor chrome) =====
+    // ===== GENERATE HTML =====
     function generatePostHTML() {
       const title = document.getElementById('postTitle').value || 'Untitled Post';
       const author = document.getElementById('postAuthor').value || 'Isabella Rivera';
@@ -745,49 +680,70 @@
       const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       const isoDate = now.toISOString();
 
-      // Collect blocks sorted by top position, then left
       const blocks = [...document.querySelectorAll('#editorCanvas .content-block')];
-      blocks.sort((a, b) => {
-        const dy = a.offsetTop - b.offsetTop;
-        return dy !== 0 ? dy : a.offsetLeft - b.offsetLeft;
-      });
-
       let contentHTML = '';
-      blocks.forEach(block => {
-        const left = block.offsetLeft;
-        const top = block.offsetTop;
-        const width = block.offsetWidth;
-        // Build inline style for positioning
-        const style = `position:absolute; left:${left}px; top:${top}px; width:${width}px;`;
 
-        const img = block.querySelector('img');
-        if (img) {
+      blocks.forEach(block => {
+        const type = block.dataset.blockType;
+
+        if (type === 'image') {
+          const img = block.querySelector('img');
+          const width = block.dataset.width || '100';
+          const align = block.dataset.align || 'center';
           const caption = block.querySelector('.caption');
-          const captionText = caption ? caption.textContent.trim() : '';
-          const h = block.style.height ? ` height:${block.style.height};` : '';
-          contentHTML += `        <div style="${style}${h}">\n`;
-          contentHTML += `          <img src="${img.src}" alt="${captionText || title}" style="width:100%;${block.style.height ? 'height:100%; object-fit:cover;' : ''}">\n`;
-          if (captionText && captionText !== 'Add caption') {
+          const captionText = caption && caption.textContent.trim() !== 'Add caption' ? caption.textContent.trim() : '';
+          contentHTML += `        <div class="img-wrap align-${align}">\n`;
+          contentHTML += `          <img src="${img.src}" alt="${captionText || title}" style="width:${width}%; height:auto;">\n`;
+          if (captionText) {
             contentHTML += `          <p style="font-size:0.85rem; color:#888; font-style:italic; text-align:center; margin-top:6px;">${captionText}</p>\n`;
           }
           contentHTML += `        </div>\n\n`;
+        } else if (type === 'gallery') {
+          const imgs = block.querySelectorAll('.gallery-item img');
+          if (imgs.length) {
+            contentHTML += `        <div class="post-gallery">\n`;
+            imgs.forEach(img => {
+              contentHTML += `          <img src="${img.src}" alt="Gallery image">\n`;
+            });
+            contentHTML += `        </div>\n`;
+            const cap = block.querySelector('.caption');
+            if (cap && cap.textContent.trim() && cap.textContent.trim() !== 'Add caption') {
+              contentHTML += `        <p class="gallery-caption" style="font-size:0.85rem; color:#888; font-style:italic; text-align:center; margin-top:-20px; margin-bottom:30px;">${cap.textContent.trim()}</p>\n`;
+            }
+            contentHTML += `\n`;
+          }
+        } else if (type === 'hero') {
+          const img = block.querySelector('.hero-image-slot img');
+          const heroText = block.querySelector('.hero-text');
+          const ratioClass = block.classList.contains('ratio-60-40') ? ' ratio-60-40' : (block.classList.contains('ratio-40-60') ? ' ratio-40-60' : '');
+          if (img || heroText) {
+            contentHTML += `        <div class="post-hero${ratioClass}">\n`;
+            if (img) {
+              contentHTML += `          <img class="hero-image" src="${img.src}" alt="Hero image">\n`;
+            } else {
+              contentHTML += `          <div class="hero-image" style="background:#f0eded;"></div>\n`;
+            }
+            contentHTML += `          <div class="hero-text">\n`;
+            if (heroText) {
+              heroText.querySelectorAll('[contenteditable]').forEach(el => {
+                const tag = el.tagName.toLowerCase();
+                const html = el.innerHTML.trim();
+                if (html) contentHTML += `            <${tag}>${html}</${tag}>\n`;
+              });
+            }
+            contentHTML += `          </div>\n`;
+            contentHTML += `        </div>\n\n`;
+          }
         } else {
           const editable = block.querySelector('[contenteditable]');
           if (editable) {
             const tag = editable.tagName.toLowerCase();
             const html = editable.innerHTML.trim();
-            if (html && html !== 'Start typing...' && html !== 'Heading' && html !== 'Subheading' && html !== 'Type here...') {
-              contentHTML += `        <${tag} style="${style}">${html}</${tag}>\n\n`;
+            if (html && !['Start typing...', 'Heading', 'Subheading'].includes(html)) {
+              contentHTML += `        <${tag}>${html}</${tag}>\n\n`;
             }
           }
         }
-      });
-
-      // Calculate canvas height
-      let canvasHeight = 800;
-      blocks.forEach(b => {
-        const bottom = b.offsetTop + b.offsetHeight + 40;
-        if (bottom > canvasHeight) canvasHeight = bottom;
       });
 
       const navPrefix = '../../pages/';
@@ -837,7 +793,7 @@
       </div>
     </section>
     <section class="post-body">
-      <div class="post-content" style="position:relative; min-height:${canvasHeight}px;">
+      <div class="post-content">
 ${contentHTML}
       </div>
     </section>
@@ -932,15 +888,6 @@ ${contentHTML}
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') { e.preventDefault(); formatCmd('bold'); }
       if ((e.metaKey || e.ctrlKey) && e.key === 'i') { e.preventDefault(); formatCmd('italic'); }
       if ((e.metaKey || e.ctrlKey) && e.key === 'u') { e.preventDefault(); formatCmd('underline'); }
-      // Delete selected block
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedBlock) {
-        const active = document.activeElement;
-        const isEditing = active && active.closest && active.closest('[contenteditable]');
-        if (!isEditing) {
-          e.preventDefault();
-          deleteBlock(selectedBlock);
-        }
-      }
     });
   </script>
 </body>
