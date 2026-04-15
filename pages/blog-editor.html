@@ -275,6 +275,63 @@
     .status-msg.error { color: #c00; }
     .status-msg.loading { color: #0969da; }
 
+    /* ===== LOAD POST MODAL ===== */
+    .load-post-tabs {
+      display: flex; justify-content: center; gap: 4px;
+      margin-bottom: 18px; border-bottom: 1px solid #eee;
+    }
+    .load-post-tab {
+      background: transparent; border: none; border-bottom: 2px solid transparent;
+      padding: 10px 20px; font-family: inherit; font-size: 0.9rem;
+      cursor: pointer; color: #666; transition: all 0.15s;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .load-post-tab:hover { color: #000; }
+    .load-post-tab.active {
+      color: #000; border-bottom-color: #000;
+    }
+    .load-post-list {
+      max-height: 340px; overflow-y: auto;
+      text-align: left; margin-bottom: 10px;
+    }
+    .load-post-item {
+      display: block;
+      padding: 11px 14px; margin-bottom: 4px;
+      background: #f9f9f9; border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer; transition: all 0.15s;
+      font-size: 0.92rem;
+    }
+    .load-post-item:hover {
+      background: #e8f1ff; border-color: #0969da;
+    }
+    .load-post-empty, .load-post-loading, .load-post-error {
+      padding: 30px 20px; text-align: center; color: #888;
+      font-size: 0.9rem; font-style: italic;
+    }
+    .load-post-error { color: #c00; }
+
+    .toolbar-btn.load-btn {
+      background: #6f42c1 !important;
+      padding: 8px 14px !important; border-radius: 6px !important;
+    }
+    .toolbar-btn.load-btn:hover { background: #5a32a3 !important; }
+
+    .editing-banner {
+      background: #fff3cd; border-bottom: 1px solid #ffecb5;
+      padding: 10px 20px; text-align: center;
+      font-size: 0.85rem; color: #664d03;
+      display: none;
+    }
+    .editing-banner.visible { display: block; }
+    .editing-banner strong { color: #000; }
+    .editing-banner button {
+      background: transparent; border: 1px solid #664d03; color: #664d03;
+      font-family: inherit; font-size: 0.75rem;
+      padding: 3px 10px; margin-left: 12px; cursor: pointer; border-radius: 4px;
+    }
+    .editing-banner button:hover { background: #664d03; color: #fff; }
+
     /* ===== PREVIEW MODE ===== */
     body.preview-mode .content-block { border-color: transparent !important; padding: 0; }
     body.preview-mode .content-block .block-controls { display: none !important; }
@@ -298,6 +355,12 @@
     <div class="error" id="passwordError"></div>
   </div>
 
+  <!-- EDITING BANNER: shown when loading an existing post for edit -->
+  <div class="editing-banner" id="editingBanner">
+    Editing existing post: <strong id="editingBannerPath"></strong>
+    <button onclick="exitEditMode()">Start new post instead</button>
+  </div>
+
   <!-- TOOLBAR -->
   <div class="editor-toolbar" id="editorToolbar">
     <div class="toolbar-group">
@@ -319,9 +382,10 @@
       <input type="file" id="heroInput" accept="image/*" style="display:none" onchange="handleHeroUpload(event)">
     </div>
     <div class="toolbar-group">
+      <button class="toolbar-btn load-btn" onclick="showLoadPostModal()">Load Post</button>
       <button class="toolbar-btn preview-btn" onclick="togglePreview()" id="previewBtn">Preview</button>
       <button class="toolbar-btn download-btn" onclick="downloadHTML()">Download</button>
-      <button class="toolbar-btn publish-btn" onclick="showPublishModal()">Publish</button>
+      <button class="toolbar-btn publish-btn" onclick="showPublishModal()" id="publishBtn">Publish</button>
     </div>
   </div>
 
@@ -375,19 +439,45 @@
   <!-- PUBLISH MODAL -->
   <div class="modal-overlay" id="publishModal">
     <div class="modal">
-      <h3>Publish Post</h3>
-      <p>This will push your post directly to your website.</p>
+      <h3 id="publishModalTitle">Publish Post</h3>
+      <p id="publishModalSub">This will push your post directly to your website.</p>
       <div style="text-align:left; margin-bottom:15px;">
-        <label style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.1em; color:#666;">File name</label>
-        <input type="text" id="publishFilename" placeholder="my-post-title">
+        <div id="publishFilenameRow">
+          <label style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.1em; color:#666;">File name</label>
+          <input type="text" id="publishFilename" placeholder="my-post-title">
+        </div>
+        <div id="publishEditingRow" style="display:none; padding:10px 12px; background:#f4f4f4; border-radius:6px; margin-bottom:10px;">
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.12em; color:#666; margin-bottom:4px;">Updating existing post</div>
+          <div id="publishEditingPath" style="font-family:monospace; font-size:0.85rem; color:#000;"></div>
+        </div>
         <label style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.1em; color:#666;">GitHub Token <span style="font-size:0.75rem; color:#999;">(stored locally, never uploaded)</span></label>
         <input type="password" id="githubToken" placeholder="ghp_xxxx or gho_xxxx">
       </div>
       <div class="btn-row">
         <button onclick="closePublishModal()">Cancel</button>
-        <button class="btn-primary" onclick="publishToGitHub()">Publish Now</button>
+        <button class="btn-primary" id="publishNowBtn" onclick="publishToGitHub()">Publish Now</button>
       </div>
       <div class="status-msg" id="publishStatus"></div>
+    </div>
+  </div>
+
+  <!-- LOAD POST MODAL -->
+  <div class="modal-overlay" id="loadPostModal">
+    <div class="modal" style="max-width: 640px;">
+      <h3>Load Existing Post</h3>
+      <p>Pick a category and then click a post to open it for editing.</p>
+      <div class="load-post-tabs">
+        <button class="load-post-tab active" data-category="beauty" onclick="loadPostList('beauty')">Beauty</button>
+        <button class="load-post-tab" data-category="wellness" onclick="loadPostList('wellness')">Wellness</button>
+        <button class="load-post-tab" data-category="style" onclick="loadPostList('style')">Style</button>
+      </div>
+      <div class="load-post-list" id="loadPostList">
+        <div class="load-post-empty">Click a category to load posts.</div>
+      </div>
+      <div class="btn-row">
+        <button onclick="closeLoadPostModal()">Close</button>
+      </div>
+      <div class="status-msg" id="loadPostStatus"></div>
     </div>
   </div>
 
@@ -398,6 +488,13 @@
 
     let blockCounter = 0;
     let pendingHeroBlock = null; // reference to hero block awaiting image upload
+
+    // ===== EDIT-EXISTING-POST STATE =====
+    // When set, the editor is in "edit mode" — save writes back to the
+    // existing file path instead of creating a new one.
+    let editingFilePath = null;  // e.g. 'posts/beauty/hotel-spotlight-five-5-star-stays.html'
+    let editingFileSha = null;   // SHA of the file at load time (refreshed at save time)
+    let preservedDate = null;    // ISO date from the post's <meta name="date"> or .post-meta
 
     // ===== PASSWORD =====
     function checkPassword() {
@@ -676,9 +773,12 @@
       const title = document.getElementById('postTitle').value || 'Untitled Post';
       const author = document.getElementById('postAuthor').value || 'Isabella Rivera';
       const category = document.getElementById('postCategory').value;
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      const isoDate = now.toISOString();
+      // When editing an existing post, reuse the original publication date so
+      // edits don't bump the post to "today".
+      const dateObj = preservedDate ? new Date(preservedDate) : new Date();
+      const now = dateObj; // legacy variable used below for footer year
+      const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const isoDate = dateObj.toISOString();
 
       const blocks = [...document.querySelectorAll('#editorCanvas .content-block')];
       let contentHTML = '';
@@ -834,6 +934,29 @@ ${contentHTML}
       const savedToken = localStorage.getItem('github_token');
       if (savedToken) document.getElementById('githubToken').value = savedToken;
       document.getElementById('publishStatus').textContent = '';
+
+      // Adjust modal for "edit mode" vs "new post mode"
+      const titleEl = document.getElementById('publishModalTitle');
+      const subEl = document.getElementById('publishModalSub');
+      const filenameRow = document.getElementById('publishFilenameRow');
+      const editingRow = document.getElementById('publishEditingRow');
+      const editingPathEl = document.getElementById('publishEditingPath');
+      const publishBtn = document.getElementById('publishNowBtn');
+      if (editingFilePath) {
+        titleEl.textContent = 'Save Changes';
+        subEl.textContent = 'This will update the existing post on your website.';
+        filenameRow.style.display = 'none';
+        editingRow.style.display = 'block';
+        editingPathEl.textContent = editingFilePath;
+        publishBtn.textContent = 'Save Now';
+      } else {
+        titleEl.textContent = 'Publish Post';
+        subEl.textContent = 'This will push your post directly to your website.';
+        filenameRow.style.display = '';
+        editingRow.style.display = 'none';
+        publishBtn.textContent = 'Publish Now';
+      }
+
       document.getElementById('publishModal').classList.add('visible');
     }
     function closePublishModal() {
@@ -846,14 +969,19 @@ ${contentHTML}
       const filename = document.getElementById('publishFilename').value.trim();
       const category = document.getElementById('postCategory').value;
       if (!token) { status.textContent = 'Please enter your GitHub token'; status.className = 'status-msg error'; return; }
-      if (!filename) { status.textContent = 'Please enter a filename'; status.className = 'status-msg error'; return; }
+      if (!editingFilePath && !filename) { status.textContent = 'Please enter a filename'; status.className = 'status-msg error'; return; }
       localStorage.setItem('github_token', token);
       const html = generatePostHTML();
-      const filePath = `posts/${category}/${filename}.html`;
+      // When editing, stay at the original file path (even if the category
+      // dropdown changed — moving posts between categories requires a rename
+      // that we don't support here). When creating new, build from slug+cat.
+      const filePath = editingFilePath || `posts/${category}/${filename}.html`;
       const content = btoa(unescape(encodeURIComponent(html)));
-      status.textContent = 'Publishing...';
+      status.textContent = editingFilePath ? 'Fetching latest file...' : 'Publishing...';
       status.className = 'status-msg loading';
       try {
+        // Always refresh the SHA right before PUT to avoid 409 conflicts
+        // when someone else edited the file in the meantime.
         let sha = null;
         try {
           const checkResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`, {
@@ -861,8 +989,12 @@ ${contentHTML}
           });
           if (checkResp.ok) { sha = (await checkResp.json()).sha; }
         } catch (e) {}
-        const body = { message: `Publish: ${document.getElementById('postTitle').value || filename}`, content, branch: GITHUB_BRANCH };
+        const commitMsg = editingFilePath
+          ? `Update: ${document.getElementById('postTitle').value || filePath}`
+          : `Publish: ${document.getElementById('postTitle').value || filename}`;
+        const body = { message: commitMsg, content, branch: GITHUB_BRANCH };
         if (sha) body.sha = sha;
+        status.textContent = editingFilePath ? 'Committing update...' : 'Committing...';
         const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`, {
           method: 'PUT',
           headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
@@ -870,8 +1002,14 @@ ${contentHTML}
         });
         if (resp.ok) {
           const result = await resp.json();
-          status.innerHTML = `Published! <a href="${result.content.html_url}" target="_blank" style="color:#0969da;">View on GitHub</a><br>Vercel will auto-deploy shortly.`;
+          const verb = editingFilePath ? 'Updated' : 'Published';
+          status.innerHTML = `${verb}! <a href="${result.content.html_url}" target="_blank" style="color:#0969da;">View on GitHub</a><br>Vercel will auto-deploy shortly.`;
           status.className = 'status-msg success';
+          // Keep editing state so she can make more edits and save again;
+          // the SHA will be refreshed on the next save.
+          if (editingFilePath) {
+            editingFileSha = result.content.sha;
+          }
         } else {
           const err = await resp.json();
           status.textContent = `Error: ${err.message || 'Failed to publish'}`;
@@ -881,6 +1019,299 @@ ${contentHTML}
         status.textContent = `Network error: ${e.message}`;
         status.className = 'status-msg error';
       }
+    }
+
+    // ============================================================
+    // LOAD EXISTING POST
+    // ============================================================
+    function showLoadPostModal() {
+      document.getElementById('loadPostModal').classList.add('visible');
+      document.getElementById('loadPostStatus').textContent = '';
+      document.getElementById('loadPostStatus').className = 'status-msg';
+      loadPostList('beauty');
+    }
+    function closeLoadPostModal() {
+      document.getElementById('loadPostModal').classList.remove('visible');
+    }
+
+    async function loadPostList(category) {
+      // Active-tab styling
+      document.querySelectorAll('.load-post-tab').forEach(t => t.classList.remove('active'));
+      const tab = document.querySelector(`.load-post-tab[data-category="${category}"]`);
+      if (tab) tab.classList.add('active');
+
+      const listEl = document.getElementById('loadPostList');
+      listEl.innerHTML = '<div class="load-post-loading">Loading posts...</div>';
+
+      try {
+        const token = localStorage.getItem('github_token');
+        const headers = token ? { 'Authorization': `token ${token}` } : {};
+        const resp = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/posts/${category}?ref=${GITHUB_BRANCH}`,
+          { headers }
+        );
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const files = await resp.json();
+        const htmlFiles = (Array.isArray(files) ? files : [])
+          .filter(f => f.type === 'file' && f.name.endsWith('.html'))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        if (htmlFiles.length === 0) {
+          listEl.innerHTML = '<div class="load-post-empty">No posts in this category.</div>';
+          return;
+        }
+        listEl.innerHTML = htmlFiles.map(f => {
+          const prettyName = f.name.replace(/\.html$/, '').replace(/-/g, ' ').replace(/\bamp\b/g, '&');
+          const filePath = `posts/${category}/${f.name}`;
+          return `<div class="load-post-item" onclick="loadPostForEditing('${filePath}', '${f.sha}')">${escapeHtmlText(prettyName)}</div>`;
+        }).join('');
+      } catch (e) {
+        listEl.innerHTML = `<div class="load-post-error">Failed to load: ${escapeHtmlText(e.message)}</div>`;
+      }
+    }
+
+    async function loadPostForEditing(filePath, sha) {
+      const status = document.getElementById('loadPostStatus');
+      status.textContent = 'Loading post...';
+      status.className = 'status-msg loading';
+      try {
+        const token = localStorage.getItem('github_token');
+        const headers = token ? { 'Authorization': `token ${token}` } : {};
+        const resp = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`,
+          { headers }
+        );
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const html = decodeURIComponent(escape(atob(data.content.replace(/\s/g, ''))));
+
+        const parsed = parsePostHtml(html);
+        populateEditorFromParsed(parsed);
+
+        editingFilePath = filePath;
+        editingFileSha = data.sha;
+        preservedDate = parsed.isoDate;
+
+        // Show the editing banner
+        document.getElementById('editingBannerPath').textContent = filePath;
+        document.getElementById('editingBanner').classList.add('visible');
+        document.getElementById('publishBtn').textContent = 'Save Changes';
+
+        status.textContent = '';
+        closeLoadPostModal();
+      } catch (e) {
+        status.textContent = `Failed: ${e.message}`;
+        status.className = 'status-msg error';
+      }
+    }
+
+    function exitEditMode() {
+      if (!confirm('Exit edit mode and start a new blank post? Any unsaved changes will be lost.')) return;
+      editingFilePath = null;
+      editingFileSha = null;
+      preservedDate = null;
+      document.getElementById('editingBanner').classList.remove('visible');
+      document.getElementById('publishBtn').textContent = 'Publish';
+      // Clear the canvas and meta fields so the user starts fresh
+      document.getElementById('editorCanvas').innerHTML = '';
+      document.getElementById('postTitle').value = '';
+      document.getElementById('postCategory').value = 'beauty';
+    }
+
+    // ============================================================
+    // PARSE POST HTML → BLOCKS
+    // ============================================================
+    function parsePostHtml(html) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      const title = (doc.querySelector('.post-header h1')?.textContent || '').trim();
+      const author = (doc.querySelector('.post-meta .author')?.textContent || 'Isabella Rivera').trim();
+      // Prefer the explicit meta tag (editor-generated) over the display text
+      const isoDate = doc.querySelector('meta[name="date"]')?.getAttribute('content') || '';
+      // Category: prefer meta tag, fall back to URL detection, then default
+      const metaCategory = doc.querySelector('meta[name="category"]')?.getAttribute('content') || '';
+      const category = metaCategory || 'beauty';
+
+      const contentEl = doc.querySelector('.post-content');
+      const blocks = [];
+      if (contentEl) {
+        for (const child of Array.from(contentEl.children)) {
+          const b = parseBlockFromElement(child);
+          if (b) blocks.push(b);
+        }
+      }
+
+      return { title, author, isoDate, category, blocks };
+    }
+
+    function parseBlockFromElement(el) {
+      const tag = el.tagName.toLowerCase();
+
+      // Skip post-nav (auto-generated prev/next links)
+      if (el.classList.contains('post-nav')) return null;
+
+      // Image placeholders from Squarespace migration: no real image, just a label
+      if (el.classList.contains('post-image-placeholder')) {
+        return { type: 'image-placeholder', text: (el.textContent || '').trim() };
+      }
+
+      // Editor-generated image wrap: <div class="img-wrap align-X"><img>[<p>caption</p>]</div>
+      if (el.classList.contains('img-wrap')) {
+        const img = el.querySelector('img');
+        const cap = el.querySelector('p');
+        const alignCls = Array.from(el.classList).find(c => c.startsWith('align-'));
+        const widthStr = img && img.style && img.style.width ? img.style.width : '100%';
+        return {
+          type: 'image',
+          src: img ? img.getAttribute('src') : '',
+          align: alignCls ? alignCls.replace('align-', '') : 'center',
+          width: widthStr.replace('%', '') || '100',
+          caption: cap ? (cap.textContent || '').trim() : ''
+        };
+      }
+
+      // Editor-generated gallery: <div class="post-gallery"><img>...</div>
+      if (el.classList.contains('post-gallery')) {
+        return {
+          type: 'gallery',
+          images: Array.from(el.querySelectorAll('img')).map(i => i.getAttribute('src'))
+        };
+      }
+
+      // Editor-generated hero: <div class="post-hero [ratio-X-Y]"><img.hero-image><div.hero-text>…</div></div>
+      if (el.classList.contains('post-hero')) {
+        const heroImg = el.querySelector('.hero-image');
+        const textEl = el.querySelector('.hero-text');
+        const headingEl = textEl ? (textEl.querySelector('h2') || textEl.querySelector('h3')) : null;
+        const bodyEl = textEl ? textEl.querySelector('p') : null;
+        const ratioCls = Array.from(el.classList).find(c => c.startsWith('ratio-'));
+        return {
+          type: 'hero',
+          image: heroImg && heroImg.tagName === 'IMG' ? heroImg.getAttribute('src') : '',
+          headingTag: headingEl ? headingEl.tagName.toLowerCase() : 'h2',
+          headingHtml: headingEl ? headingEl.innerHTML : '',
+          bodyHtml: bodyEl ? bodyEl.innerHTML : '',
+          ratio: ratioCls ? ratioCls.replace('ratio-', '') : '50-50'
+        };
+      }
+
+      // Standard text / heading / list / blockquote blocks
+      if (['p', 'h2', 'h3', 'blockquote', 'ul', 'ol'].includes(tag)) {
+        return { type: tag, html: el.innerHTML };
+      }
+
+      // Gallery caption emitted by generatePostHTML as a <p.gallery-caption>
+      if (tag === 'p' && el.classList.contains('gallery-caption')) {
+        return null; // swallowed — we don't round-trip captions precisely yet
+      }
+
+      // Unknown element — wrap as a paragraph so at least the content survives
+      return { type: 'p', html: el.outerHTML };
+    }
+
+    // ============================================================
+    // POPULATE CANVAS FROM PARSED BLOCKS
+    // ============================================================
+    function populateEditorFromParsed(parsed) {
+      // Meta fields
+      document.getElementById('postTitle').value = parsed.title || '';
+      document.getElementById('postAuthor').value = parsed.author || 'Isabella Rivera';
+      // Only set category if it matches one of the dropdown options
+      const catSelect = document.getElementById('postCategory');
+      const validCats = Array.from(catSelect.options).map(o => o.value);
+      if (validCats.includes(parsed.category)) {
+        catSelect.value = parsed.category;
+      }
+
+      // Clear canvas and block counter
+      const canvas = document.getElementById('editorCanvas');
+      canvas.innerHTML = '';
+      blockCounter = 0;
+
+      parsed.blocks.forEach(pb => {
+        if (['p', 'h2', 'h3', 'blockquote', 'ul', 'ol'].includes(pb.type)) {
+          const block = addBlock(pb.type);
+          const editable = block.querySelector('[contenteditable]');
+          if (editable) editable.innerHTML = pb.html || '';
+        } else if (pb.type === 'image-placeholder') {
+          // Legacy Squarespace placeholder — insert as a text block with a note.
+          // User can replace with a real image block later.
+          const block = addBlock('p');
+          const editable = block.querySelector('[contenteditable]');
+          if (editable) editable.innerHTML = `<em>[Image placeholder: ${escapeHtmlText(pb.text)}]</em>`;
+        } else if (pb.type === 'image') {
+          const block = document.createElement('div');
+          block.className = 'content-block image-block';
+          block.dataset.blockType = 'image';
+          block.dataset.blockId = ++blockCounter;
+          block.dataset.width = pb.width || '100';
+          block.dataset.align = pb.align || 'center';
+          block.innerHTML = controlsHTML() + `
+            <div class="img-container" style="width:${pb.width || '100'}%;">
+              <img src="${pb.src}" alt="Blog image">
+            </div>
+            <div class="image-toolbar">
+              <label>Width</label>
+              <input type="range" min="20" max="100" value="${pb.width || '100'}" oninput="updateImageWidth(this)">
+              <span class="width-label">${pb.width || '100'}%</span>
+              <div class="align-buttons">
+                <button class="${pb.align === 'left' ? 'active' : ''}" onclick="setImageAlign(this, 'left')">L</button>
+                <button class="${(!pb.align || pb.align === 'center') ? 'active' : ''}" onclick="setImageAlign(this, 'center')">C</button>
+                <button class="${pb.align === 'right' ? 'active' : ''}" onclick="setImageAlign(this, 'right')">R</button>
+              </div>
+            </div>
+            <div class="caption" contenteditable="true">${pb.caption || 'Add caption'}</div>
+          `;
+          canvas.appendChild(block);
+          applyImageAlignment(block);
+        } else if (pb.type === 'gallery') {
+          const block = addBlock('gallery');
+          const row = block.querySelector('.gallery-row');
+          const addBtn = row.querySelector('.add-gallery-img');
+          (pb.images || []).forEach(src => {
+            const item = document.createElement('div');
+            item.className = 'gallery-item';
+            item.innerHTML = `
+              <img src="${src}" alt="Gallery image">
+              <button class="remove-img" onclick="event.stopPropagation(); this.closest('.gallery-item').remove()">&times;</button>
+            `;
+            row.insertBefore(item, addBtn);
+          });
+        } else if (pb.type === 'hero') {
+          const block = addBlock('hero');
+          if (pb.ratio && pb.ratio !== '50-50') {
+            block.classList.add(`ratio-${pb.ratio}`);
+            const sel = block.querySelector('.hero-options select');
+            if (sel) sel.value = pb.ratio;
+          }
+          if (pb.image) {
+            const slot = block.querySelector('.hero-image-slot');
+            const existing = slot.querySelector('img');
+            if (existing) existing.remove();
+            const img = document.createElement('img');
+            img.src = pb.image;
+            img.alt = 'Hero image';
+            slot.insertBefore(img, slot.firstChild);
+          }
+          const heroText = block.querySelector('.hero-text');
+          if (heroText) {
+            const h = heroText.querySelector('h2, h3');
+            if (h && pb.headingHtml) h.innerHTML = pb.headingHtml;
+            const p = heroText.querySelector('p');
+            if (p && pb.bodyHtml) p.innerHTML = pb.bodyHtml;
+          }
+        }
+      });
+    }
+
+    // Small HTML-escape helper used by the load list and placeholder notes.
+    function escapeHtmlText(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     // ===== KEYBOARD SHORTCUTS =====
