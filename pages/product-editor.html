@@ -297,7 +297,8 @@
     <a data-filter="skincare" onclick="filterBy('skincare', this)">Skincare</a>
     <a data-filter="body" onclick="filterBy('body', this)">Body</a>
     <a data-filter="makeup" onclick="filterBy('makeup', this)">Makeup</a>
-    <a data-filter="tools" onclick="filterBy('tools', this)">Tools</a>
+    <a data-filter="hair" onclick="filterBy('hair', this)">Hair</a>
+    <a data-filter="tools" onclick="filterBy('tools', this)">Tools &amp; Technology</a>
     <a data-filter="fragrance" onclick="filterBy('fragrance', this)">Fragrance</a>
   </nav>
 
@@ -333,11 +334,12 @@
           </div>
           <div class="field">
             <label>Category</label>
-            <select id="editCategory">
+            <select id="editCategory" onchange="onCategoryChange()">
               <option value="skincare">Skincare</option>
               <option value="body">Body</option>
               <option value="makeup">Makeup</option>
-              <option value="tools">Tools</option>
+              <option value="hair">Hair</option>
+              <option value="tools">Tools &amp; Technology</option>
               <option value="fragrance">Fragrance</option>
             </select>
           </div>
@@ -350,8 +352,10 @@
       </div>
 
       <div class="field field-full" style="margin-top:10px;">
-        <label>Subcategory label <span style="text-transform:none; font-size:0.75rem; color:#999;">(shown only when no image — e.g. Cleanser, Moisturizer)</span></label>
-        <input type="text" id="editSubcategory" placeholder="Cleanser">
+        <label>Subcategory label</label>
+        <select id="editSubcategory">
+          <option value="">-- None --</option>
+        </select>
       </div>
 
       <div class="field field-full" style="margin-top:10px;">
@@ -403,6 +407,30 @@
     const PASSWORD = '2626';
     const CORS_PROXY = 'https://corsproxy.io/?';
     const MICROLINK_API = 'https://api.microlink.io/?url=';
+
+    // Pretty display names for category slugs. The slug stays in data-category
+    // (e.g. "tools") so existing products keep working; the display name is
+    // what the user sees on the shop page and in the editor.
+    const CATEGORY_DISPLAY = {
+      skincare: 'Skincare',
+      body: 'Body',
+      makeup: 'Makeup',
+      hair: 'Hair',
+      tools: 'Tools & Technology',
+      fragrance: 'Fragrance'
+    };
+
+    // Subcategory options scoped per category. Controls the dropdown in the
+    // edit modal. Existing products with values not in this list are kept as
+    // "(custom)" orphan options so no data is lost on edit.
+    const SUBCATEGORIES = {
+      skincare:  ['Cleansers', 'Moisturizers', 'Treatments', 'Masks', 'Sunscreen', 'Eye Care', 'Lip Care', 'Self Tanners'],
+      body:      ['Body Wash', 'Moisturizers', 'Scrubs', 'Deodorant', 'Self Tanners'],
+      makeup:    ['Foundations', 'Tinted Moisturizers', 'Concealers', 'Primers', 'Setting Sprays', 'Highlighter', 'Bronzers', 'Contours', 'Blushes', 'Brushes & Tools'],
+      hair:      ['Shampoo', 'Conditioner', 'Masks', 'Treatments', 'Oils', 'Styling'],
+      tools:     ['Body', 'Face', 'Hair'],
+      fragrance: ['Oil', 'Balm', 'Sprays']
+    };
 
     // ============================================================
     // STATE
@@ -513,10 +541,11 @@
       const imageHtml = p.image
         ? `<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.title)}" onerror="this.remove();">`
         : escapeHtml(p.subcategory || 'No image');
+      const categoryDisplay = CATEGORY_DISPLAY[p.category] || p.category || '';
       const categoryTag = p.category
-        ? `<div class="card-category-tag">${escapeHtml(p.category)}</div>` : '';
+        ? `<div class="card-category-tag">${escapeHtml(categoryDisplay)}</div>` : '';
       const categoryLabelHtml = p.category
-        ? `<div class="product-category-label">${escapeHtml(p.category)}</div>`
+        ? `<div class="product-category-label">${escapeHtml(categoryDisplay)}</div>`
         : '';
       // Preview of the Shop Now button; clicks are swallowed so they don't
       // navigate — the card's own click handler opens the edit modal instead.
@@ -568,7 +597,8 @@
       document.getElementById('editPrice').value = p.price || '';
       document.getElementById('editCategory').value = p.category || 'skincare';
       document.getElementById('editImage').value = p.image || '';
-      document.getElementById('editSubcategory').value = p.subcategory || '';
+      // Subcategory must be set AFTER category so the options list is correct.
+      populateSubcategoryOptions(p.category || 'skincare', p.subcategory || '');
       document.getElementById('editProductUrl').value = p.sourceUrl || '';
       document.getElementById('fetchStatus').textContent = '';
       document.getElementById('fetchStatus').className = 'fetch-status';
@@ -585,7 +615,7 @@
       document.getElementById('editPrice').value = '';
       document.getElementById('editCategory').value = 'skincare';
       document.getElementById('editImage').value = '';
-      document.getElementById('editSubcategory').value = '';
+      populateSubcategoryOptions('skincare', '');
       document.getElementById('editProductUrl').value = '';
       document.getElementById('fetchStatus').textContent = '';
       document.getElementById('fetchStatus').className = 'fetch-status';
@@ -598,6 +628,36 @@
     function closeEditModal() {
       document.getElementById('editModal').classList.remove('visible');
       editingId = null;
+    }
+
+    // Rebuild the subcategory <select> based on the category. If currentValue
+    // is provided and not in the canonical list, keep it as an orphan option
+    // so legacy data isn't silently dropped on save.
+    function populateSubcategoryOptions(category, currentValue) {
+      const select = document.getElementById('editSubcategory');
+      const options = SUBCATEGORIES[category] || [];
+      select.innerHTML = '<option value="">-- None --</option>';
+      options.forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt;
+        el.textContent = opt;
+        select.appendChild(el);
+      });
+      if (currentValue && !options.includes(currentValue)) {
+        const orphan = document.createElement('option');
+        orphan.value = currentValue;
+        orphan.textContent = currentValue + ' (custom)';
+        // Insert right after "-- None --"
+        select.insertBefore(orphan, select.children[1]);
+      }
+      select.value = currentValue || '';
+    }
+
+    // Called when the user changes the category dropdown — reset the
+    // subcategory selection since the options list is now different.
+    function onCategoryChange() {
+      const category = document.getElementById('editCategory').value;
+      populateSubcategoryOptions(category, '');
     }
 
     function updatePreviewImage() {
@@ -743,10 +803,15 @@
         }
         if (gotPrice) document.getElementById('editPrice').value = gotPrice;
 
-        // Auto-detect subcategory from title if empty
+        // Auto-detect subcategory from title if empty. Route through
+        // populateSubcategoryOptions so a guess that isn't in the canonical
+        // list becomes a "(custom)" orphan instead of silently failing.
         if (!document.getElementById('editSubcategory').value.trim()) {
           const guess = guessSubcategory(gotTitle || document.getElementById('editTitle').value);
-          if (guess) document.getElementById('editSubcategory').value = guess;
+          if (guess) {
+            const currentCat = document.getElementById('editCategory').value;
+            populateSubcategoryOptions(currentCat, guess);
+          }
         }
 
         const fields = [];
@@ -897,15 +962,31 @@
       if (!title) return '';
       const t = title.toLowerCase();
       const map = [
-        ['cleanser', 'Cleanser'], ['wash', 'Cleanser'], ['balm', 'Cleanser'],
-        ['moisturizer', 'Moisturizer'], ['moisturiser', 'Moisturizer'], ['cream', 'Moisturizer'], ['lotion', 'Moisturizer'],
-        ['sunscreen', 'Sunscreen'], ['spf', 'Sunscreen'], ['sun ', 'Sunscreen'],
-        ['serum', 'Serum'], ['essence', 'Essence'], ['toner', 'Toner'],
-        ['foundation', 'Foundation'], ['tint', 'Tint'], ['concealer', 'Concealer'],
-        ['mascara', 'Mascara'], ['blush', 'Blush'], ['bronzer', 'Bronzer'],
-        ['lipstick', 'Lipstick'], ['lip balm', 'Lip Balm'], ['gloss', 'Lip Gloss'],
-        ['eyeshadow', 'Eyeshadow'], ['eye liner', 'Eyeliner'], ['eyeliner', 'Eyeliner'],
-        ['deodorant', 'Deodorant'], ['perfume', 'Fragrance'], ['eau de', 'Fragrance'],
+        // Values here should match entries in SUBCATEGORIES so the guess
+        // auto-selects from the dropdown instead of creating an orphan.
+        ['cleanser', 'Cleansers'], ['face wash', 'Cleansers'], ['cleansing balm', 'Cleansers'],
+        ['moisturizer', 'Moisturizers'], ['moisturiser', 'Moisturizers'], ['face cream', 'Moisturizers'], ['hydrating cream', 'Moisturizers'],
+        ['sunscreen', 'Sunscreen'], ['spf', 'Sunscreen'],
+        ['serum', 'Treatments'], ['essence', 'Treatments'], ['toner', 'Treatments'], ['retinol', 'Treatments'], ['exfoliant', 'Treatments'],
+        ['mask', 'Masks'],
+        ['eye cream', 'Eye Care'], ['eye serum', 'Eye Care'],
+        ['lip balm', 'Lip Care'], ['lip mask', 'Lip Care'], ['lip treatment', 'Lip Care'],
+        ['self tanner', 'Self Tanners'], ['self-tanner', 'Self Tanners'],
+        ['body wash', 'Body Wash'], ['shower gel', 'Body Wash'],
+        ['scrub', 'Scrubs'],
+        ['deodorant', 'Deodorant'],
+        ['foundation', 'Foundations'],
+        ['tinted moisturizer', 'Tinted Moisturizers'], ['skin tint', 'Tinted Moisturizers'],
+        ['concealer', 'Concealers'],
+        ['primer', 'Primers'],
+        ['setting spray', 'Setting Sprays'],
+        ['highlighter', 'Highlighter'],
+        ['bronzer', 'Bronzers'],
+        ['contour', 'Contours'],
+        ['blush', 'Blushes'],
+        ['brush', 'Brushes & Tools'],
+        ['shampoo', 'Shampoo'], ['conditioner', 'Conditioner'],
+        ['hair oil', 'Oils'], ['hair serum', 'Oils'],
       ];
       for (const [k, v] of map) if (t.includes(k)) return v;
       return '';
@@ -940,7 +1021,7 @@
     // ============================================================
     function generateGridHtml(products) {
       // Group by category for cleaner diffs
-      const order = ['skincare', 'body', 'makeup', 'tools', 'fragrance'];
+      const order = ['skincare', 'body', 'makeup', 'hair', 'tools', 'fragrance'];
       const grouped = {};
       products.forEach(p => {
         const cat = p.category || 'skincare';
@@ -974,7 +1055,7 @@
         : escapeHtml(p.subcategory || '');
 
       const categoryLabel = p.category
-        ? `\n            <div class="product-category-label">${escapeHtml(p.category)}</div>`
+        ? `\n            <div class="product-category-label">${escapeHtml(CATEGORY_DISPLAY[p.category] || p.category)}</div>`
         : '';
 
       const shopNowBtn = p.sourceUrl
