@@ -354,6 +354,11 @@
         <input type="text" id="editSubcategory" placeholder="Cleanser">
       </div>
 
+      <div class="field field-full" style="margin-top:10px;">
+        <label>Product URL <span style="text-transform:none; font-size:0.75rem; color:#999;">(links the "Shop Now" button on the product card)</span></label>
+        <input type="url" id="editProductUrl" placeholder="https://www.sephora.com/product/...">
+      </div>
+
       <div class="btn-row">
         <div class="left-btns">
           <button class="btn-danger" id="deleteBtn" onclick="deleteCurrentProduct()">Delete</button>
@@ -510,6 +515,14 @@
         : escapeHtml(p.subcategory || 'No image');
       const categoryTag = p.category
         ? `<div class="card-category-tag">${escapeHtml(p.category)}</div>` : '';
+      const categoryLabelHtml = p.category
+        ? `<div class="product-category-label">${escapeHtml(p.category)}</div>`
+        : '';
+      // Preview of the Shop Now button; clicks are swallowed so they don't
+      // navigate — the card's own click handler opens the edit modal instead.
+      const shopNowBtnHtml = p.sourceUrl
+        ? `<span class="product-shop-now">Shop Now</span>`
+        : '';
       return `
         <div class="editor-product-card" onclick="openEditModal(${p.id})">
           ${categoryTag}
@@ -517,7 +530,9 @@
           <div class="product-image">${imageHtml}</div>
           <div class="product-info">
             <h4>${escapeHtml(p.title || 'Untitled')}</h4>
+            ${categoryLabelHtml}
             <div class="price">${escapeHtml(formatPriceDisplay(p.price))}</div>
+            ${shopNowBtnHtml}
           </div>
         </div>`;
     }
@@ -554,6 +569,7 @@
       document.getElementById('editCategory').value = p.category || 'skincare';
       document.getElementById('editImage').value = p.image || '';
       document.getElementById('editSubcategory').value = p.subcategory || '';
+      document.getElementById('editProductUrl').value = p.sourceUrl || '';
       document.getElementById('fetchStatus').textContent = '';
       document.getElementById('fetchStatus').className = 'fetch-status';
       document.getElementById('deleteBtn').style.display = '';
@@ -570,6 +586,7 @@
       document.getElementById('editCategory').value = 'skincare';
       document.getElementById('editImage').value = '';
       document.getElementById('editSubcategory').value = '';
+      document.getElementById('editProductUrl').value = '';
       document.getElementById('fetchStatus').textContent = '';
       document.getElementById('fetchStatus').className = 'fetch-status';
       document.getElementById('deleteBtn').style.display = 'none';
@@ -599,7 +616,10 @@
       const category = document.getElementById('editCategory').value;
       const image = document.getElementById('editImage').value.trim();
       const subcategory = document.getElementById('editSubcategory').value.trim();
-      const sourceUrl = document.getElementById('fetchUrl').value.trim();
+      // Prefer the dedicated Product URL field; fall back to the Fetch URL field
+      // if Product URL is empty (so legacy behavior still works).
+      const sourceUrl = document.getElementById('editProductUrl').value.trim()
+                     || document.getElementById('fetchUrl').value.trim();
 
       if (!title) {
         document.getElementById('fetchStatus').textContent = 'Product name is required.';
@@ -651,6 +671,13 @@
         status.textContent = 'URL must start with http:// or https://';
         status.className = 'fetch-status error';
         return;
+      }
+
+      // Convenience: if Product URL is empty, copy the Fetch URL into it so
+      // the Shop Now button has a target by default (user can override after).
+      const productUrlInput = document.getElementById('editProductUrl');
+      if (!productUrlInput.value.trim()) {
+        productUrlInput.value = url;
       }
 
       btn.disabled = true;
@@ -946,11 +973,19 @@
         ? `<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.title)}">`
         : escapeHtml(p.subcategory || '');
 
+      const categoryLabel = p.category
+        ? `\n            <div class="product-category-label">${escapeHtml(p.category)}</div>`
+        : '';
+
+      const shopNowBtn = p.sourceUrl
+        ? `\n            <a class="product-shop-now" href="${escapeAttr(p.sourceUrl)}" target="_blank" rel="noopener">Shop Now</a>`
+        : '';
+
       return `        <div class="product-card" ${dataAttrs.join(' ')}>
           <div class="product-image">${imageInner}</div>
           <div class="product-info">
-            <h4>${escapeHtml(p.title || '')}</h4>
-            <div class="price">${escapeHtml(p.price || '')}</div>
+            <h4>${escapeHtml(p.title || '')}</h4>${categoryLabel}
+            <div class="price">${escapeHtml(p.price || '')}</div>${shopNowBtn}
           </div>
         </div>`;
     }

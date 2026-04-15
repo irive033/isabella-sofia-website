@@ -899,12 +899,41 @@ p {
   font-family: 'adobe-garamond-pro', 'Garamond', 'Georgia', serif;
   font-weight: 400;
   letter-spacing: 0;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+}
+
+.product-category-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #555;
+  margin-bottom: 6px;
 }
 
 .product-card .price {
   font-size: 0.95rem;
   color: #666;
+}
+
+.product-shop-now {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 8px 22px;
+  font-size: 0.72rem;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #000;
+  background: transparent;
+  border: 1px solid #000;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.product-shop-now:hover {
+  background: #000;
+  color: #fff;
 }
 
 /* --- About Page --- */
