@@ -52,6 +52,11 @@
       <a href="#fragrance" onclick="filterProducts('fragrance', this)">Fragrance</a>
     </nav>
 
+    <!-- Subcategory filter: appears when a specific category is selected -->
+    <section class="category-hero" id="categoryHero">
+      <nav class="subcategory-nav" id="subcategoryNav"></nav>
+    </section>
+
     <section style="background:#fff;">
       <div class="product-grid" id="productGrid">
         <!-- Skincare -->
@@ -754,18 +759,123 @@
   </footer>
 
   <script>
+    // Canonical subcategory ordering per category. Mirrors the editor so the
+    // subcategory nav shows items in a consistent order. Legacy values that
+    // don't appear in this list are appended alphabetically at the end.
+    const SUBCATEGORIES = {
+      skincare:  ['Cleansers', 'Moisturizers', 'Treatments', 'Masks', 'Sunscreen', 'Eye Care', 'Lip Care', 'Self Tanners'],
+      body:      ['Body Wash', 'Moisturizers', 'Scrubs', 'Deodorant', 'Self Tanners'],
+      makeup:    ['Foundations', 'Tinted Moisturizers', 'Concealers', 'Primers', 'Setting Sprays', 'Highlighter', 'Bronzers', 'Contours', 'Blushes', 'Brushes & Tools'],
+      hair:      ['Shampoo', 'Conditioner', 'Masks', 'Treatments', 'Oils', 'Styling'],
+      tools:     ['Body', 'Face', 'Hair'],
+      fragrance: ['Oil', 'Balm', 'Sprays']
+    };
+
+    const CATEGORY_DISPLAY = {
+      skincare: 'Skincare',
+      body: 'Body',
+      makeup: 'Makeup',
+      hair: 'Hair',
+      tools: 'Tools & Technology',
+      fragrance: 'Fragrance'
+    };
+
+    let currentCategory = 'all';
+    let currentSubcategory = '';
+
+    // Normalize subcategory values for matching (handles plural/singular
+    // mismatch between canonical list and legacy product data, e.g.
+    // "Cleanser" (legacy) matches "Cleansers" (canonical), and
+    // "Blush" (legacy) matches "Blushes" (canonical, plural ends in "es").
+    function normSub(s) {
+      let x = (s || '').toLowerCase().trim();
+      if (x.endsWith('es')) x = x.slice(0, -2);
+      else if (x.endsWith('s')) x = x.slice(0, -1);
+      return x;
+    }
+
     function filterProducts(category, clickedEl) {
-      const cards = document.querySelectorAll('.product-card');
-      cards.forEach(card => {
-        if (category === 'all' || card.dataset.category === category) {
-          card.style.display = '';
-        } else {
-          card.style.display = 'none';
-        }
-      });
-      // Update active state
+      currentCategory = category;
+      currentSubcategory = '';
+      applyFilters();
+
+      // Update main category nav active state
       document.querySelectorAll('.category-nav a').forEach(a => a.classList.remove('active'));
       if (clickedEl) clickedEl.classList.add('active');
+
+      // Show/hide the subcategory filter bar + build it
+      const hero = document.getElementById('categoryHero');
+      if (category === 'all') {
+        hero.classList.remove('visible');
+      } else {
+        hero.classList.add('visible');
+        buildSubcategoryNav(category);
+        // Scroll so the subcategory filter is in view
+        hero.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+    }
+
+    function buildSubcategoryNav(category) {
+      const nav = document.getElementById('subcategoryNav');
+      nav.innerHTML = '';
+
+      // Collect unique subcategories actually present in this category
+      const cards = document.querySelectorAll(`.product-card[data-category="${category}"]`);
+      const present = new Set();
+      cards.forEach(c => { if (c.dataset.subcategory) present.add(c.dataset.subcategory); });
+
+      // Build display list: canonical order first, legacy values appended
+      const canonical = SUBCATEGORIES[category] || [];
+      const displayList = [];
+      const usedNormKeys = new Set();
+
+      canonical.forEach(canon => {
+        const cKey = normSub(canon);
+        const hasMatch = [...present].some(p => normSub(p) === cKey);
+        if (hasMatch) {
+          displayList.push(canon);
+          usedNormKeys.add(cKey);
+        }
+      });
+
+      // Legacy values that don't match any canonical entry
+      [...present].sort().forEach(p => {
+        const pKey = normSub(p);
+        if (!usedNormKeys.has(pKey)) {
+          displayList.push(p);
+          usedNormKeys.add(pKey);
+        }
+      });
+
+      // "All" link + subcategory links
+      const allLink = document.createElement('a');
+      allLink.textContent = 'All';
+      allLink.classList.add('active');
+      allLink.onclick = () => filterSubcategory('', allLink);
+      nav.appendChild(allLink);
+
+      displayList.forEach(sub => {
+        const a = document.createElement('a');
+        a.textContent = sub;
+        a.onclick = () => filterSubcategory(sub, a);
+        nav.appendChild(a);
+      });
+    }
+
+    function filterSubcategory(subcategory, clickedEl) {
+      currentSubcategory = subcategory;
+      applyFilters();
+      document.querySelectorAll('.subcategory-nav a').forEach(a => a.classList.remove('active'));
+      if (clickedEl) clickedEl.classList.add('active');
+    }
+
+    function applyFilters() {
+      const filterKey = normSub(currentSubcategory);
+      document.querySelectorAll('.product-card').forEach(card => {
+        const matchesCategory = currentCategory === 'all' || card.dataset.category === currentCategory;
+        const matchesSubcategory = !currentSubcategory || normSub(card.dataset.subcategory) === filterKey;
+        card.style.display = (matchesCategory && matchesSubcategory) ? '' : 'none';
+      });
     }
 
     // Auto-prepend $ to numeric prices (so raw numbers like "21.00" display as "$21.00")
