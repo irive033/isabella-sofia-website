@@ -652,10 +652,23 @@
     // ============================================================
     // RENDER GRID
     // ============================================================
+    // Sort by brand (A-Z), then product name (A-Z).
+    // Products with no brand sort to the end.
+    function sortByBrandThenTitle(arr) {
+      return arr.slice().sort((a, b) => {
+        const aBrand = (a.brand || '').toLowerCase();
+        const bBrand = (b.brand || '').toLowerCase();
+        if (!aBrand && bBrand) return 1;
+        if (aBrand && !bBrand) return -1;
+        if (aBrand !== bBrand) return aBrand.localeCompare(bBrand);
+        return (a.title || '').toLowerCase().localeCompare((b.title || '').toLowerCase());
+      });
+    }
+
     function renderGrid() {
       const grid = document.getElementById('editorProductGrid');
-      const visible = products.filter(p =>
-        currentFilter === 'all' || p.category === currentFilter
+      const visible = sortByBrandThenTitle(
+        products.filter(p => currentFilter === 'all' || p.category === currentFilter)
       );
       const cardsHtml = visible.map(p => renderEditorCard(p)).join('');
       const addCardHtml = `
@@ -1156,27 +1169,9 @@
     // GENERATE NEW GRID HTML
     // ============================================================
     function generateGridHtml(products) {
-      // Group by category for cleaner diffs
-      const order = ['skincare', 'body', 'makeup', 'hair', 'tools', 'fragrance'];
-      const grouped = {};
-      products.forEach(p => {
-        const cat = p.category || 'skincare';
-        if (!grouped[cat]) grouped[cat] = [];
-        grouped[cat].push(p);
-      });
-      const lines = [];
-      for (const cat of order) {
-        if (!grouped[cat] || grouped[cat].length === 0) continue;
-        lines.push(`        <!-- ${capitalize(cat)} -->`);
-        grouped[cat].forEach(p => lines.push(renderCardHtml(p)));
-      }
-      // Any remaining categories not in the ordered list
-      for (const cat of Object.keys(grouped)) {
-        if (order.includes(cat)) continue;
-        lines.push(`        <!-- ${capitalize(cat)} -->`);
-        grouped[cat].forEach(p => lines.push(renderCardHtml(p)));
-      }
-      return lines.join('\n');
+      // Sort by brand (A-Z), then product name (A-Z)
+      const sorted = sortByBrandThenTitle(products);
+      return sorted.map(p => renderCardHtml(p)).join('\n');
     }
 
     function renderCardHtml(p) {
