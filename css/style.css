@@ -622,20 +622,93 @@ p {
   opacity: 0.6;
 }
 
-/* --- Post Gallery (horizontal row of images) --- */
-.post-content .post-gallery {
-  display: flex;
-  gap: 10px;
+/* --- Post Gallery (slideshow — 1 image at a time, left/right chevrons) --- */
+/* Intentionally NOT scoped to .post-content so the blog editor preview,
+   which imports this stylesheet, renders galleries identically. */
+.post-gallery {
+  position: relative;
   margin: 30px 0;
   width: 100%;
+  background: #f0eded;
+  overflow: hidden;
+  min-height: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.post-content .post-gallery img {
-  flex: 1 1 0;
-  min-width: 0;
-  height: 300px;
+.post-gallery .gallery-slide {
+  display: none;
+  width: 100%;
+  max-height: 600px;
   object-fit: cover;
   margin: 0;
+}
+
+.post-gallery .gallery-slide.active {
+  display: block;
+}
+
+.post-gallery .gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  background: none;
+  color: rgba(255, 255, 255, 0.9);
+  border: none;
+  font-size: 0;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  transition: color 0.2s;
+  padding: 0;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Thin chevron arrows via CSS borders */
+.post-gallery .gallery-nav::after {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+}
+
+.post-gallery .gallery-prev::after {
+  transform: rotate(-135deg);
+  margin-left: 4px;
+}
+
+.post-gallery .gallery-next::after {
+  transform: rotate(45deg);
+  margin-right: 4px;
+}
+
+.post-gallery .gallery-nav:hover {
+  color: #fff;
+}
+
+.post-gallery .gallery-prev { left: 15px; }
+.post-gallery .gallery-next { right: 15px; }
+
+.post-gallery .gallery-counter {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  z-index: 3;
 }
 
 .post-content .post-gallery + .gallery-caption {
@@ -694,13 +767,22 @@ p {
   .post-content .post-hero .hero-image {
     height: 280px;
   }
-  .post-content .post-gallery {
-    flex-wrap: wrap;
+  .post-gallery {
+    min-height: 320px;
   }
-  .post-content .post-gallery img {
-    flex: 1 1 45%;
-    height: 180px;
+  .post-gallery .gallery-slide {
+    max-height: 420px;
   }
+  .post-gallery .gallery-nav {
+    width: 36px;
+    height: 36px;
+  }
+  .post-gallery .gallery-nav::after {
+    width: 11px;
+    height: 11px;
+  }
+  .post-gallery .gallery-prev { left: 10px; }
+  .post-gallery .gallery-next { right: 10px; }
 }
 
 .post-image-placeholder {

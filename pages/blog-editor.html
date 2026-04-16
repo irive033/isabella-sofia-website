@@ -166,34 +166,23 @@
       text-align: center; margin-top: 8px;
     }
 
-    /* ===== GALLERY BLOCK ===== */
-    .gallery-block .gallery-row {
-      display: flex; gap: 10px; width: 100%;
+    /* ===== GALLERY BLOCK (slideshow) ===== */
+    /* The .post-gallery inside the block uses the same rules as style.css,
+       so we only style the editor-specific controls and empty-state hint. */
+    .gallery-block .post-gallery .empty-hint {
+      color: #aaa; font-style: italic; font-size: 1rem; padding: 20px; text-align: center;
     }
-    .gallery-block .gallery-item {
-      flex: 1 1 0; min-width: 0; position: relative;
-      height: 250px; background: #f0eded;
-      display: flex; align-items: center; justify-content: center;
-      color: #aaa; font-style: italic;
+    .gallery-block .gallery-editor-controls {
+      display: flex; gap: 8px; padding: 8px 12px; background: #f4f4f4;
+      border-radius: 6px; margin-top: 10px; font-size: 0.85rem; align-items: center;
     }
-    .gallery-block .gallery-item img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
+    .gallery-block .gallery-editor-controls button {
+      background: #fff; border: 1px solid #ccc; padding: 6px 12px;
+      cursor: pointer; font-size: 0.8rem; border-radius: 4px; font-family: inherit;
     }
-    .gallery-block .gallery-item .remove-img {
-      position: absolute; top: 5px; right: 5px;
-      width: 22px; height: 22px; border-radius: 50%;
-      background: rgba(0,0,0,0.7); color: #fff; border: none;
-      cursor: pointer; display: none; align-items: center; justify-content: center;
-      font-size: 14px;
+    .gallery-block .gallery-editor-controls button:hover {
+      background: #0969da; color: #fff; border-color: #0969da;
     }
-    .gallery-block .gallery-item:hover .remove-img { display: flex; }
-    .gallery-block .add-gallery-img {
-      flex: 0 0 80px; height: 250px; border: 2px dashed #ccc;
-      background: #fafafa; cursor: pointer; display: flex;
-      align-items: center; justify-content: center;
-      color: #999; font-size: 1.5rem;
-    }
-    .gallery-block .add-gallery-img:hover { border-color: #0969da; color: #0969da; }
     .gallery-block .caption {
       font-size: 0.85rem; color: #888; font-style: italic;
       text-align: center; margin-top: 8px;
@@ -337,7 +326,7 @@
     body.preview-mode .content-block .block-controls { display: none !important; }
     body.preview-mode .image-block .image-toolbar,
     body.preview-mode .hero-block .hero-options,
-    body.preview-mode .gallery-block .add-gallery-img { display: none !important; }
+    body.preview-mode .gallery-block .gallery-editor-controls { display: none !important; }
     body.preview-mode .editor-toolbar { display: none; }
     body.preview-mode .editor-meta input,
     body.preview-mode .editor-meta select { border-bottom-color: transparent; pointer-events: none; }
@@ -536,10 +525,17 @@
       } else if (type === 'gallery') {
         block.classList.add('gallery-block');
         block.innerHTML = controlsHTML() + `
-          <div class="gallery-row">
-            <div class="add-gallery-img" onclick="addGalleryImage(this)">+</div>
+          <div class="post-gallery" data-slide="0">
+            <span class="empty-hint">No images yet &mdash; click + Add Image below</span>
+            <button class="gallery-nav gallery-prev" onclick="gallerySlide(this,-1)" aria-label="Previous" style="display:none">&#10094;</button>
+            <button class="gallery-nav gallery-next" onclick="gallerySlide(this,1)" aria-label="Next" style="display:none">&#10095;</button>
+            <div class="gallery-counter" style="display:none"></div>
           </div>
-          <div class="caption" contenteditable="true" data-placeholder="Add caption (optional)">Add caption</div>
+          <div class="gallery-editor-controls">
+            <button onclick="addSlideshowImage(this)">+ Add Image</button>
+            <button onclick="removeCurrentSlide(this)">Remove current slide</button>
+          </div>
+          <div class="caption" contenteditable="true">Add caption</div>
         `;
       } else if (type === 'hero') {
         block.classList.add('hero-block');
@@ -661,32 +657,93 @@
       else container.style.margin = '0 auto';
     }
 
-    // ===== GALLERY =====
-    let activeGalleryRow = null;
+    // ===== GALLERY (slideshow — 1 image at a time) =====
+    let activeGalleryBlock = null;
 
-    function addGalleryImage(plusBtn) {
-      activeGalleryRow = plusBtn.closest('.gallery-row');
+    function addSlideshowImage(btn) {
+      activeGalleryBlock = btn.closest('.content-block');
       document.getElementById('galleryInput').click();
     }
 
     function handleGalleryUpload(event) {
       const files = Array.from(event.target.files);
-      if (!files.length || !activeGalleryRow) return;
-      const plusBtn = activeGalleryRow.querySelector('.add-gallery-img');
+      if (!files.length || !activeGalleryBlock) return;
+      const gallery = activeGalleryBlock.querySelector('.post-gallery');
+      const firstNav = gallery.querySelector('.gallery-nav');
+      let lastAddedIdx = -1;
       files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
-          const item = document.createElement('div');
-          item.className = 'gallery-item';
-          item.innerHTML = `
-            <img src="${e.target.result}" alt="Gallery image">
-            <button class="remove-img" onclick="event.stopPropagation(); this.closest('.gallery-item').remove()">&times;</button>
-          `;
-          activeGalleryRow.insertBefore(item, plusBtn);
+          const img = document.createElement('img');
+          img.className = 'gallery-slide';
+          img.src = e.target.result;
+          img.alt = 'Gallery image';
+          // Insert before the first nav button (keeps buttons/counter at the end)
+          gallery.insertBefore(img, firstNav);
+          // Jump to the newly added slide so the user sees it immediately
+          const allSlides = gallery.querySelectorAll('.gallery-slide');
+          gallery.dataset.slide = (allSlides.length - 1).toString();
+          refreshSlideshow(activeGalleryBlock);
         };
         reader.readAsDataURL(file);
       });
       event.target.value = '';
+    }
+
+    function refreshSlideshow(block) {
+      const gallery = block.querySelector('.post-gallery');
+      const slides = gallery.querySelectorAll('.gallery-slide');
+      const counter = gallery.querySelector('.gallery-counter');
+      const prev = gallery.querySelector('.gallery-prev');
+      const next = gallery.querySelector('.gallery-next');
+      let idx = parseInt(gallery.dataset.slide || '0', 10);
+      if (slides.length === 0) idx = 0;
+      else if (idx >= slides.length) idx = slides.length - 1;
+      else if (idx < 0) idx = 0;
+      gallery.dataset.slide = idx;
+      slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+      const multi = slides.length >= 2;
+      if (prev) prev.style.display = multi ? '' : 'none';
+      if (next) next.style.display = multi ? '' : 'none';
+      if (counter) {
+        counter.style.display = multi ? '' : 'none';
+        counter.textContent = slides.length ? `${idx + 1} / ${slides.length}` : '';
+      }
+      // Empty-state hint
+      let hint = gallery.querySelector('.empty-hint');
+      if (slides.length === 0) {
+        if (!hint) {
+          hint = document.createElement('span');
+          hint.className = 'empty-hint';
+          hint.innerHTML = 'No images yet &mdash; click + Add Image below';
+          gallery.insertBefore(hint, gallery.firstChild);
+        }
+      } else if (hint) {
+        hint.remove();
+      }
+    }
+
+    function gallerySlide(btn, dir) {
+      const gallery = btn.closest('.post-gallery');
+      if (!gallery) return;
+      const slides = gallery.querySelectorAll('.gallery-slide');
+      if (slides.length < 2) return;
+      let idx = parseInt(gallery.dataset.slide || '0', 10);
+      idx = (idx + dir + slides.length) % slides.length;
+      gallery.dataset.slide = idx;
+      slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+      const counter = gallery.querySelector('.gallery-counter');
+      if (counter) counter.textContent = `${idx + 1} / ${slides.length}`;
+    }
+
+    function removeCurrentSlide(btn) {
+      const block = btn.closest('.content-block');
+      const gallery = block.querySelector('.post-gallery');
+      const slides = gallery.querySelectorAll('.gallery-slide');
+      if (!slides.length) return;
+      let idx = parseInt(gallery.dataset.slide || '0', 10);
+      slides[idx].remove();
+      refreshSlideshow(block);
     }
 
     // ===== HERO =====
@@ -799,12 +856,18 @@
           }
           contentHTML += `        </div>\n\n`;
         } else if (type === 'gallery') {
-          const imgs = block.querySelectorAll('.gallery-item img');
+          const imgs = block.querySelectorAll('.post-gallery .gallery-slide');
           if (imgs.length) {
-            contentHTML += `        <div class="post-gallery">\n`;
-            imgs.forEach(img => {
-              contentHTML += `          <img src="${img.src}" alt="Gallery image">\n`;
+            contentHTML += `        <div class="post-gallery" data-slide="0">\n`;
+            imgs.forEach((img, i) => {
+              const cls = i === 0 ? 'gallery-slide active' : 'gallery-slide';
+              contentHTML += `          <img class="${cls}" src="${img.src}" alt="Gallery image">\n`;
             });
+            if (imgs.length > 1) {
+              contentHTML += `          <button class="gallery-nav gallery-prev" onclick="gallerySlide(this,-1)" aria-label="Previous">&#10094;</button>\n`;
+              contentHTML += `          <button class="gallery-nav gallery-next" onclick="gallerySlide(this,1)" aria-label="Next">&#10095;</button>\n`;
+              contentHTML += `          <div class="gallery-counter">1 / ${imgs.length}</div>\n`;
+            }
             contentHTML += `        </div>\n`;
             const cap = block.querySelector('.caption');
             if (cap && cap.textContent.trim() && cap.textContent.trim() !== 'Add caption') {
@@ -906,6 +969,23 @@ ${contentHTML}
     </section>
   </main>
   <footer class="site-footer"><p>&copy; ${now.getFullYear()} Isabella Sofia. All rights reserved.</p></footer>
+  <script>
+    // Gallery slideshow navigation (used by any .post-gallery on the page)
+    function gallerySlide(btn, dir) {
+      var gallery = btn.closest('.post-gallery');
+      if (!gallery) return;
+      var slides = gallery.querySelectorAll('.gallery-slide');
+      if (slides.length < 2) return;
+      var idx = parseInt(gallery.dataset.slide || '0', 10);
+      idx = (idx + dir + slides.length) % slides.length;
+      gallery.dataset.slide = idx;
+      for (var i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i === idx);
+      }
+      var counter = gallery.querySelector('.gallery-counter');
+      if (counter) counter.textContent = (idx + 1) + ' / ' + slides.length;
+    }
+  <\/script>
 </body>
 </html>`;
     }
@@ -1266,17 +1346,17 @@ ${contentHTML}
           applyImageAlignment(block);
         } else if (pb.type === 'gallery') {
           const block = addBlock('gallery');
-          const row = block.querySelector('.gallery-row');
-          const addBtn = row.querySelector('.add-gallery-img');
+          const gallery = block.querySelector('.post-gallery');
+          const firstNav = gallery.querySelector('.gallery-nav');
           (pb.images || []).forEach(src => {
-            const item = document.createElement('div');
-            item.className = 'gallery-item';
-            item.innerHTML = `
-              <img src="${src}" alt="Gallery image">
-              <button class="remove-img" onclick="event.stopPropagation(); this.closest('.gallery-item').remove()">&times;</button>
-            `;
-            row.insertBefore(item, addBtn);
+            const img = document.createElement('img');
+            img.className = 'gallery-slide';
+            img.src = src;
+            img.alt = 'Gallery image';
+            gallery.insertBefore(img, firstNav);
           });
+          gallery.dataset.slide = '0';
+          refreshSlideshow(block);
         } else if (pb.type === 'hero') {
           const block = addBlock('hero');
           if (pb.ratio && pb.ratio !== '50-50') {
