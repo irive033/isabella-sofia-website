@@ -528,9 +528,33 @@ p {
 
 /* --- Blog Post Detail --- */
 .post-header {
-  background: #ABA8A6;
+  background: #DAE1E4;
   padding: 80px 4vw 60px;
   text-align: center;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.post-header.has-header-image {
+  padding: 100px 4vw 80px;
+  color: #fff;
+}
+
+.post-header.has-header-image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.post-header.has-header-image > * {
+  position: relative;
+  z-index: 1;
+}
+
+.post-header.has-header-image .post-meta {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .post-header h1 {

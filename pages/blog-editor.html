@@ -53,8 +53,32 @@
 
     /* ===== META FIELDS ===== */
     .editor-meta {
-      background: #ABA8A6; padding: 60px 4vw 40px; text-align: center;
+      background: #DAE1E4; padding: 60px 4vw 40px; text-align: center;
+      background-size: cover; background-position: center; position: relative;
     }
+    .editor-meta.has-header-image::before {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(0,0,0,0.35);
+    }
+    .editor-meta.has-header-image > * {
+      position: relative; z-index: 1;
+    }
+    .editor-meta.has-header-image input,
+    .editor-meta.has-header-image select { color: #fff; }
+    .editor-meta.has-header-image input::placeholder { color: rgba(255,255,255,0.4); }
+    .editor-meta.has-header-image .meta-row input { color: rgba(255,255,255,0.8); }
+    .header-image-controls { margin-bottom: 15px; display: flex; justify-content: center; gap: 8px; }
+    .header-image-btn {
+      background: rgba(255,255,255,0.25); color: #333; border: 1px dashed rgba(0,0,0,0.25);
+      padding: 7px 16px; font-family: inherit; font-size: 0.75rem; cursor: pointer;
+      border-radius: 4px; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .header-image-btn:hover { background: rgba(255,255,255,0.5); }
+    .editor-meta.has-header-image .header-image-btn {
+      color: #fff; border-color: rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.15);
+    }
+    .editor-meta.has-header-image .header-image-btn:hover { background: rgba(255,255,255,0.3); }
     .editor-meta input {
       display: block; width: 100%; max-width: 750px; margin: 0 auto;
       background: transparent; border: none; border-bottom: 2px dashed rgba(0,0,0,0.2);
@@ -379,7 +403,11 @@
   </div>
 
   <!-- META -->
-  <section class="editor-meta">
+  <section class="editor-meta" id="editorMeta">
+    <div class="header-image-controls">
+      <button class="header-image-btn" onclick="triggerHeaderImageUpload()" id="headerImageBtn">+ Header Image</button>
+      <button class="header-image-btn" onclick="removeHeaderImage()" id="removeHeaderImageBtn" style="display:none">Remove Image</button>
+    </div>
     <input type="text" id="postTitle" placeholder="Your Post Title">
     <div class="meta-row">
       <input type="text" id="postAuthor" value="Isabella Rivera" placeholder="Author">
@@ -389,6 +417,7 @@
         <option value="style">Style</option>
       </select>
     </div>
+    <input type="file" id="headerImageInput" accept="image/*" style="display:none" onchange="handleHeaderImageUpload(event)">
   </section>
 
   <!-- CANVAS -->
@@ -477,6 +506,7 @@
 
     let blockCounter = 0;
     let pendingHeroBlock = null; // reference to hero block awaiting image upload
+    let headerImageUrl = '';     // data URL or remote URL for post header background
 
     // ===== EDIT-EXISTING-POST STATE =====
     // When set, the editor is in "edit mode" — save writes back to the
@@ -499,6 +529,43 @@
     }
     if (sessionStorage.getItem('blog_editor_auth') === 'true') {
       document.getElementById('passwordGate').classList.add('hidden');
+    }
+
+    // ===== HEADER IMAGE =====
+    function triggerHeaderImageUpload() {
+      document.getElementById('headerImageInput').click();
+    }
+
+    function handleHeaderImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        headerImageUrl = e.target.result;
+        applyHeaderImage();
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function applyHeaderImage() {
+      const meta = document.getElementById('editorMeta');
+      if (headerImageUrl) {
+        meta.style.backgroundImage = `url('${headerImageUrl}')`;
+        meta.classList.add('has-header-image');
+        document.getElementById('headerImageBtn').textContent = 'Change Image';
+        document.getElementById('removeHeaderImageBtn').style.display = '';
+      } else {
+        meta.style.backgroundImage = '';
+        meta.classList.remove('has-header-image');
+        document.getElementById('headerImageBtn').textContent = '+ Header Image';
+        document.getElementById('removeHeaderImageBtn').style.display = 'none';
+      }
+    }
+
+    function removeHeaderImage() {
+      headerImageUrl = '';
+      applyHeaderImage();
     }
 
     // ===== BLOCK CONTROLS TEMPLATE =====
@@ -948,7 +1015,7 @@
     </div>
   </header>
   <main>
-    <section class="post-header">
+    <section class="post-header${headerImageUrl ? ' has-header-image' : ''}"${headerImageUrl ? ` style="background-image: url('${headerImageUrl}')"` : ''}>
       <h1>${title}</h1>
       <div class="post-meta">
         <span class="author">${author}</span>
@@ -1196,6 +1263,8 @@ ${contentHTML}
       document.getElementById('editorCanvas').innerHTML = '';
       document.getElementById('postTitle').value = '';
       document.getElementById('postCategory').value = 'beauty';
+      headerImageUrl = '';
+      applyHeaderImage();
     }
 
     // ============================================================
@@ -1204,13 +1273,18 @@ ${contentHTML}
     function parsePostHtml(html) {
       const doc = new DOMParser().parseFromString(html, 'text/html');
 
-      const title = (doc.querySelector('.post-header h1')?.textContent || '').trim();
+      const postHeader = doc.querySelector('.post-header');
+      const title = (postHeader?.querySelector('h1')?.textContent || '').trim();
       const author = (doc.querySelector('.post-meta .author')?.textContent || 'Isabella Rivera').trim();
       // Prefer the explicit meta tag (editor-generated) over the display text
       const isoDate = doc.querySelector('meta[name="date"]')?.getAttribute('content') || '';
       // Category: prefer meta tag, fall back to URL detection, then default
       const metaCategory = doc.querySelector('meta[name="category"]')?.getAttribute('content') || '';
       const category = metaCategory || 'beauty';
+
+      // Header background image
+      const bgImage = postHeader?.style?.backgroundImage || '';
+      const headerImage = bgImage.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '') || '';
 
       const contentEl = doc.querySelector('.post-content');
       const blocks = [];
@@ -1221,7 +1295,7 @@ ${contentHTML}
         }
       }
 
-      return { title, author, isoDate, category, blocks };
+      return { title, author, isoDate, category, headerImage, blocks };
     }
 
     function parseBlockFromElement(el) {
@@ -1302,6 +1376,10 @@ ${contentHTML}
       if (validCats.includes(parsed.category)) {
         catSelect.value = parsed.category;
       }
+
+      // Header image
+      headerImageUrl = parsed.headerImage || '';
+      applyHeaderImage();
 
       // Clear canvas and block counter
       const canvas = document.getElementById('editorCanvas');
