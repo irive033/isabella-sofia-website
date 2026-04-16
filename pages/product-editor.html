@@ -1263,61 +1263,74 @@
       status.className = 'status-msg loading';
 
       try {
-        // 1. Get current shop.html + SHA
-        const getResp = await fetch(
-          `https://api.github.com/repos/${GITHUB_REPO}/contents/${SHOP_FILE_PATH}?ref=${GITHUB_BRANCH}`,
-          { headers: { 'Authorization': `token ${token}` } }
-        );
-        if (!getResp.ok) {
-          const err = await getResp.json().catch(() => ({}));
-          throw new Error(err.message || `HTTP ${getResp.status}`);
-        }
-        const getJson = await getResp.json();
-        const sha = getJson.sha;
-        const currentHtml = decodeBase64(getJson.content);
-
-        // 2. Update the product grid section
-        status.textContent = 'Updating product grid...';
-        const newGridHtml = generateGridHtml(products);
-        const newShopHtml = updateShopHtml(currentHtml, newGridHtml);
-
-        // 3. Commit
-        status.textContent = 'Committing to GitHub...';
-        const commitResp = await fetch(
-          `https://api.github.com/repos/${GITHUB_REPO}/contents/${SHOP_FILE_PATH}`,
-          {
-            method: 'PUT',
-            headers: {
-              'Authorization': `token ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              message: `Update Skin Safe Product List (${products.length} products)`,
-              content: encodeBase64(newShopHtml),
-              branch: GITHUB_BRANCH,
-              sha
-            })
-          }
-        );
-
-        if (commitResp.ok) {
-          const result = await commitResp.json();
-          status.innerHTML = `Published! <a href="${result.content.html_url}" target="_blank" style="color:#0969da;">View on GitHub</a><br>Vercel will auto-deploy in ~30s.`;
-          status.className = 'status-msg success';
-          // Update snapshot — changes are now "saved"
-          originalProducts = JSON.parse(JSON.stringify(products));
-          markClean();
-        } else {
-          const err = await commitResp.json().catch(() => ({}));
-          status.textContent = `Error: ${err.message || 'Failed to commit'}`;
-          status.className = 'status-msg error';
-        }
+        const result = await commitShopHtml(token, status);
+        status.innerHTML = `Published! <a href="${result.html_url}" target="_blank" style="color:#0969da;">View on GitHub</a><br>Vercel will auto-deploy in ~30s.`;
+        status.className = 'status-msg success';
+        originalProducts = JSON.parse(JSON.stringify(products));
+        markClean();
       } catch (e) {
         status.textContent = `Failed: ${e.message}`;
         status.className = 'status-msg error';
       } finally {
         btn.disabled = false;
       }
+    }
+
+    // Fetch latest shop.html, splice in the product grid, and commit.
+    // Retries once on a 409 SHA conflict (common when the remote was
+    // updated moments before — e.g. by a concurrent push or deploy).
+    async function commitShopHtml(token, status, attempt = 1) {
+      const headers = { 'Authorization': `token ${token}` };
+
+      // 1. Get current shop.html + SHA
+      status.textContent = attempt > 1
+        ? 'SHA conflict — retrying with latest version...'
+        : 'Fetching latest shop.html from GitHub...';
+      status.className = 'status-msg loading';
+      const getResp = await fetch(
+        `https://api.github.com/repos/${GITHUB_REPO}/contents/${SHOP_FILE_PATH}?ref=${GITHUB_BRANCH}`,
+        { headers }
+      );
+      if (!getResp.ok) {
+        const err = await getResp.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${getResp.status}`);
+      }
+      const getJson = await getResp.json();
+      const sha = getJson.sha;
+      const currentHtml = decodeBase64(getJson.content);
+
+      // 2. Update the product grid section
+      status.textContent = 'Updating product grid...';
+      const newGridHtml = generateGridHtml(products);
+      const newShopHtml = updateShopHtml(currentHtml, newGridHtml);
+
+      // 3. Commit
+      status.textContent = 'Committing to GitHub...';
+      const commitResp = await fetch(
+        `https://api.github.com/repos/${GITHUB_REPO}/contents/${SHOP_FILE_PATH}`,
+        {
+          method: 'PUT',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `Update Skin Safe Product List (${products.length} products)`,
+            content: encodeBase64(newShopHtml),
+            branch: GITHUB_BRANCH,
+            sha
+          })
+        }
+      );
+
+      if (commitResp.ok) {
+        const result = await commitResp.json();
+        return result.content;
+      }
+
+      const err = await commitResp.json().catch(() => ({}));
+      // 409 = SHA conflict — retry once with a fresh SHA
+      if (commitResp.status === 409 && attempt < 3) {
+        return commitShopHtml(token, status, attempt + 1);
+      }
+      throw new Error(err.message || 'Failed to commit');
     }
 
     // ============================================================
