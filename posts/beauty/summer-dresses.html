@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Summer Dresses — Isabella Sofia</title>
   <link rel="stylesheet" href="../../css/style.css">
+  <meta name="date" content="2026-04-16T03:24:33.745Z">
+  <meta name="author" content="Isabella Rivera">
+  <meta name="category" content="style">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
     body { font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; }
@@ -36,7 +39,7 @@
       <h1>Summer Dresses</h1>
       <div class="post-meta">
         <span class="author">Isabella Rivera</span>
-        <span class="date">&middot; Mar 11, 2019</span>
+        <span class="date">&middot; Apr 15, 2026</span>
       </div>
     </section>
     <section class="post-body">
@@ -46,32 +49,38 @@
         <h2>At a Glance</h2>
 
         <h3>Mara Hoffman</h3>
-        <div class="post-image-placeholder">Mara Hoffman dress photo</div>
+
+        <p><em>[Image placeholder: Mara Hoffman dress photo]</em></p>
+
         <p>Bold prints meet responsible production. Designed with longevity in mind.</p>
 
         <h3>Sami Miro Vintage</h3>
+
         <p>One-of-a-kind vintage pieces reimagined for modern wear.</p>
 
         <h3>Mila Vert</h3>
+
         <p>Minimalist designs in natural fabrics, made ethically.</p>
 
         <h3>KOTN</h3>
+
         <p>Egyptian cotton basics at accessible price points.</p>
 
         <h3>Maggie Marilyn</h3>
+
         <p>Feminine designs with full supply chain transparency.</p>
 
         <h3>Reformation</h3>
+
         <p>Trendy silhouettes with a sustainability report for every garment.</p>
 
         <h3>Stella McCartney</h3>
+
         <p>Luxury fashion leading the way in cruelty-free and sustainable design.</p>
 
         <p><em>Price range: from accessible to luxury options across all brands.</em></p>
-        <div class="post-nav">
-          <a href=\"brand-spotlight-ilia-beauty.html\">&larr; Previous</a>brand-spotlight-ilia-beauty.html
-          <a href=\"7-eco-friendly-swimwear-brands.html\">Next &rarr;</a>7-eco-friendly-swimwear-brands.html
-        </div>
+
+
       </div>
     </section>
     <section class="newsletter-section">
@@ -83,5 +92,22 @@
     </section>
   </main>
   <footer class="site-footer"><p>&copy; 2026 Isabella Sofia. All rights reserved.</p></footer>
+  <script>
+    // Gallery slideshow navigation (used by any .post-gallery on the page)
+    function gallerySlide(btn, dir) {
+      var gallery = btn.closest('.post-gallery');
+      if (!gallery) return;
+      var slides = gallery.querySelectorAll('.gallery-slide');
+      if (slides.length < 2) return;
+      var idx = parseInt(gallery.dataset.slide || '0', 10);
+      idx = (idx + dir + slides.length) % slides.length;
+      gallery.dataset.slide = idx;
+      for (var i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i === idx);
+      }
+      var counter = gallery.querySelector('.gallery-counter');
+      if (counter) counter.textContent = (idx + 1) + ' / ' + slides.length;
+    }
+  </script>
 </body>
 </html>
