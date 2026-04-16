@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="../../css/style.css">
   <meta name="date" content="2026-04-15T21:04:31.697Z">
   <meta name="author" content="Isabella Rivera">
-  <meta name="category" content="beauty">
+  <meta name="category" content="wellness">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
     body { font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; }
@@ -94,5 +94,22 @@
     </section>
   </main>
   <footer class="site-footer"><p>&copy; 2026 Isabella Sofia. All rights reserved.</p></footer>
+  <script>
+    // Gallery slideshow navigation (used by any .post-gallery on the page)
+    function gallerySlide(btn, dir) {
+      var gallery = btn.closest('.post-gallery');
+      if (!gallery) return;
+      var slides = gallery.querySelectorAll('.gallery-slide');
+      if (slides.length < 2) return;
+      var idx = parseInt(gallery.dataset.slide || '0', 10);
+      idx = (idx + dir + slides.length) % slides.length;
+      gallery.dataset.slide = idx;
+      for (var i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i === idx);
+      }
+      var counter = gallery.querySelector('.gallery-counter');
+      if (counter) counter.textContent = (idx + 1) + ' / ' + slides.length;
+    }
+  </script>
 </body>
 </html>
