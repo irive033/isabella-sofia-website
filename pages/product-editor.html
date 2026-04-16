@@ -447,8 +447,12 @@
         <div class="preview-image" id="previewImage">No image</div>
         <div class="fields">
           <div class="field">
+            <label>Brand</label>
+            <input type="text" id="editBrand" placeholder="The Ordinary">
+          </div>
+          <div class="field">
             <label>Product name</label>
-            <input type="text" id="editTitle" placeholder="The Ordinary Squalane Cleanser">
+            <input type="text" id="editTitle" placeholder="Squalane Cleanser">
           </div>
           <div class="field">
             <label>Price</label>
@@ -557,7 +561,7 @@
     // ============================================================
     // STATE
     // ============================================================
-    let products = [];          // [{id, category, subcategory, title, price, image, sourceUrl}]
+    let products = [];          // [{id, category, subcategory, brand, title, price, image, sourceUrl}]
     let originalProducts = [];  // snapshot for dirty detection
     let shopHtmlCache = '';     // raw shop.html from initial load
     let editingId = null;       // id of product being edited (null = adding new)
@@ -622,6 +626,7 @@
       return Array.from(cards).map((card, i) => {
         const category = card.dataset.category || '';
         const sourceUrl = card.dataset.sourceUrl || '';
+        const brand = card.dataset.brand || '';
         const subcategoryAttr = card.dataset.subcategory || '';
         const imageEl = card.querySelector('.product-image');
         const img = imageEl ? imageEl.querySelector('img') : null;
@@ -635,6 +640,7 @@
           id: i,
           category,
           subcategory,
+          brand,
           title: h4 ? h4.textContent.trim() : '',
           price: priceEl ? priceEl.textContent.trim() : '',
           image,
@@ -675,12 +681,16 @@
       const shopNowBtnHtml = p.sourceUrl
         ? `<span class="product-shop-now">Shop Now</span>`
         : '';
+      const brandLabelHtml = p.brand
+        ? `<div class="product-brand-label">${escapeHtml(p.brand)}</div>`
+        : '';
       return `
         <div class="editor-product-card" onclick="openEditModal(${p.id})">
           ${categoryTag}
           <div class="edit-badge">Edit</div>
           <div class="product-image">${imageHtml}</div>
           <div class="product-info">
+            ${brandLabelHtml}
             <h4>${escapeHtml(p.title || 'Untitled')}</h4>
             ${categoryLabelHtml}
             <div class="price">${escapeHtml(formatPriceDisplay(p.price))}</div>
@@ -716,6 +726,7 @@
       editingId = id;
       document.getElementById('modalTitle').textContent = 'Edit Product';
       document.getElementById('fetchUrl').value = p.sourceUrl || '';
+      document.getElementById('editBrand').value = p.brand || '';
       document.getElementById('editTitle').value = p.title || '';
       document.getElementById('editPrice').value = p.price || '';
       document.getElementById('editCategory').value = p.category || 'skincare';
@@ -734,6 +745,7 @@
       editingId = null;
       document.getElementById('modalTitle').textContent = 'Add Product';
       document.getElementById('fetchUrl').value = '';
+      document.getElementById('editBrand').value = '';
       document.getElementById('editTitle').value = '';
       document.getElementById('editPrice').value = '';
       document.getElementById('editCategory').value = 'skincare';
@@ -794,6 +806,7 @@
     }
 
     function saveProductFromModal() {
+      const brand = document.getElementById('editBrand').value.trim();
       const title = document.getElementById('editTitle').value.trim();
       const price = document.getElementById('editPrice').value.trim();
       const category = document.getElementById('editCategory').value;
@@ -814,14 +827,14 @@
         // Adding new
         const newProduct = {
           id: nextLocalId++,
-          category, subcategory, title, price, image, sourceUrl
+          category, subcategory, brand, title, price, image, sourceUrl
         };
         products.push(newProduct);
       } else {
         // Editing existing
         const idx = products.findIndex(x => x.id === editingId);
         if (idx >= 0) {
-          products[idx] = { ...products[idx], category, subcategory, title, price, image, sourceUrl };
+          products[idx] = { ...products[idx], category, subcategory, brand, title, price, image, sourceUrl };
         }
       }
       closeEditModal();
@@ -1171,11 +1184,16 @@
         `data-category="${escapeAttr(p.category || '')}"`
       ];
       if (p.subcategory) dataAttrs.push(`data-subcategory="${escapeAttr(p.subcategory)}"`);
+      if (p.brand) dataAttrs.push(`data-brand="${escapeAttr(p.brand)}"`);
       if (p.sourceUrl) dataAttrs.push(`data-source-url="${escapeAttr(p.sourceUrl)}"`);
 
       const imageInner = p.image
         ? `<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.title)}">`
         : escapeHtml(p.subcategory || '');
+
+      const brandLabel = p.brand
+        ? `\n            <div class="product-brand-label">${escapeHtml(p.brand)}</div>`
+        : '';
 
       const categoryLabel = p.category
         ? `\n            <div class="product-category-label">${escapeHtml(CATEGORY_DISPLAY[p.category] || p.category)}</div>`
@@ -1187,7 +1205,7 @@
 
       return `        <div class="product-card" ${dataAttrs.join(' ')}>
           <div class="product-image">${imageInner}</div>
-          <div class="product-info">
+          <div class="product-info">${brandLabel}
             <h4>${escapeHtml(p.title || '')}</h4>${categoryLabel}
             <div class="price">${escapeHtml(p.price || '')}</div>${shopNowBtn}
           </div>

@@ -1113,6 +1113,14 @@ p {
   margin-bottom: 6px;
 }
 
+.product-brand-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #555;
+  margin-bottom: 4px;
+}
+
 .product-category-label {
   font-size: 0.7rem;
   text-transform: uppercase;
