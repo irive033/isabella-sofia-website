@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sandals for your next Pool Day — Isabella Sofia</title>
   <link rel="stylesheet" href="../../css/style.css">
+  <meta name="date" content="2026-04-16T03:24:10.129Z">
+  <meta name="author" content="Isabella Rivera">
+  <meta name="category" content="style">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
     body { font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; }
@@ -36,22 +39,20 @@
       <h1>Sandals for your next Pool Day</h1>
       <div class="post-meta">
         <span class="author">Isabella Rivera</span>
-        <span class="date">&middot; Jun 2, 2022</span>
+        <span class="date">&middot; Apr 15, 2026</span>
       </div>
     </section>
     <section class="post-body">
       <div class="post-content">
         <p>Sustainable sandals that do not sacrifice style. The best picks for warm weather and poolside lounging.</p>
 
-        <div class="post-image-placeholder">Sandals collection photo</div>
+        <p><em>[Image placeholder: Sandals collection photo]</em></p>
 
         <p>From slides to strappy designs, these sandals are made with materials and practices you can feel good about. Perfect for summer days by the pool or exploring a new city.</p>
 
-        <div class="post-image-placeholder">Sandals detail photo</div>
-        <div class="post-nav">
-          <a href=\"for-the-home-art.html\">&larr; Previous</a>for-the-home-art.html
-          <a href=\"eco-friendly-spas-wellness-centers.html\">Next &rarr;</a>eco-friendly-spas-wellness-centers.html
-        </div>
+        <p><em>[Image placeholder: Sandals detail photo]</em></p>
+
+
       </div>
     </section>
     <section class="newsletter-section">
@@ -63,5 +64,22 @@
     </section>
   </main>
   <footer class="site-footer"><p>&copy; 2026 Isabella Sofia. All rights reserved.</p></footer>
+  <script>
+    // Gallery slideshow navigation (used by any .post-gallery on the page)
+    function gallerySlide(btn, dir) {
+      var gallery = btn.closest('.post-gallery');
+      if (!gallery) return;
+      var slides = gallery.querySelectorAll('.gallery-slide');
+      if (slides.length < 2) return;
+      var idx = parseInt(gallery.dataset.slide || '0', 10);
+      idx = (idx + dir + slides.length) % slides.length;
+      gallery.dataset.slide = idx;
+      for (var i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i === idx);
+      }
+      var counter = gallery.querySelector('.gallery-counter');
+      if (counter) counter.textContent = (idx + 1) + ' / ' + slides.length;
+    }
+  </script>
 </body>
 </html>
