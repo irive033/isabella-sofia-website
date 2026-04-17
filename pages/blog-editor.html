@@ -128,6 +128,7 @@
     }
     .content-block:hover { border-color: #ddd; }
     .content-block:focus-within { border-color: #0969da; }
+    .content-block.selected { border-left: 3px solid #0969da; }
 
     .content-block .block-controls {
       position: absolute; top: -14px; right: 0;
@@ -199,6 +200,7 @@
     .gallery-block .gallery-editor-controls {
       display: flex; gap: 8px; padding: 8px 12px; background: #f4f4f4;
       border-radius: 6px; margin-top: 10px; font-size: 0.85rem; align-items: center;
+      flex-wrap: wrap;
     }
     .gallery-block .gallery-editor-controls button {
       background: #fff; border: 1px solid #ccc; padding: 6px 12px;
@@ -207,6 +209,21 @@
     .gallery-block .gallery-editor-controls button:hover {
       background: #0969da; color: #fff; border-color: #0969da;
     }
+    .gallery-block .gallery-editor-controls select {
+      background: #fff; border: 1px solid #ccc; padding: 5px 8px;
+      font-size: 0.8rem; border-radius: 4px; font-family: inherit;
+    }
+    .gallery-block .gallery-editor-controls label {
+      color: #555; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .gallery-block .gallery-link-row {
+      display: flex; gap: 6px; align-items: center; width: 100%; margin-top: 4px;
+    }
+    .gallery-block .gallery-link-row input {
+      flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px;
+      font-size: 0.8rem; font-family: inherit; outline: none;
+    }
+    .gallery-block .gallery-link-row input:focus { border-color: #000; }
     .gallery-block .caption {
       font-size: 0.85rem; color: #888; font-style: italic;
       text-align: center; margin-top: 8px;
@@ -579,6 +596,39 @@
       `;
     }
 
+    // ===== BLOCK SELECTION (insert-after target) =====
+    function selectBlock(block) {
+      document.querySelectorAll('.content-block.selected').forEach(b => b.classList.remove('selected'));
+      if (block) block.classList.add('selected');
+    }
+
+    // Track which block the user is working in
+    document.addEventListener('click', (e) => {
+      const block = e.target.closest('.content-block');
+      if (block && document.getElementById('editorCanvas').contains(block)) {
+        selectBlock(block);
+      }
+    });
+    document.addEventListener('focusin', (e) => {
+      const block = e.target.closest('.content-block');
+      if (block && document.getElementById('editorCanvas').contains(block)) {
+        selectBlock(block);
+      }
+    });
+
+    // Insert a block element into the canvas — after the selected block,
+    // or at the end if nothing is selected.
+    function insertBlockInCanvas(block) {
+      const canvas = document.getElementById('editorCanvas');
+      const selected = canvas.querySelector('.content-block.selected');
+      if (selected && selected.nextSibling) {
+        canvas.insertBefore(block, selected.nextSibling);
+      } else {
+        canvas.appendChild(block);
+      }
+      selectBlock(block);
+    }
+
     // ===== ADD BLOCK =====
     function addBlock(type, content = '') {
       const canvas = document.getElementById('editorCanvas');
@@ -592,7 +642,7 @@
       } else if (type === 'gallery') {
         block.classList.add('gallery-block');
         block.innerHTML = controlsHTML() + `
-          <div class="post-gallery" data-slide="0">
+          <div class="post-gallery" data-slide="0" data-visible="1">
             <span class="empty-hint">No images yet &mdash; click + Add Image below</span>
             <button class="gallery-nav gallery-prev" onclick="gallerySlide(this,-1)" aria-label="Previous" style="display:none">&#10094;</button>
             <button class="gallery-nav gallery-next" onclick="gallerySlide(this,1)" aria-label="Next" style="display:none">&#10095;</button>
@@ -601,6 +651,19 @@
           <div class="gallery-editor-controls">
             <button onclick="addSlideshowImage(this)">+ Add Image</button>
             <button onclick="removeCurrentSlide(this)">Remove current slide</button>
+            <label>Show</label>
+            <select onchange="setGalleryVisible(this)">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+            <label>at a time</label>
+            <div class="gallery-link-row">
+              <label>Link</label>
+              <input type="url" placeholder="https://..." oninput="updateSlideLink(this)">
+            </div>
           </div>
           <div class="caption" contenteditable="true">Add caption</div>
         `;
@@ -630,7 +693,7 @@
         block.innerHTML = controlsHTML() + `<${type} contenteditable="true">${content || placeholder}</${type}>`;
       }
 
-      canvas.appendChild(block);
+      insertBlockInCanvas(block);
 
       // Focus first editable
       const editable = block.querySelector('[contenteditable]');
@@ -694,7 +757,7 @@
         </div>
         <div class="caption" contenteditable="true">Add caption</div>
       `;
-      canvas.appendChild(block);
+      insertBlockInCanvas(block);
       applyImageAlignment(block);
     }
 
@@ -724,7 +787,7 @@
       else container.style.margin = '0 auto';
     }
 
-    // ===== GALLERY (slideshow — 1 image at a time) =====
+    // ===== GALLERY (slideshow — 1 to 5 images at a time) =====
     let activeGalleryBlock = null;
 
     function addSlideshowImage(btn) {
@@ -737,7 +800,6 @@
       if (!files.length || !activeGalleryBlock) return;
       const gallery = activeGalleryBlock.querySelector('.post-gallery');
       const firstNav = gallery.querySelector('.gallery-nav');
-      let lastAddedIdx = -1;
       files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -745,9 +807,8 @@
           img.className = 'gallery-slide';
           img.src = e.target.result;
           img.alt = 'Gallery image';
-          // Insert before the first nav button (keeps buttons/counter at the end)
+          img.dataset.link = '';
           gallery.insertBefore(img, firstNav);
-          // Jump to the newly added slide so the user sees it immediately
           const allSlides = gallery.querySelectorAll('.gallery-slide');
           gallery.dataset.slide = (allSlides.length - 1).toString();
           refreshSlideshow(activeGalleryBlock);
@@ -757,25 +818,42 @@
       event.target.value = '';
     }
 
+    function getVisibleCount(gallery) {
+      return parseInt(gallery.dataset.visible || '1', 10);
+    }
+
     function refreshSlideshow(block) {
       const gallery = block.querySelector('.post-gallery');
       const slides = gallery.querySelectorAll('.gallery-slide');
       const counter = gallery.querySelector('.gallery-counter');
       const prev = gallery.querySelector('.gallery-prev');
       const next = gallery.querySelector('.gallery-next');
+      const vis = getVisibleCount(gallery);
+
       let idx = parseInt(gallery.dataset.slide || '0', 10);
       if (slides.length === 0) idx = 0;
-      else if (idx >= slides.length) idx = slides.length - 1;
+      else if (idx >= slides.length) idx = Math.max(0, slides.length - vis);
       else if (idx < 0) idx = 0;
       gallery.dataset.slide = idx;
-      slides.forEach((s, i) => s.classList.toggle('active', i === idx));
-      const multi = slides.length >= 2;
-      if (prev) prev.style.display = multi ? '' : 'none';
-      if (next) next.style.display = multi ? '' : 'none';
+
+      // Show slides in the visible window [idx .. idx+vis-1]
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i >= idx && i < idx + vis);
+      });
+
+      const needsNav = slides.length > vis;
+      if (prev) prev.style.display = needsNav ? '' : 'none';
+      if (next) next.style.display = needsNav ? '' : 'none';
       if (counter) {
-        counter.style.display = multi ? '' : 'none';
-        counter.textContent = slides.length ? `${idx + 1} / ${slides.length}` : '';
+        counter.style.display = needsNav ? '' : 'none';
+        if (vis === 1) {
+          counter.textContent = slides.length ? `${idx + 1} / ${slides.length}` : '';
+        } else {
+          const end = Math.min(idx + vis, slides.length);
+          counter.textContent = slides.length ? `${idx + 1}–${end} / ${slides.length}` : '';
+        }
       }
+
       // Empty-state hint
       let hint = gallery.querySelector('.empty-hint');
       if (slides.length === 0) {
@@ -788,19 +866,31 @@
       } else if (hint) {
         hint.remove();
       }
+
+      // Sync link input to current slide
+      const linkInput = block.querySelector('.gallery-link-row input');
+      if (linkInput && slides.length > 0) {
+        linkInput.value = slides[idx].dataset.link || '';
+      } else if (linkInput) {
+        linkInput.value = '';
+      }
     }
 
     function gallerySlide(btn, dir) {
       const gallery = btn.closest('.post-gallery');
       if (!gallery) return;
       const slides = gallery.querySelectorAll('.gallery-slide');
-      if (slides.length < 2) return;
+      const vis = getVisibleCount(gallery);
+      if (slides.length <= vis) return;
       let idx = parseInt(gallery.dataset.slide || '0', 10);
-      idx = (idx + dir + slides.length) % slides.length;
+      idx += dir * vis;
+      // Wrap around
+      if (idx >= slides.length) idx = 0;
+      else if (idx < 0) idx = Math.max(0, slides.length - vis);
       gallery.dataset.slide = idx;
-      slides.forEach((s, i) => s.classList.toggle('active', i === idx));
-      const counter = gallery.querySelector('.gallery-counter');
-      if (counter) counter.textContent = `${idx + 1} / ${slides.length}`;
+      // Find parent block for full refresh
+      const block = gallery.closest('.content-block') || gallery.parentElement;
+      refreshSlideshow(block);
     }
 
     function removeCurrentSlide(btn) {
@@ -811,6 +901,24 @@
       let idx = parseInt(gallery.dataset.slide || '0', 10);
       slides[idx].remove();
       refreshSlideshow(block);
+    }
+
+    function setGalleryVisible(select) {
+      const block = select.closest('.content-block');
+      const gallery = block.querySelector('.post-gallery');
+      gallery.dataset.visible = select.value;
+      gallery.dataset.slide = '0';
+      refreshSlideshow(block);
+    }
+
+    function updateSlideLink(input) {
+      const block = input.closest('.content-block');
+      const gallery = block.querySelector('.post-gallery');
+      const slides = gallery.querySelectorAll('.gallery-slide');
+      const idx = parseInt(gallery.dataset.slide || '0', 10);
+      if (slides[idx]) {
+        slides[idx].dataset.link = input.value.trim();
+      }
     }
 
     // ===== HERO =====
@@ -925,15 +1033,26 @@
         } else if (type === 'gallery') {
           const imgs = block.querySelectorAll('.post-gallery .gallery-slide');
           if (imgs.length) {
-            contentHTML += `        <div class="post-gallery" data-slide="0">\n`;
+            const vis = block.querySelector('.post-gallery').dataset.visible || '1';
+            const visNum = parseInt(vis, 10);
+            contentHTML += `        <div class="post-gallery" data-slide="0" data-visible="${vis}">\n`;
             imgs.forEach((img, i) => {
-              const cls = i === 0 ? 'gallery-slide active' : 'gallery-slide';
-              contentHTML += `          <img class="${cls}" src="${img.src}" alt="Gallery image">\n`;
+              const isActive = i < visNum;
+              const link = img.dataset.link || '';
+              if (link) {
+                const cls = isActive ? 'gallery-slide-link active' : 'gallery-slide-link';
+                contentHTML += `          <a class="${cls}" href="${link}" target="_blank" rel="noopener"><img src="${img.src}" alt="Gallery image"></a>\n`;
+              } else {
+                const cls = isActive ? 'gallery-slide active' : 'gallery-slide';
+                contentHTML += `          <img class="${cls}" src="${img.src}" alt="Gallery image">\n`;
+              }
             });
-            if (imgs.length > 1) {
+            if (imgs.length > visNum) {
               contentHTML += `          <button class="gallery-nav gallery-prev" onclick="gallerySlide(this,-1)" aria-label="Previous">&#10094;</button>\n`;
               contentHTML += `          <button class="gallery-nav gallery-next" onclick="gallerySlide(this,1)" aria-label="Next">&#10095;</button>\n`;
-              contentHTML += `          <div class="gallery-counter">1 / ${imgs.length}</div>\n`;
+              const end = Math.min(visNum, imgs.length);
+              const counterText = visNum === 1 ? `1 / ${imgs.length}` : `1–${end} / ${imgs.length}`;
+              contentHTML += `          <div class="gallery-counter">${counterText}</div>\n`;
             }
             contentHTML += `        </div>\n`;
             const cap = block.querySelector('.caption');
@@ -1041,16 +1160,24 @@ ${contentHTML}
     function gallerySlide(btn, dir) {
       var gallery = btn.closest('.post-gallery');
       if (!gallery) return;
-      var slides = gallery.querySelectorAll('.gallery-slide');
-      if (slides.length < 2) return;
+      var slides = gallery.querySelectorAll('.gallery-slide, .gallery-slide-link');
+      var vis = parseInt(gallery.dataset.visible || '1', 10);
+      if (slides.length <= vis) return;
       var idx = parseInt(gallery.dataset.slide || '0', 10);
-      idx = (idx + dir + slides.length) % slides.length;
+      idx += dir * vis;
+      if (idx >= slides.length) idx = 0;
+      else if (idx < 0) idx = Math.max(0, slides.length - vis);
       gallery.dataset.slide = idx;
       for (var i = 0; i < slides.length; i++) {
-        slides[i].classList.toggle('active', i === idx);
+        slides[i].classList.toggle('active', i >= idx && i < idx + vis);
       }
       var counter = gallery.querySelector('.gallery-counter');
-      if (counter) counter.textContent = (idx + 1) + ' / ' + slides.length;
+      if (counter) {
+        var end = Math.min(idx + vis, slides.length);
+        counter.textContent = vis === 1
+          ? (idx + 1) + ' / ' + slides.length
+          : (idx + 1) + '\u2013' + end + ' / ' + slides.length;
+      }
     }
   <\/script>
 </body>
@@ -1324,11 +1451,26 @@ ${contentHTML}
         };
       }
 
-      // Editor-generated gallery: <div class="post-gallery"><img>...</div>
+      // Editor-generated gallery: <div class="post-gallery" data-visible="N">
+      //   <img class="gallery-slide"> or <a class="gallery-slide-link"><img></a>
       if (el.classList.contains('post-gallery')) {
+        const slides = [];
+        // Collect both bare <img> slides and <a>-wrapped slides
+        el.querySelectorAll('.gallery-slide, .gallery-slide-link').forEach(node => {
+          if (node.tagName === 'IMG') {
+            slides.push({ src: node.getAttribute('src'), link: '' });
+          } else if (node.tagName === 'A') {
+            const img = node.querySelector('img');
+            slides.push({
+              src: img ? img.getAttribute('src') : '',
+              link: node.getAttribute('href') || ''
+            });
+          }
+        });
         return {
           type: 'gallery',
-          images: Array.from(el.querySelectorAll('img')).map(i => i.getAttribute('src'))
+          visible: el.dataset.visible || '1',
+          slides
         };
       }
 
@@ -1426,11 +1568,17 @@ ${contentHTML}
           const block = addBlock('gallery');
           const gallery = block.querySelector('.post-gallery');
           const firstNav = gallery.querySelector('.gallery-nav');
-          (pb.images || []).forEach(src => {
+          // Set visible count
+          gallery.dataset.visible = pb.visible || '1';
+          const visSelect = block.querySelector('.gallery-editor-controls select');
+          if (visSelect) visSelect.value = pb.visible || '1';
+          // Add slides with per-image links
+          (pb.slides || []).forEach(slide => {
             const img = document.createElement('img');
             img.className = 'gallery-slide';
-            img.src = src;
+            img.src = slide.src || '';
             img.alt = 'Gallery image';
+            img.dataset.link = slide.link || '';
             gallery.insertBefore(img, firstNav);
           });
           gallery.dataset.slide = '0';
