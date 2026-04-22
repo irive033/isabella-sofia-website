@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>For the Home: Art — Isabella Sofia</title>
   <link rel="stylesheet" href="../../css/style.css">
+  <meta name="date" content="2026-04-22T23:41:56.169Z">
+  <meta name="author" content="Isabella Rivera">
+  <meta name="category" content="wellness">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
     body { font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; }
@@ -24,7 +27,7 @@
       <nav class="main-nav">
         <a href="../../pages/style.html">Style</a>
         <a href="../../pages/beauty.html">Beauty</a>
-        <a href="../../pages/wellness.html">Wellness</a>
+        <a href="../../pages/wellness.html">Lifestyle</a>
         <a href="../../pages/shop.html">Skin Safe Product List</a>
         <a href="../../pages/about.html">About</a>
         <a href="../../pages/contact.html">Contact</a>
@@ -36,22 +39,20 @@
       <h1>For the Home: Art</h1>
       <div class="post-meta">
         <span class="author">Isabella Rivera</span>
-        <span class="date">&middot; Jun 3, 2022</span>
+        <span class="date">&middot; Apr 22, 2026</span>
       </div>
     </section>
     <section class="post-body">
       <div class="post-content">
         <p>Elevate your space with meaningful art pieces. A guide to finding art that reflects your values and transforms your home.</p>
 
-        <div class="post-image-placeholder">Home art gallery photo</div>
+        <p><em>[Image placeholder: Home art gallery photo]</em></p>
 
         <p>Art has the power to change the energy of a room. These are the pieces and sources that inspire a thoughtful, curated home.</p>
 
-        <div class="post-image-placeholder">Art styling photo</div>
-        <div class="post-nav">
-          <a href=\"best-all-natural-deoderants.html\">&larr; Previous</a>best-all-natural-deoderants.html
-          <a href=\"sandals-for-your-next-pool-day.html\">Next &rarr;</a>sandals-for-your-next-pool-day.html
-        </div>
+        <p><em>[Image placeholder: Art styling photo]</em></p>
+
+
       </div>
     </section>
     <section class="newsletter-section">
@@ -63,5 +64,30 @@
     </section>
   </main>
   <footer class="site-footer"><p>&copy; 2026 Isabella Sofia. All rights reserved.</p></footer>
+  <script>
+    // Gallery slideshow navigation (used by any .post-gallery on the page)
+    function gallerySlide(btn, dir) {
+      var gallery = btn.closest('.post-gallery');
+      if (!gallery) return;
+      var slides = gallery.querySelectorAll('.gallery-slide, .gallery-slide-link');
+      var vis = parseInt(gallery.dataset.visible || '1', 10);
+      if (slides.length <= vis) return;
+      var idx = parseInt(gallery.dataset.slide || '0', 10);
+      idx += dir * vis;
+      if (idx >= slides.length) idx = 0;
+      else if (idx < 0) idx = Math.max(0, slides.length - vis);
+      gallery.dataset.slide = idx;
+      for (var i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i >= idx && i < idx + vis);
+      }
+      var counter = gallery.querySelector('.gallery-counter');
+      if (counter) {
+        var end = Math.min(idx + vis, slides.length);
+        counter.textContent = vis === 1
+          ? (idx + 1) + ' / ' + slides.length
+          : (idx + 1) + '–' + end + ' / ' + slides.length;
+      }
+    }
+  </script>
 </body>
 </html>
