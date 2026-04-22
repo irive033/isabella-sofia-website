@@ -27,7 +27,7 @@
       <nav class="main-nav">
         <a href="../../pages/style.html">Style</a>
         <a href="../../pages/beauty.html">Beauty</a>
-        <a href="../../pages/wellness.html">Wellness</a>
+        <a href="../../pages/wellness.html">Lifestyle</a>
         <a href="../../pages/shop.html">Skin Safe Product List</a>
         <a href="../../pages/about.html">About</a>
         <a href="../../pages/contact.html">Contact</a>
@@ -90,5 +90,30 @@
     </section>
   </main>
   <footer class="site-footer"><p>&copy; 2026 Isabella Sofia. All rights reserved.</p></footer>
+  <script>
+    // Gallery slideshow navigation (used by any .post-gallery on the page)
+    function gallerySlide(btn, dir) {
+      var gallery = btn.closest('.post-gallery');
+      if (!gallery) return;
+      var slides = gallery.querySelectorAll('.gallery-slide, .gallery-slide-link');
+      var vis = parseInt(gallery.dataset.visible || '1', 10);
+      if (slides.length <= vis) return;
+      var idx = parseInt(gallery.dataset.slide || '0', 10);
+      idx += dir * vis;
+      if (idx >= slides.length) idx = 0;
+      else if (idx < 0) idx = Math.max(0, slides.length - vis);
+      gallery.dataset.slide = idx;
+      for (var i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i >= idx && i < idx + vis);
+      }
+      var counter = gallery.querySelector('.gallery-counter');
+      if (counter) {
+        var end = Math.min(idx + vis, slides.length);
+        counter.textContent = vis === 1
+          ? (idx + 1) + ' / ' + slides.length
+          : (idx + 1) + '–' + end + ' / ' + slides.length;
+      }
+    }
+  </script>
 </body>
 </html>
