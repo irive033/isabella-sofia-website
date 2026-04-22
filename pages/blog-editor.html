@@ -325,15 +325,34 @@
       text-align: left; margin-bottom: 10px;
     }
     .load-post-item {
-      display: block;
-      padding: 11px 14px; margin-bottom: 4px;
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 8px 8px 14px; margin-bottom: 4px;
       background: #f9f9f9; border: 1px solid transparent;
-      border-radius: 6px;
-      cursor: pointer; transition: all 0.15s;
+      border-radius: 6px; transition: all 0.15s;
       font-size: 0.92rem;
     }
     .load-post-item:hover {
       background: #e8f1ff; border-color: #0969da;
+    }
+    .load-post-item-body {
+      flex: 1; display: flex; align-items: center; gap: 10px;
+      cursor: pointer; padding: 4px 0;
+    }
+    .load-post-item-name { flex: 1; }
+    .load-post-badge {
+      font-size: 0.65rem; letter-spacing: 0.1em; color: #777;
+      background: #e6e6e6; padding: 2px 8px; border-radius: 10px;
+      text-transform: uppercase; flex-shrink: 0;
+    }
+    .load-post-delete {
+      background: transparent; border: 1px solid transparent; color: #c00;
+      width: 28px; height: 28px; font-size: 1.2rem; line-height: 1;
+      cursor: pointer; border-radius: 4px; flex-shrink: 0;
+      padding: 0; font-family: inherit;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .load-post-delete:hover {
+      background: #ffeaea; border-color: #f5c4c4;
     }
     .load-post-empty, .load-post-loading, .load-post-error {
       padding: 30px 20px; text-align: center; color: #888;
@@ -500,14 +519,15 @@
   <div class="modal-overlay" id="loadPostModal">
     <div class="modal" style="max-width: 640px;">
       <h3>Load Existing Post</h3>
-      <p>Pick a category and then click a post to open it for editing.</p>
+      <p>Click a post to open it for editing, or &times; to delete.</p>
       <div class="load-post-tabs">
-        <button class="load-post-tab active" data-category="beauty" onclick="loadPostList('beauty')">Beauty</button>
-        <button class="load-post-tab" data-category="wellness" onclick="loadPostList('wellness')">Lifestyle</button>
-        <button class="load-post-tab" data-category="style" onclick="loadPostList('style')">Style</button>
+        <button class="load-post-tab active" data-category="all" onclick="filterPostList('all')">All</button>
+        <button class="load-post-tab" data-category="beauty" onclick="filterPostList('beauty')">Beauty</button>
+        <button class="load-post-tab" data-category="wellness" onclick="filterPostList('wellness')">Lifestyle</button>
+        <button class="load-post-tab" data-category="style" onclick="filterPostList('style')">Style</button>
       </div>
       <div class="load-post-list" id="loadPostList">
-        <div class="load-post-empty">Click a category to load posts.</div>
+        <div class="load-post-empty">Loading posts...</div>
       </div>
       <div class="btn-row">
         <button onclick="closeLoadPostModal()">Close</button>
@@ -1298,49 +1318,154 @@ ${contentHTML}
     // ============================================================
     // LOAD EXISTING POST
     // ============================================================
-    function showLoadPostModal() {
+    // Flat cache of posts across all category folders, filled when the
+    // modal opens. Lets tab switching filter client-side instead of
+    // re-fetching per tab (and sidesteps 404s from missing folders).
+    let allPostsCache = [];
+    const POST_CATEGORIES = ['beauty', 'wellness', 'style'];
+    const POST_CATEGORY_LABEL = { beauty: 'Beauty', wellness: 'Lifestyle', style: 'Style' };
+
+    async function showLoadPostModal() {
       document.getElementById('loadPostModal').classList.add('visible');
       document.getElementById('loadPostStatus').textContent = '';
       document.getElementById('loadPostStatus').className = 'status-msg';
-      loadPostList('beauty');
+      await fetchAllPostsList();
+      // Reset active tab to "All" each time the modal opens
+      document.querySelectorAll('.load-post-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('.load-post-tab[data-category="all"]').classList.add('active');
+      filterPostList('all');
     }
     function closeLoadPostModal() {
       document.getElementById('loadPostModal').classList.remove('visible');
     }
 
-    async function loadPostList(category) {
-      // Active-tab styling
+    // Fetch HTML file listings from every category folder in parallel.
+    // Folders that don't exist (404) are skipped silently — this avoids
+    // the old bug where the Style tab hard-errored because posts/style/
+    // hadn't been created yet.
+    async function fetchAllPostsList() {
+      const listEl = document.getElementById('loadPostList');
+      listEl.innerHTML = '<div class="load-post-loading">Loading posts...</div>';
+      const token = localStorage.getItem('github_token');
+      const headers = token ? { 'Authorization': `token ${token}` } : {};
+      try {
+        const results = await Promise.all(POST_CATEGORIES.map(async (cat) => {
+          try {
+            const resp = await fetch(
+              `https://api.github.com/repos/${GITHUB_REPO}/contents/posts/${cat}?ref=${GITHUB_BRANCH}`,
+              { headers }
+            );
+            if (!resp.ok) return []; // folder missing — just skip
+            const files = await resp.json();
+            return (Array.isArray(files) ? files : [])
+              .filter(f => f.type === 'file' && f.name.endsWith('.html'))
+              .map(f => ({
+                folder: cat,
+                name: f.name,
+                path: `posts/${cat}/${f.name}`,
+                sha: f.sha
+              }));
+          } catch (e) {
+            return [];
+          }
+        }));
+        allPostsCache = results.flat().sort((a, b) => a.name.localeCompare(b.name));
+      } catch (e) {
+        listEl.innerHTML = `<div class="load-post-error">Failed to load: ${escapeHtmlText(e.message)}</div>`;
+        allPostsCache = [];
+      }
+    }
+
+    // Render the list, optionally filtered by folder. Called from the tab
+    // buttons and after a successful delete.
+    function filterPostList(filter) {
       document.querySelectorAll('.load-post-tab').forEach(t => t.classList.remove('active'));
-      const tab = document.querySelector(`.load-post-tab[data-category="${category}"]`);
+      const tab = document.querySelector(`.load-post-tab[data-category="${filter}"]`);
       if (tab) tab.classList.add('active');
 
       const listEl = document.getElementById('loadPostList');
-      listEl.innerHTML = '<div class="load-post-loading">Loading posts...</div>';
+      const visible = filter === 'all'
+        ? allPostsCache
+        : allPostsCache.filter(p => p.folder === filter);
+
+      if (visible.length === 0) {
+        listEl.innerHTML = '<div class="load-post-empty">No posts in this category.</div>';
+        return;
+      }
+      listEl.innerHTML = visible.map(p => {
+        const prettyName = p.name.replace(/\.html$/, '').replace(/-/g, ' ').replace(/\bamp\b/g, '&');
+        const label = POST_CATEGORY_LABEL[p.folder] || p.folder;
+        // JSON-stringify then strip quotes for embedding in onclick attrs.
+        const prettyArg = JSON.stringify(prettyName).replace(/"/g, '&quot;');
+        return `
+          <div class="load-post-item">
+            <div class="load-post-item-body" onclick="loadPostForEditing('${p.path}', '${p.sha}')">
+              <span class="load-post-item-name">${escapeHtmlText(prettyName)}</span>
+              <span class="load-post-badge">${escapeHtmlText(label)}</span>
+            </div>
+            <button class="load-post-delete" onclick="event.stopPropagation(); deletePost('${p.path}', ${prettyArg})" title="Delete post" aria-label="Delete post">&times;</button>
+          </div>`;
+      }).join('');
+    }
+
+    // Legacy name kept in case anything external still calls it; delegates
+    // to the new filter-based approach.
+    function loadPostList(category) { filterPostList(category); }
+
+    async function deletePost(filePath, prettyName) {
+      if (!confirm(`Delete "${prettyName}"?\n\nThis removes the post file from GitHub and cannot be undone.`)) return;
+
+      const status = document.getElementById('loadPostStatus');
+      let token = localStorage.getItem('github_token');
+      if (!token) {
+        token = prompt('Paste your GitHub token to delete this post:');
+        if (!token) return;
+        localStorage.setItem('github_token', token);
+      }
+
+      status.textContent = `Deleting "${prettyName}"...`;
+      status.className = 'status-msg loading';
 
       try {
-        const token = localStorage.getItem('github_token');
-        const headers = token ? { 'Authorization': `token ${token}` } : {};
-        const resp = await fetch(
-          `https://api.github.com/repos/${GITHUB_REPO}/contents/posts/${category}?ref=${GITHUB_BRANCH}`,
-          { headers }
+        // Refresh the SHA right before DELETE to avoid 409 conflicts.
+        const getResp = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`,
+          { headers: { 'Authorization': `token ${token}` } }
         );
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const files = await resp.json();
-        const htmlFiles = (Array.isArray(files) ? files : [])
-          .filter(f => f.type === 'file' && f.name.endsWith('.html'))
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        if (htmlFiles.length === 0) {
-          listEl.innerHTML = '<div class="load-post-empty">No posts in this category.</div>';
-          return;
+        if (!getResp.ok) {
+          const err = await getResp.json().catch(() => ({}));
+          throw new Error(err.message || `Could not find file (HTTP ${getResp.status})`);
         }
-        listEl.innerHTML = htmlFiles.map(f => {
-          const prettyName = f.name.replace(/\.html$/, '').replace(/-/g, ' ').replace(/\bamp\b/g, '&');
-          const filePath = `posts/${category}/${f.name}`;
-          return `<div class="load-post-item" onclick="loadPostForEditing('${filePath}', '${f.sha}')">${escapeHtmlText(prettyName)}</div>`;
-        }).join('');
+        const current = await getResp.json();
+
+        const delResp = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`,
+          {
+            method: 'DELETE',
+            headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: `Delete post: ${prettyName}`,
+              sha: current.sha,
+              branch: GITHUB_BRANCH
+            })
+          }
+        );
+
+        if (delResp.ok) {
+          status.textContent = `Deleted "${prettyName}".`;
+          status.className = 'status-msg success';
+          // Remove from cache and re-render the list with the same active filter.
+          allPostsCache = allPostsCache.filter(p => p.path !== filePath);
+          const activeTab = document.querySelector('.load-post-tab.active');
+          filterPostList(activeTab ? activeTab.dataset.category : 'all');
+        } else {
+          const err = await delResp.json().catch(() => ({}));
+          status.textContent = `Failed to delete: ${err.message || delResp.statusText}`;
+          status.className = 'status-msg error';
+        }
       } catch (e) {
-        listEl.innerHTML = `<div class="load-post-error">Failed to load: ${escapeHtmlText(e.message)}</div>`;
+        status.textContent = `Failed: ${e.message}`;
+        status.className = 'status-msg error';
       }
     }
 
