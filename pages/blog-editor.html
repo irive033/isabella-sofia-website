@@ -1343,12 +1343,19 @@ ${contentHTML}
     // Folders that don't exist (404) are skipped silently — this avoids
     // the old bug where the Style tab hard-errored because posts/style/
     // hadn't been created yet.
+    //
+    // After the listings are fetched, each post's HTML is fetched in
+    // parallel (via raw.githubusercontent.com — fast + cached) so we can
+    // read the real <meta name="category"> tag. That way a post that lives
+    // in posts/beauty/ but has category="style" in its HTML is correctly
+    // shown as Style in the load modal (folder is just storage, not truth).
     async function fetchAllPostsList() {
       const listEl = document.getElementById('loadPostList');
       listEl.innerHTML = '<div class="load-post-loading">Loading posts...</div>';
       const token = localStorage.getItem('github_token');
       const headers = token ? { 'Authorization': `token ${token}` } : {};
       try {
+        // Step 1: list every HTML file in every category folder.
         const results = await Promise.all(POST_CATEGORIES.map(async (cat) => {
           try {
             const resp = await fetch(
@@ -1363,13 +1370,31 @@ ${contentHTML}
                 folder: cat,
                 name: f.name,
                 path: `posts/${cat}/${f.name}`,
-                sha: f.sha
+                sha: f.sha,
+                // Filled in by step 2; default to folder while we wait.
+                metaCategory: cat
               }));
           } catch (e) {
             return [];
           }
         }));
         allPostsCache = results.flat().sort((a, b) => a.name.localeCompare(b.name));
+
+        // Step 2: for each post, fetch the raw HTML and parse the real
+        // category out of the <meta name="category"> tag. Fire them all
+        // in parallel so total wait is dominated by the slowest request.
+        listEl.innerHTML = '<div class="load-post-loading">Reading post categories...</div>';
+        await Promise.all(allPostsCache.map(async (p) => {
+          try {
+            const raw = await fetch(
+              `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${p.path}`
+            );
+            if (!raw.ok) return;
+            const html = await raw.text();
+            const m = html.match(/<meta\s+name=["']category["']\s+content=["']([^"']+)["']/i);
+            if (m && m[1]) p.metaCategory = m[1].toLowerCase().trim();
+          } catch (e) { /* keep folder-based default */ }
+        }));
       } catch (e) {
         listEl.innerHTML = `<div class="load-post-error">Failed to load: ${escapeHtmlText(e.message)}</div>`;
         allPostsCache = [];
@@ -1384,9 +1409,11 @@ ${contentHTML}
       if (tab) tab.classList.add('active');
 
       const listEl = document.getElementById('loadPostList');
+      // Filter by the post's actual category (from its <meta> tag),
+      // not by which folder the file happens to live in.
       const visible = filter === 'all'
         ? allPostsCache
-        : allPostsCache.filter(p => p.folder === filter);
+        : allPostsCache.filter(p => (p.metaCategory || p.folder) === filter);
 
       if (visible.length === 0) {
         listEl.innerHTML = '<div class="load-post-empty">No posts in this category.</div>';
@@ -1394,7 +1421,8 @@ ${contentHTML}
       }
       listEl.innerHTML = visible.map(p => {
         const prettyName = p.name.replace(/\.html$/, '').replace(/-/g, ' ').replace(/\bamp\b/g, '&');
-        const label = POST_CATEGORY_LABEL[p.folder] || p.folder;
+        const effectiveCat = p.metaCategory || p.folder;
+        const label = POST_CATEGORY_LABEL[effectiveCat] || effectiveCat;
         // JSON-stringify then strip quotes for embedding in onclick attrs.
         const prettyArg = JSON.stringify(prettyName).replace(/"/g, '&quot;');
         return `
