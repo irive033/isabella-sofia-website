@@ -944,8 +944,8 @@ p {
 }
 
 .custom-page-header-body p {
-  font-size: 1rem;
-  line-height: 1.75;
+  font-size: 1.15rem;
+  line-height: 1.7;
   color: #222;
   margin: 0 0 16px;
 }

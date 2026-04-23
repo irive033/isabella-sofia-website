@@ -131,6 +131,12 @@
       display: flex; align-items: center; justify-content: center;
     }
     .page-header-format-bar button:hover { background: #e8e8e8; }
+    .page-header-size-select {
+      height: 30px; padding: 0 6px;
+      background: #f4f4f4; border: 1px solid #ddd; border-radius: 4px;
+      font-family: inherit; font-size: 0.8rem; color: #333; cursor: pointer;
+    }
+    .page-header-size-select:hover { background: #e8e8e8; }
     .page-header-body-editable {
       min-height: 120px;
       padding: 14px 16px;
@@ -440,6 +446,15 @@
             <button type="button" onclick="execHeaderFormat('italic')" title="Italic"><em>I</em></button>
             <button type="button" onclick="execHeaderFormat('underline')" title="Underline"><u>U</u></button>
             <button type="button" onclick="insertHeaderLink()" title="Link">&#128279;</button>
+            <select class="page-header-size-select" onchange="execHeaderFontSize(this)" title="Font size">
+              <option value="">Size</option>
+              <option value="2">Small</option>
+              <option value="3">Normal</option>
+              <option value="4">Medium</option>
+              <option value="5">Large</option>
+              <option value="6">X-Large</option>
+              <option value="7">Huge</option>
+            </select>
             <button type="button" onclick="execHeaderFormat('removeFormat')" title="Clear formatting">&#8709;</button>
           </div>
           <div class="page-header-body-editable" id="editPageBody" contenteditable="true" oninput="markHeaderDirty()"></div>
@@ -1439,6 +1454,18 @@
     function execHeaderFormat(command) {
       document.getElementById('editPageBody').focus();
       document.execCommand(command, false, null);
+      markHeaderDirty();
+    }
+
+    function execHeaderFontSize(select) {
+      const size = select.value;
+      select.selectedIndex = 0; // reset back to "Size" label after applying
+      if (!size) return;
+      document.getElementById('editPageBody').focus();
+      // styleWithCSS makes execCommand emit `<span style="font-size: ...">`
+      // instead of the deprecated `<font size>` tag — keeps the HTML clean.
+      document.execCommand('styleWithCSS', false, true);
+      document.execCommand('fontSize', false, size);
       markHeaderDirty();
     }
 
