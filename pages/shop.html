@@ -994,8 +994,10 @@
       const nav = document.getElementById('subcategoryNav');
       nav.innerHTML = '';
 
-      // Collect unique subcategories actually present in this category
-      const cards = document.querySelectorAll(`.product-card[data-category="${category}"]`);
+      // Collect unique subcategories actually present in this category.
+      // Hidden (draft) products are excluded so empty subcategories don't
+      // show up in the filter nav.
+      const cards = document.querySelectorAll(`.product-card[data-category="${category}"]:not([data-hidden="true"])`);
       const present = new Set();
       cards.forEach(c => { if (c.dataset.subcategory) present.add(c.dataset.subcategory); });
 
@@ -1047,6 +1049,14 @@
     function applyFilters() {
       const filterKey = normSub(currentSubcategory);
       document.querySelectorAll('.product-card').forEach(card => {
+        // Hidden (draft) products stay hidden regardless of filters.
+        // Leave the inline style cleared so the CSS `display: none !important`
+        // rule governs; don't set it to '' because that would also clear
+        // a legitimate filter-hide below.
+        if (card.dataset.hidden === 'true') {
+          card.style.display = '';
+          return;
+        }
         const matchesCategory = currentCategory === 'all' || card.dataset.category === currentCategory;
         const matchesSubcategory = !currentSubcategory || normSub(card.dataset.subcategory) === filterKey;
         card.style.display = (matchesCategory && matchesSubcategory) ? '' : 'none';

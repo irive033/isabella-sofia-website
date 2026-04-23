@@ -1182,6 +1182,10 @@ p {
   margin-bottom: 4px;
 }
 
+/* Hide draft products from the live shop page.
+   Toggled via the "Live/Hidden" switch in the product editor. */
+.product-card[data-hidden="true"] { display: none !important; }
+
 .product-category-label {
   font-size: 0.7rem;
   text-transform: uppercase;

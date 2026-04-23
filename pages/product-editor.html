@@ -233,6 +233,17 @@
       font-size: 0.65rem; padding: 3px 8px; border-radius: 10px;
       text-transform: uppercase; letter-spacing: 0.08em;
     }
+    .editor-product-card .card-hidden-tag {
+      position: absolute; top: 8px; right: 80px;
+      background: #c03a2b; color: #fff;
+      font-size: 0.65rem; padding: 3px 8px; border-radius: 10px;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      z-index: 2;
+    }
+    .editor-product-card.is-hidden .product-image,
+    .editor-product-card.is-hidden .product-info { opacity: 0.45; }
+    .editor-product-card.is-hidden:hover .product-image,
+    .editor-product-card.is-hidden:hover .product-info { opacity: 0.7; }
     .editor-product-card.new-marker::after {
       content: 'NEW'; position: absolute; top: 8px; left: 8px;
       background: #2ea043; color: #fff; font-size: 0.65rem;
@@ -317,6 +328,31 @@
     }
     .field input:focus, .field select:focus { border-color: #000; }
     .field-full { grid-column: 1 / -1; }
+
+    /* Visibility toggle inside the edit modal */
+    .visibility-field { border: 1px solid #e5e5e5; border-radius: 6px; padding: 14px; background: #fafafa; }
+    .visibility-toggle {
+      display: flex; align-items: center; gap: 14px; cursor: pointer; user-select: none;
+    }
+    .visibility-toggle input[type="checkbox"] {
+      position: absolute; opacity: 0; pointer-events: none;
+    }
+    .visibility-slider {
+      position: relative; flex-shrink: 0;
+      width: 44px; height: 24px; background: #2ea043;
+      border-radius: 999px; transition: background 0.2s;
+    }
+    .visibility-slider::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 20px; height: 20px; background: #fff; border-radius: 50%;
+      transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    /* When checked = hidden */
+    .visibility-toggle input:checked + .visibility-slider { background: #888; }
+    .visibility-toggle input:checked + .visibility-slider::after { transform: translateX(20px); }
+    .visibility-labels { display: flex; flex-direction: column; gap: 2px; }
+    .visibility-labels strong { font-size: 0.95rem; color: #000; }
+    .visibility-labels .visibility-sub { font-size: 0.8rem; color: #777; }
 
     .modal .btn-row {
       display: flex; gap: 10px; justify-content: space-between; margin-top: 22px;
@@ -489,6 +525,17 @@
         <input type="url" id="editProductUrl" placeholder="https://www.sephora.com/product/...">
       </div>
 
+      <div class="field field-full visibility-field" style="margin-top:16px;">
+        <label class="visibility-toggle">
+          <input type="checkbox" id="editHidden">
+          <span class="visibility-slider"></span>
+          <span class="visibility-labels">
+            <strong id="visibilityLabel">Live</strong>
+            <span class="visibility-sub">Product is visible on the shop page</span>
+          </span>
+        </label>
+      </div>
+
       <div class="btn-row">
         <div class="left-btns">
           <button class="btn-danger" id="deleteBtn" onclick="deleteCurrentProduct()">Delete</button>
@@ -561,7 +608,7 @@
     // ============================================================
     // STATE
     // ============================================================
-    let products = [];          // [{id, category, subcategory, brand, title, price, image, sourceUrl}]
+    let products = [];          // [{id, category, subcategory, brand, title, price, image, sourceUrl, hidden}]
     let originalProducts = [];  // snapshot for dirty detection
     let shopHtmlCache = '';     // raw shop.html from initial load
     let editingId = null;       // id of product being edited (null = adding new)
@@ -627,6 +674,7 @@
         const category = card.dataset.category || '';
         const sourceUrl = card.dataset.sourceUrl || '';
         const brand = card.dataset.brand || '';
+        const hidden = card.dataset.hidden === 'true';
         const subcategoryAttr = card.dataset.subcategory || '';
         const imageEl = card.querySelector('.product-image');
         const img = imageEl ? imageEl.querySelector('img') : null;
@@ -644,7 +692,8 @@
           title: h4 ? h4.textContent.trim() : '',
           price: priceEl ? priceEl.textContent.trim() : '',
           image,
-          sourceUrl
+          sourceUrl,
+          hidden
         };
       });
     }
@@ -697,9 +746,14 @@
       const brandLabelHtml = p.brand
         ? `<div class="product-brand-label">${escapeHtml(p.brand)}</div>`
         : '';
+      const hiddenBadgeHtml = p.hidden
+        ? `<div class="card-hidden-tag">Hidden</div>`
+        : '';
+      const hiddenClass = p.hidden ? ' is-hidden' : '';
       return `
-        <div class="editor-product-card" onclick="openEditModal(${p.id})">
+        <div class="editor-product-card${hiddenClass}" onclick="openEditModal(${p.id})">
           ${categoryTag}
+          ${hiddenBadgeHtml}
           <div class="edit-badge">Edit</div>
           <div class="product-image">${imageHtml}</div>
           <div class="product-info">
@@ -747,6 +801,8 @@
       // Subcategory must be set AFTER category so the options list is correct.
       populateSubcategoryOptions(p.category || 'skincare', p.subcategory || '');
       document.getElementById('editProductUrl').value = p.sourceUrl || '';
+      document.getElementById('editHidden').checked = !!p.hidden;
+      syncVisibilityLabel();
       document.getElementById('fetchStatus').textContent = '';
       document.getElementById('fetchStatus').className = 'fetch-status';
       document.getElementById('deleteBtn').style.display = '';
@@ -765,6 +821,8 @@
       document.getElementById('editImage').value = '';
       populateSubcategoryOptions('skincare', '');
       document.getElementById('editProductUrl').value = '';
+      document.getElementById('editHidden').checked = false;
+      syncVisibilityLabel();
       document.getElementById('fetchStatus').textContent = '';
       document.getElementById('fetchStatus').className = 'fetch-status';
       document.getElementById('deleteBtn').style.display = 'none';
@@ -772,6 +830,23 @@
       document.getElementById('editModal').classList.add('visible');
       document.getElementById('fetchUrl').focus();
     }
+
+    // Keeps the toggle label in sync with the checkbox state in real time
+    function syncVisibilityLabel() {
+      const hidden = document.getElementById('editHidden').checked;
+      const label = document.getElementById('visibilityLabel');
+      const sub = label.nextElementSibling;
+      if (hidden) {
+        label.textContent = 'Hidden';
+        sub.textContent = 'Product will not appear on the shop page';
+      } else {
+        label.textContent = 'Live';
+        sub.textContent = 'Product is visible on the shop page';
+      }
+    }
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.id === 'editHidden') syncVisibilityLabel();
+    });
 
     function closeEditModal() {
       document.getElementById('editModal').classList.remove('visible');
@@ -829,6 +904,7 @@
       // if Product URL is empty (so legacy behavior still works).
       const sourceUrl = document.getElementById('editProductUrl').value.trim()
                      || document.getElementById('fetchUrl').value.trim();
+      const hidden = document.getElementById('editHidden').checked;
 
       if (!title) {
         document.getElementById('fetchStatus').textContent = 'Product name is required.';
@@ -840,14 +916,14 @@
         // Adding new
         const newProduct = {
           id: nextLocalId++,
-          category, subcategory, brand, title, price, image, sourceUrl
+          category, subcategory, brand, title, price, image, sourceUrl, hidden
         };
         products.push(newProduct);
       } else {
         // Editing existing
         const idx = products.findIndex(x => x.id === editingId);
         if (idx >= 0) {
-          products[idx] = { ...products[idx], category, subcategory, brand, title, price, image, sourceUrl };
+          products[idx] = { ...products[idx], category, subcategory, brand, title, price, image, sourceUrl, hidden };
         }
       }
       closeEditModal();
@@ -1181,6 +1257,7 @@
       if (p.subcategory) dataAttrs.push(`data-subcategory="${escapeAttr(p.subcategory)}"`);
       if (p.brand) dataAttrs.push(`data-brand="${escapeAttr(p.brand)}"`);
       if (p.sourceUrl) dataAttrs.push(`data-source-url="${escapeAttr(p.sourceUrl)}"`);
+      if (p.hidden) dataAttrs.push(`data-hidden="true"`);
 
       const imageInner = p.image
         ? `<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.title)}">`
