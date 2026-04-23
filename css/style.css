@@ -895,6 +895,30 @@ p {
   padding: 100px 6vw 80px;
 }
 
+/* Keeps the paragraph at the top of its column (doesn't stretch to match
+   the h1 height), so the badge directly below sits right under the text. */
+.custom-page-header-body-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.vetted-badge {
+  font-family: inherit;
+  font-size: 0.82rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #6b7752;
+}
+.vetted-badge a {
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.vetted-badge a:hover {
+  opacity: 0.7;
+}
+
 .custom-page-header-grid {
   display: grid;
   grid-template-columns: 1fr 1.4fr;
@@ -946,6 +970,9 @@ p {
   }
   .custom-page-header-heading h1 {
     font-size: 2.4rem;
+  }
+  .vetted-badge {
+    font-size: 0.72rem;
   }
 }
 

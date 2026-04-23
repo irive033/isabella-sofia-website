@@ -1467,8 +1467,14 @@
         <div class="custom-page-header-heading">
           <h1>${escapeHtml(heading)}</h1>
         </div>
-        <div class="custom-page-header-body">
+        <div class="custom-page-header-body-wrap">
+          <div class="custom-page-header-body">
 ${indentBodyHtml(bodyHtml)}
+          </div>
+          <!-- Static badge — preserved through page-header edits. -->
+          <div class="vetted-badge">
+            <a href="https://acneclinicnyc.com/pore-clogging-ingredients/" target="_blank" rel="noopener">Vetted with the Acne Clinic NYC Ingredient Checker</a>
+          </div>
         </div>
       </div>
     </section>`;
@@ -1476,7 +1482,7 @@ ${indentBodyHtml(bodyHtml)}
 
     // Indent inner body HTML to line up with the surrounding shop.html tags.
     function indentBodyHtml(html) {
-      return html.split('\n').map(line => '          ' + line.trim()).filter(l => l.trim() !== '').join('\n');
+      return html.split('\n').map(line => '            ' + line.trim()).filter(l => l.trim() !== '').join('\n');
     }
 
     // Replace the <section id="customPageHeader">…</section> block in the given
