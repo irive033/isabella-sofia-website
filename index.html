@@ -81,9 +81,9 @@
       <div class="section-label">From the Blog</div>
       <div class="blog-preview-grid">
         <div class="blog-card">
-          <h2>7 Eco-Friendly Bathing Suits for Summer</h2>
-          <p>The perfect bathing suits for your next vacation or lounge by the pool.</p>
-          <a href="posts/beauty/7-eco-friendly-swimwear-brands.html" class="read-more">Read more</a>
+          <h2>Style</h2>
+          <p>Sustainable, timeless pieces for every season.</p>
+          <a href="pages/style.html" class="read-more">Read more</a>
         </div>
         <div class="blog-card">
           <h2>Skin Safe Product List</h2>
@@ -91,9 +91,9 @@
           <a href="pages/shop.html" class="read-more">Read more</a>
         </div>
         <div class="blog-card">
-          <h2>Brand Spotlight: Ilia Beauty</h2>
+          <h2>Beauty</h2>
           <p>Clean, glowing skin has never been easier.</p>
-          <a href="posts/beauty/brand-spotlight-ilia-beauty.html" class="read-more">Read more</a>
+          <a href="pages/beauty.html" class="read-more">Read more</a>
         </div>
       </div>
     </section>
@@ -118,35 +118,15 @@
       </div>
     </section>
 
-    <!-- ============ SHOP SUMMER STYLES (Blog Carousel) ============ -->
+    <!-- ============ STYLE (Blog Carousel) ============ -->
     <section class="blog-carousel-section white-bg">
       <div class="container">
         <div class="blog-carousel-header">
-          <h2>Shop Summer Styles</h2>
-          <span class="carousel-nav-label">Beauty</span>
+          <h2>Style</h2>
+          <span class="carousel-nav-label">Style</span>
         </div>
-        <div class="blog-carousel">
-          <a href="posts/beauty/hotel-spotlight-five-5-star-stays.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Hotel Spotlight Image</div>
-            <h4>Hotel Spotlight: Five 5-Star Stays</h4>
-          </a>
-          <a href="posts/beauty/morning-amp-nightime-skincare-routine.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Skincare Image</div>
-            <h4>Morning & Nighttime Skincare Routine</h4>
-          </a>
-          <a href="posts/beauty/everyday-hair-routine-1.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Bodycare Image</div>
-            <h4>Simple Bodycare Routine</h4>
-          </a>
-          <a href="posts/beauty/minimal-makeup-routine.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Makeup Image</div>
-            <h4>Minimal Makeup Routine</h4>
-          </a>
-          <a href="posts/beauty/everything-skincare-routine.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Shower Image</div>
-            <h4>Everything Shower Routine</h4>
-          </a>
-        </div>
+        <!-- Populated by js/post-index.js — always reflects live posts -->
+        <div class="blog-carousel" id="styleCarousel"></div>
       </div>
     </section>
 
@@ -157,33 +137,8 @@
           <h2>Clear Skin Routines</h2>
           <span class="carousel-nav-label">Beauty</span>
         </div>
-        <div class="blog-carousel">
-          <a href="posts/beauty/hotel-spotlight-five-5-star-stays.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Hotel Image</div>
-            <div class="date">Apr 1, 2026</div>
-            <h4>Hotel Spotlight: Five 5-Star Stays</h4>
-          </a>
-          <a href="posts/beauty/morning-amp-nightime-skincare-routine.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Skincare Image</div>
-            <div class="date">Jun 19, 2025</div>
-            <h4>Morning & Nighttime Skincare Routine</h4>
-          </a>
-          <a href="posts/beauty/everyday-hair-routine-1.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Bodycare Image</div>
-            <div class="date">Jun 19, 2025</div>
-            <h4>Simple Bodycare Routine</h4>
-          </a>
-          <a href="posts/beauty/minimal-makeup-routine.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Makeup Image</div>
-            <div class="date">Jun 15, 2025</div>
-            <h4>Minimal Makeup Routine</h4>
-          </a>
-          <a href="posts/beauty/everything-skincare-routine.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Shower Image</div>
-            <div class="date">Jun 15, 2025</div>
-            <h4>Everything Shower Routine</h4>
-          </a>
-        </div>
+        <!-- Populated by js/post-index.js — always reflects live posts -->
+        <div class="blog-carousel" id="beautyCarousel"></div>
       </div>
     </section>
 
@@ -202,5 +157,10 @@
     <p>&copy; 2026 Isabella Sofia. All rights reserved.</p>
   </footer>
 
+  <script src="js/post-index.js"></script>
+  <script>
+    renderPostCarousel(document.getElementById('styleCarousel'), 'style', { limit: 5 });
+    renderPostCarousel(document.getElementById('beautyCarousel'), 'beauty', { limit: 5 });
+  </script>
 </body>
 </html>

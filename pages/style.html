@@ -44,114 +44,11 @@
       <h1>Style</h1>
     </section>
 
-    <!-- Featured Sections -->
-    <section class="blog-preview-section">
-      <div class="blog-preview-grid">
-        <div class="blog-card">
-          <h2>Window Shop</h2>
-          <p>Curated finds for the mindful shopper.</p>
-          <a href="../posts/beauty/window-shop.html" class="read-more">Read more</a>
-        </div>
-        <div class="blog-card">
-          <h2>Summer Swimsuits 2025</h2>
-          <p>Eco-friendly swimwear for the conscious consumer.</p>
-          <a href="../posts/beauty/7-eco-friendly-swimwear-brands.html" class="read-more">Read more</a>
-        </div>
-        <div class="blog-card">
-          <h2>Sandals For Summer</h2>
-          <p>The best sustainable sandals for warm weather.</p>
-          <a href="../posts/beauty/sandals-for-your-next-pool-day.html" class="read-more">Read more</a>
-        </div>
-      </div>
+    <section style="background:#fff; padding: 40px 0 60px;">
+      <!-- Posts are fetched live from the GitHub repo by js/post-index.js -->
+      <div class="blog-grid" id="dynamicPostGrid"></div>
     </section>
 
-    <!-- Blog Grid -->
-    <section style="background:#fff; padding: 20px 0 60px;">
-      <div class="blog-grid">
-        <article class="blog-grid-item">
-          <div class="thumb">Window Shop</div>
-          <div class="post-info">
-            <h3>Window Shop</h3>
-            <div class="meta">Isabella Rivera &middot; Jun 2025</div>
-            <p>Curated luxury finds from brands that care about the planet.</p>
-            <a href="../posts/beauty/window-shop.html" class="read-more">Read more</a>
-          </div>
-        </article>
-        <article class="blog-grid-item">
-          <div class="thumb">Summer Dresses</div>
-          <div class="post-info">
-            <h3>Summer Dresses</h3>
-            <div class="meta">Isabella Rivera &middot; Jun 2025</div>
-            <p>Effortless style for warm days ahead.</p>
-            <a href="../posts/beauty/summer-dresses.html" class="read-more">Read more</a>
-          </div>
-        </article>
-        <article class="blog-grid-item">
-          <div class="thumb">Swimwear</div>
-          <div class="post-info">
-            <h3>7 Eco-Friendly Swimwear Brands</h3>
-            <div class="meta">Isabella Rivera &middot; Jun 2025</div>
-            <p>The perfect bathing suits for your next vacation or lounge by the pool.</p>
-            <a href="../posts/beauty/7-eco-friendly-swimwear-brands.html" class="read-more">Read more</a>
-          </div>
-        </article>
-        <article class="blog-grid-item">
-          <div class="thumb">Sandals</div>
-          <div class="post-info">
-            <h3>Sandals for your next Pool Day</h3>
-            <div class="meta">Isabella Rivera &middot; Jun 2025</div>
-            <p>Sustainable sandals that don't sacrifice style.</p>
-            <a href="../posts/beauty/sandals-for-your-next-pool-day.html" class="read-more">Read more</a>
-          </div>
-        </article>
-        <article class="blog-grid-item">
-          <div class="thumb">Home Art</div>
-          <div class="post-info">
-            <h3>For the Home: Art</h3>
-            <div class="meta">Isabella Rivera &middot; May 2025</div>
-            <p>Elevate your space with meaningful art pieces.</p>
-            <a href="../posts/beauty/for-the-home-art.html" class="read-more">Read more</a>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <!-- Clear Skin Routines Carousel -->
-    <section class="blog-carousel-section">
-      <div class="container">
-        <div class="blog-carousel-header">
-          <h2>Clear Skin Routines</h2>
-          <span class="carousel-nav-label">Beauty</span>
-        </div>
-        <div class="blog-carousel">
-          <a href="../posts/beauty/everything-skincare-routine.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Hotel Image</div>
-            <div class="date">Apr 1, 2026</div>
-            <h4>Hotel Spotlight: Five 5-Star Stays</h4>
-          </a>
-          <a href="../posts/beauty/hotel-spotlight-five-5-star-stays.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Skincare Image</div>
-            <div class="date">Jun 19, 2025</div>
-            <h4>Morning & Nighttime Skincare Routine</h4>
-          </a>
-          <a href="../posts/beauty/hotel-spotlight-five-5-star-stays.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Bodycare Image</div>
-            <div class="date">Jun 19, 2025</div>
-            <h4>Simple Bodycare Routine</h4>
-          </a>
-          <a href="../posts/beauty/hotel-spotlight-five-5-star-stays.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Makeup Image</div>
-            <div class="date">Jun 15, 2025</div>
-            <h4>Minimal Makeup Routine</h4>
-          </a>
-          <a href="../posts/beauty/hotel-spotlight-five-5-star-stays.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Shower Image</div>
-            <div class="date">Jun 15, 2025</div>
-            <h4>Everything Shower Routine</h4>
-          </a>
-        </div>
-      </div>
-    </section>
 
     <section class="newsletter-section">
       <h3>Never miss a post</h3>
@@ -166,5 +63,7 @@
     <p>&copy; 2026 Isabella Sofia. All rights reserved.</p>
   </footer>
 
+  <script src="../js/post-index.js"></script>
+  <script>renderPostGrid(document.getElementById('dynamicPostGrid'), 'style');</script>
 </body>
 </html>

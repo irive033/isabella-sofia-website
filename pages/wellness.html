@@ -39,80 +39,8 @@
     </section>
 
     <section style="background:#fff; padding: 40px 0 60px;">
-      <div class="blog-grid">
-        <article class="blog-grid-item">
-          <div class="thumb">Wellness Image</div>
-          <div class="post-info">
-            <h3>Redefine Success</h3>
-            <div class="meta">Isabella Rivera &middot; May 28, 2019</div>
-            <p>Confidence builds quietly, step by step. Start where you are and grow from there.</p>
-            <a href="../posts/wellness/redefine-success.html" class="read-more">Read more</a>
-          </div>
-        </article>
-        <article class="blog-grid-item">
-          <div class="thumb">Wellness Image</div>
-          <div class="post-info">
-            <h3>Small Steps Create Big Shifts</h3>
-            <div class="meta">Isabella Rivera &middot; May 28, 2019</div>
-            <p>Consistent action and small steps build the confidence you're looking for.</p>
-            <a href="../posts/wellness/small-steps-create-big-shifts.html" class="read-more">Read more</a>
-          </div>
-        </article>
-        <article class="blog-grid-item">
-          <div class="thumb">Wellness Image</div>
-          <div class="post-info">
-            <h3>Turn Intention Into Action</h3>
-            <div class="meta">Isabella Rivera &middot; May 28, 2019</div>
-            <p>Move from thinking to doing with practical mindful habits.</p>
-            <a href="../posts/wellness/turn-intention-into-action.html" class="read-more">Read more</a>
-          </div>
-        </article>
-        <article class="blog-grid-item">
-          <div class="thumb">Wellness Image</div>
-          <div class="post-info">
-            <h3>Make Room for Growth</h3>
-            <div class="meta">Isabella Rivera &middot; May 28, 2019</div>
-            <p>Create space in your life for the things that truly matter.</p>
-            <a href="../posts/wellness/make-room-for-growth.html" class="read-more">Read more</a>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section class="blog-carousel-section">
-      <div class="container">
-        <div class="blog-carousel-header">
-          <h2>Clear Skin Routines</h2>
-          <span class="carousel-nav-label">Beauty</span>
-        </div>
-        <div class="blog-carousel">
-          <a href="../posts/beauty/everything-skincare-routine.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Hotel Image</div>
-            <div class="date">Apr 1, 2026</div>
-            <h4>Hotel Spotlight: Five 5-Star Stays</h4>
-          </a>
-          <a href="../posts/beauty/hotel-spotlight-five-5-star-stays.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Skincare Image</div>
-            <div class="date">Jun 19, 2025</div>
-            <h4>Morning & Nighttime Skincare Routine</h4>
-          </a>
-          <a href="../posts/beauty/hotel-spotlight-five-5-star-stays.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Bodycare Image</div>
-            <div class="date">Jun 19, 2025</div>
-            <h4>Simple Bodycare Routine</h4>
-          </a>
-          <a href="../posts/beauty/hotel-spotlight-five-5-star-stays.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Makeup Image</div>
-            <div class="date">Jun 15, 2025</div>
-            <h4>Minimal Makeup Routine</h4>
-          </a>
-          <a href="../posts/beauty/hotel-spotlight-five-5-star-stays.html" class="carousel-item">
-            <div class="carousel-item-placeholder">Shower Image</div>
-            <div class="date">Jun 15, 2025</div>
-            <h4>Everything Shower Routine</h4>
-          </a>
-        </div>
-      </div>
+      <!-- Posts are fetched live from the GitHub repo by js/post-index.js -->
+      <div class="blog-grid" id="dynamicPostGrid"></div>
     </section>
 
     <section class="newsletter-section">
@@ -128,5 +56,7 @@
     <p>&copy; 2026 Isabella Sofia. All rights reserved.</p>
   </footer>
 
+  <script src="../js/post-index.js"></script>
+  <script>renderPostGrid(document.getElementById('dynamicPostGrid'), 'lifestyle');</script>
 </body>
 </html>
