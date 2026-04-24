@@ -1354,13 +1354,18 @@ ${contentHTML}
       listEl.innerHTML = '<div class="load-post-loading">Loading posts...</div>';
       const token = localStorage.getItem('github_token');
       const headers = token ? { 'Authorization': `token ${token}` } : {};
+      // GitHub's contents API sends `cache-control: max-age=60`, so a recently
+      // deleted post would otherwise still appear for up to a minute. Force
+      // the browser to skip its HTTP cache so the list reflects the current
+      // state of the repo every time the modal opens.
+      const fetchOpts = { headers, cache: 'no-store' };
       try {
         // Step 1: list every HTML file in every category folder.
         const results = await Promise.all(POST_CATEGORIES.map(async (cat) => {
           try {
             const resp = await fetch(
               `https://api.github.com/repos/${GITHUB_REPO}/contents/posts/${cat}?ref=${GITHUB_BRANCH}`,
-              { headers }
+              fetchOpts
             );
             if (!resp.ok) return []; // folder missing — just skip
             const files = await resp.json();
@@ -1387,7 +1392,8 @@ ${contentHTML}
         await Promise.all(allPostsCache.map(async (p) => {
           try {
             const raw = await fetch(
-              `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${p.path}`
+              `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${p.path}`,
+              { cache: 'no-store' }
             );
             if (!raw.ok) return;
             const html = await raw.text();
