@@ -449,7 +449,7 @@
       <input type="text" id="postAuthor" value="Isabella Rivera" placeholder="Author">
       <select id="postCategory">
         <option value="beauty">Beauty</option>
-        <option value="wellness">Lifestyle</option>
+        <option value="lifestyle">Lifestyle</option>
         <option value="style">Style</option>
       </select>
     </div>
@@ -523,13 +523,14 @@
       <div class="load-post-tabs">
         <button class="load-post-tab active" data-category="all" onclick="filterPostList('all')">All</button>
         <button class="load-post-tab" data-category="beauty" onclick="filterPostList('beauty')">Beauty</button>
-        <button class="load-post-tab" data-category="wellness" onclick="filterPostList('wellness')">Lifestyle</button>
+        <button class="load-post-tab" data-category="lifestyle" onclick="filterPostList('lifestyle')">Lifestyle</button>
         <button class="load-post-tab" data-category="style" onclick="filterPostList('style')">Style</button>
       </div>
       <div class="load-post-list" id="loadPostList">
         <div class="load-post-empty">Loading posts...</div>
       </div>
-      <div class="btn-row">
+      <div class="btn-row" style="justify-content: space-between;">
+        <button onclick="migrateToCorrectFolders()" title="Move any post whose folder doesn't match its category meta tag">Migrate folders</button>
         <button onclick="closeLoadPostModal()">Close</button>
       </div>
       <div class="status-msg" id="loadPostStatus"></div>
@@ -1266,49 +1267,94 @@ ${contentHTML}
       if (!editingFilePath && !filename) { status.textContent = 'Please enter a filename'; status.className = 'status-msg error'; return; }
       localStorage.setItem('github_token', token);
       const html = generatePostHTML();
-      // When editing, stay at the original file path (even if the category
-      // dropdown changed — moving posts between categories requires a rename
-      // that we don't support here). When creating new, build from slug+cat.
-      const filePath = editingFilePath || `posts/${category}/${filename}.html`;
       const content = btoa(unescape(encodeURIComponent(html)));
+      const headers = { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' };
+
+      // Figure out the target path. When editing, detect a category change by
+      // comparing the folder segment of the old path to the dropdown value.
+      // If they differ, we'll create the file at the NEW path and delete the
+      // OLD one — effectively moving it. Otherwise just overwrite in place.
+      let targetPath;
+      let oldPathToDelete = null;
+      if (editingFilePath) {
+        const oldFolder = editingFilePath.split('/')[1]; // "posts/<folder>/name.html"
+        if (oldFolder !== category) {
+          const name = editingFilePath.split('/').pop();
+          targetPath = `posts/${category}/${name}`;
+          oldPathToDelete = editingFilePath;
+        } else {
+          targetPath = editingFilePath;
+        }
+      } else {
+        targetPath = `posts/${category}/${filename}.html`;
+      }
+
       status.textContent = editingFilePath ? 'Fetching latest file...' : 'Publishing...';
       status.className = 'status-msg loading';
       try {
-        // Always refresh the SHA right before PUT to avoid 409 conflicts
-        // when someone else edited the file in the meantime.
+        // Always refresh the SHA right before PUT to avoid 409 conflicts.
+        // Only needed when overwriting — a fresh path doesn't have a SHA.
         let sha = null;
-        try {
-          const checkResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`, {
-            headers: { 'Authorization': `token ${token}` }
-          });
-          if (checkResp.ok) { sha = (await checkResp.json()).sha; }
-        } catch (e) {}
-        const commitMsg = editingFilePath
-          ? `Update: ${document.getElementById('postTitle').value || filePath}`
-          : `Publish: ${document.getElementById('postTitle').value || filename}`;
+        if (targetPath === editingFilePath) {
+          try {
+            const checkResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${targetPath}?ref=${GITHUB_BRANCH}`, {
+              headers: { 'Authorization': `token ${token}` }, cache: 'no-store'
+            });
+            if (checkResp.ok) { sha = (await checkResp.json()).sha; }
+          } catch (e) {}
+        }
+        const postTitle = document.getElementById('postTitle').value;
+        const commitMsg = oldPathToDelete
+          ? `Move to ${category}: ${postTitle || targetPath}`
+          : editingFilePath
+            ? `Update: ${postTitle || targetPath}`
+            : `Publish: ${postTitle || filename}`;
         const body = { message: commitMsg, content, branch: GITHUB_BRANCH };
         if (sha) body.sha = sha;
-        status.textContent = editingFilePath ? 'Committing update...' : 'Committing...';
-        const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`, {
-          method: 'PUT',
-          headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
+
+        status.textContent = oldPathToDelete
+          ? 'Creating file in new category folder...'
+          : (editingFilePath ? 'Committing update...' : 'Committing...');
+        const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${targetPath}`, {
+          method: 'PUT', headers, body: JSON.stringify(body)
         });
-        if (resp.ok) {
-          const result = await resp.json();
-          const verb = editingFilePath ? 'Updated' : 'Published';
-          status.innerHTML = `${verb}! <a href="${result.content.html_url}" target="_blank" style="color:#0969da;">View on GitHub</a><br>Vercel will auto-deploy shortly.`;
-          status.className = 'status-msg success';
-          // Keep editing state so she can make more edits and save again;
-          // the SHA will be refreshed on the next save.
-          if (editingFilePath) {
-            editingFileSha = result.content.sha;
-          }
-        } else {
-          const err = await resp.json();
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
           status.textContent = `Error: ${err.message || 'Failed to publish'}`;
           status.className = 'status-msg error';
+          return;
         }
+        const result = await resp.json();
+
+        // If the category changed, delete the old file. A failure here leaves
+        // the post in both folders — not ideal, but the new path is correct.
+        if (oldPathToDelete) {
+          status.textContent = 'Removing file from old category folder...';
+          try {
+            const getOld = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${oldPathToDelete}?ref=${GITHUB_BRANCH}`, {
+              headers: { 'Authorization': `token ${token}` }, cache: 'no-store'
+            });
+            if (getOld.ok) {
+              const oldMeta = await getOld.json();
+              await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${oldPathToDelete}`, {
+                method: 'DELETE', headers,
+                body: JSON.stringify({
+                  message: `Delete old location after category move: ${postTitle}`,
+                  sha: oldMeta.sha, branch: GITHUB_BRANCH
+                })
+              });
+            }
+          } catch (e) { /* best-effort; the new file is already in place */ }
+          // Update editing state so subsequent saves target the new path.
+          editingFilePath = targetPath;
+          document.getElementById('editingBannerPath').textContent = targetPath;
+        }
+
+        const verb = oldPathToDelete ? 'Moved and updated' : (editingFilePath ? 'Updated' : 'Published');
+        status.innerHTML = `${verb}! <a href="${result.content.html_url}" target="_blank" style="color:#0969da;">View on GitHub</a><br>Vercel will auto-deploy shortly.`;
+        status.className = 'status-msg success';
+        if (editingFilePath) editingFileSha = result.content.sha;
       } catch (e) {
         status.textContent = `Network error: ${e.message}`;
         status.className = 'status-msg error';
@@ -1322,8 +1368,19 @@ ${contentHTML}
     // modal opens. Lets tab switching filter client-side instead of
     // re-fetching per tab (and sidesteps 404s from missing folders).
     let allPostsCache = [];
-    const POST_CATEGORIES = ['beauty', 'wellness', 'style'];
-    const POST_CATEGORY_LABEL = { beauty: 'Beauty', wellness: 'Lifestyle', style: 'Style' };
+    const POST_CATEGORIES = ['beauty', 'lifestyle', 'style'];
+    const POST_CATEGORY_LABEL = { beauty: 'Beauty', lifestyle: 'Lifestyle', style: 'Style' };
+
+    // Existing posts may have been saved with the legacy `wellness` slug
+    // (before the Lifestyle rename). Anywhere we read a category from a
+    // file, funnel it through this helper so the UI always works in the
+    // new slug space. Return 'beauty' as a safe default for unknown values.
+    function normalizeCategorySlug(slug) {
+      const s = (slug || '').toLowerCase().trim();
+      if (s === 'wellness') return 'lifestyle';
+      if (['beauty', 'lifestyle', 'style'].includes(s)) return s;
+      return 'beauty';
+    }
 
     async function showLoadPostModal() {
       document.getElementById('loadPostModal').classList.add('visible');
@@ -1398,7 +1455,7 @@ ${contentHTML}
             if (!raw.ok) return;
             const html = await raw.text();
             const m = html.match(/<meta\s+name=["']category["']\s+content=["']([^"']+)["']/i);
-            if (m && m[1]) p.metaCategory = m[1].toLowerCase().trim();
+            if (m && m[1]) p.metaCategory = normalizeCategorySlug(m[1]);
           } catch (e) { /* keep folder-based default */ }
         }));
       } catch (e) {
@@ -1503,6 +1560,94 @@ ${contentHTML}
       }
     }
 
+    // One-shot migration: scan every post in the cache; for any whose current
+    // folder doesn't match its meta category, create the file at the correct
+    // path and delete the old copy. Also updates legacy `content="wellness"`
+    // meta tags to `content="lifestyle"` so the file on disk matches the new
+    // slug space going forward.
+    async function migrateToCorrectFolders() {
+      const status = document.getElementById('loadPostStatus');
+      const mismatched = allPostsCache.filter(p =>
+        p.metaCategory && p.metaCategory !== p.folder
+      );
+      if (mismatched.length === 0) {
+        status.textContent = 'All posts are already in their correct folders — nothing to migrate.';
+        status.className = 'status-msg success';
+        return;
+      }
+      const summary = mismatched.map(p =>
+        `  • ${p.name.replace(/\.html$/, '')}: ${p.folder} → ${p.metaCategory}`
+      ).join('\n');
+      if (!confirm(`Move ${mismatched.length} post(s) to match their category?\n\n${summary}`)) return;
+
+      let token = localStorage.getItem('github_token');
+      if (!token) {
+        token = prompt('Paste your GitHub token to perform the migration:');
+        if (!token) return;
+        localStorage.setItem('github_token', token);
+      }
+      const headers = { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' };
+
+      status.textContent = `Migrating ${mismatched.length} post(s)...`;
+      status.className = 'status-msg loading';
+      let moved = 0, failed = 0;
+      for (const p of mismatched) {
+        try {
+          // 1) Fetch current file content + SHA
+          const getResp = await fetch(
+            `https://api.github.com/repos/${GITHUB_REPO}/contents/${p.path}?ref=${GITHUB_BRANCH}`,
+            { headers: { 'Authorization': `token ${token}` }, cache: 'no-store' }
+          );
+          if (!getResp.ok) { failed++; continue; }
+          const getJson = await getResp.json();
+          let html = decodeURIComponent(escape(atob(getJson.content.replace(/\s/g, ''))));
+
+          // 2) Normalize the meta tag in-place so the file content matches
+          //    the new slug space (wellness → lifestyle).
+          html = html.replace(
+            /(<meta\s+name=["']category["']\s+content=["'])([^"']+)(["'][^>]*>)/i,
+            (_m, pre, val, post) => pre + normalizeCategorySlug(val) + post
+          );
+          const newContent = btoa(unescape(encodeURIComponent(html)));
+
+          // 3) PUT new file at the correct folder path
+          const newPath = `posts/${p.metaCategory}/${p.name}`;
+          const putResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${newPath}`, {
+            method: 'PUT', headers,
+            body: JSON.stringify({
+              message: `Migrate to ${p.metaCategory}: ${p.name.replace(/\.html$/, '')}`,
+              content: newContent, branch: GITHUB_BRANCH
+            })
+          });
+          if (!putResp.ok) { failed++; continue; }
+
+          // 4) DELETE old file (use fresh SHA we just fetched)
+          await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${p.path}`, {
+            method: 'DELETE', headers,
+            body: JSON.stringify({
+              message: `Remove old location after migration: ${p.name.replace(/\.html$/, '')}`,
+              sha: getJson.sha, branch: GITHUB_BRANCH
+            })
+          });
+
+          moved++;
+          status.textContent = `Migrating... ${moved}/${mismatched.length} done.`;
+        } catch (e) {
+          failed++;
+        }
+      }
+
+      status.textContent = failed === 0
+        ? `Migration complete — moved ${moved} post(s).`
+        : `Moved ${moved}, failed ${failed}. Check the list and retry if needed.`;
+      status.className = failed === 0 ? 'status-msg success' : 'status-msg error';
+
+      // Refresh the list with fresh data from the remote.
+      await fetchAllPostsList();
+      const activeTab = document.querySelector('.load-post-tab.active');
+      filterPostList(activeTab ? activeTab.dataset.category : 'all');
+    }
+
     async function loadPostForEditing(filePath, sha) {
       const status = document.getElementById('loadPostStatus');
       status.textContent = 'Loading post...';
@@ -1564,9 +1709,10 @@ ${contentHTML}
       const author = (doc.querySelector('.post-meta .author')?.textContent || 'Isabella Rivera').trim();
       // Prefer the explicit meta tag (editor-generated) over the display text
       const isoDate = doc.querySelector('meta[name="date"]')?.getAttribute('content') || '';
-      // Category: prefer meta tag, fall back to URL detection, then default
+      // Category: prefer meta tag, fall back to URL detection, then default.
+      // Normalizer handles the legacy 'wellness' → 'lifestyle' rename.
       const metaCategory = doc.querySelector('meta[name="category"]')?.getAttribute('content') || '';
-      const category = metaCategory || 'beauty';
+      const category = normalizeCategorySlug(metaCategory);
 
       // Header background image
       const bgImage = postHeader?.style?.backgroundImage || '';
