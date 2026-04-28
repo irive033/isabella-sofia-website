@@ -1258,6 +1258,85 @@ ${contentHTML}
       document.getElementById('publishModal').classList.remove('visible');
     }
 
+    // Walk the generated HTML for data:image/...;base64,... URIs, upload each
+    // unique one to images/uploads/YYYY/MM/<sha1-12>.<ext> in the repo, and
+    // return the HTML with the URIs replaced by relative paths.
+    //
+    // Without this, every uploaded image gets baked into the post HTML as a
+    // multi-MB base64 blob (one capsule-wardrobe post hit 10 MB). Identical
+    // images dedup by content hash, both within one publish and across posts
+    // — files that already exist in the repo are skipped, so republishing or
+    // reusing an image elsewhere costs nothing.
+    async function uploadEmbeddedImages(html, headers, statusEl) {
+      const re = /data:image\/([a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)/g;
+      const unique = new Map(); // b64 -> mime
+      let m;
+      while ((m = re.exec(html)) !== null) {
+        if (!unique.has(m[2])) unique.set(m[2], m[1]);
+      }
+      if (unique.size === 0) return html;
+
+      const mimeToExt = (mime) => {
+        let ext = mime.toLowerCase();
+        if (ext === 'jpeg') return 'jpg';
+        if (ext === 'svg+xml') return 'svg';
+        if (ext.startsWith('x-')) ext = ext.slice(2);
+        return ext.split('+')[0];
+      };
+
+      const now = new Date();
+      const dirPath = `images/uploads/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+      const replacements = new Map();
+      let i = 0;
+      for (const [b64, mime] of unique) {
+        i++;
+        if (statusEl) {
+          statusEl.textContent = `Uploading image ${i} of ${unique.size}...`;
+          statusEl.className = 'status-msg loading';
+        }
+
+        // Hash the decoded bytes — same content yields same filename, which
+        // is what makes the cross-post dedup work.
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let j = 0; j < bin.length; j++) bytes[j] = bin.charCodeAt(j);
+        const digest = await crypto.subtle.digest('SHA-1', bytes);
+        const hash = Array.from(new Uint8Array(digest))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('')
+          .slice(0, 12);
+        const repoPath = `${dirPath}/${hash}.${mimeToExt(mime)}`;
+
+        // If the same content already lives at this path, no PUT needed.
+        const checkResp = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/${repoPath}?ref=${GITHUB_BRANCH}`,
+          { headers: { 'Authorization': headers.Authorization }, cache: 'no-store' }
+        );
+        if (!checkResp.ok) {
+          const putResp = await fetch(
+            `https://api.github.com/repos/${GITHUB_REPO}/contents/${repoPath}`,
+            {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({
+                message: `Upload image: ${hash}.${mimeToExt(mime)}`,
+                content: b64,
+                branch: GITHUB_BRANCH,
+              }),
+            }
+          );
+          if (!putResp.ok) {
+            const err = await putResp.json().catch(() => ({}));
+            throw new Error(`Image upload failed: ${err.message || putResp.statusText}`);
+          }
+        }
+        replacements.set(b64, `../../${repoPath}`);
+      }
+
+      return html.replace(re, (full, _mime, b64) => replacements.get(b64) || full);
+    }
+
     async function publishToGitHub() {
       const status = document.getElementById('publishStatus');
       const token = document.getElementById('githubToken').value.trim();
@@ -1266,9 +1345,17 @@ ${contentHTML}
       if (!token) { status.textContent = 'Please enter your GitHub token'; status.className = 'status-msg error'; return; }
       if (!editingFilePath && !filename) { status.textContent = 'Please enter a filename'; status.className = 'status-msg error'; return; }
       localStorage.setItem('github_token', token);
-      const html = generatePostHTML();
-      const content = btoa(unescape(encodeURIComponent(html)));
       const headers = { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' };
+      const rawHtml = generatePostHTML();
+      let html;
+      try {
+        html = await uploadEmbeddedImages(rawHtml, headers, status);
+      } catch (e) {
+        status.textContent = e.message;
+        status.className = 'status-msg error';
+        return;
+      }
+      const content = btoa(unescape(encodeURIComponent(html)));
 
       // Figure out the target path. When editing, detect a category change by
       // comparing the folder segment of the old path to the dropdown value.
