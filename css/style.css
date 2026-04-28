@@ -771,13 +771,15 @@ p {
   z-index: 3;
 }
 
-.post-content .post-gallery + .gallery-caption {
+.post-content .gallery-caption {
   font-size: 0.85rem;
   color: #888;
   font-style: italic;
   text-align: center;
-  margin-top: -20px;
   margin-bottom: 30px;
+}
+.post-content .post-gallery + .gallery-caption {
+  margin-top: -20px;
 }
 
 /* --- Post Image Hero (image left, text right) --- */
