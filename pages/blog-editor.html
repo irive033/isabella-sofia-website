@@ -1442,15 +1442,17 @@ ${contentHTML}
         }));
         allPostsCache = results.flat().sort((a, b) => a.name.localeCompare(b.name));
 
-        // Step 2: for each post, fetch the raw HTML and parse the real
-        // category out of the <meta name="category"> tag. Fire them all
-        // in parallel so total wait is dominated by the slowest request.
+        // Step 2: for each post, fetch only the start of the file and parse
+        // the <meta name="category"> tag out of the <head>. Use a Range
+        // request so we don't download megabytes per post — some posts
+        // include base64-embedded images and run to 10 MB+, which would
+        // otherwise hang the modal. 8 KB is plenty to cover the head.
         listEl.innerHTML = '<div class="load-post-loading">Reading post categories...</div>';
         await Promise.all(allPostsCache.map(async (p) => {
           try {
             const raw = await fetch(
               `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${p.path}`,
-              { cache: 'no-store' }
+              { cache: 'no-store', headers: { 'Range': 'bytes=0-8191' } }
             );
             if (!raw.ok) return;
             const html = await raw.text();
@@ -1661,7 +1663,21 @@ ${contentHTML}
         );
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
-        const html = decodeURIComponent(escape(atob(data.content.replace(/\s/g, ''))));
+        // GitHub's Contents API only inlines base64 content for files <= 1 MB.
+        // For larger files (e.g. posts with base64-embedded images) it returns
+        // encoding:"none" and an empty content field — we still get a valid
+        // SHA, but have to fetch the actual bytes from the raw URL.
+        let html;
+        if (data.encoding === 'base64' && data.content) {
+          html = decodeURIComponent(escape(atob(data.content.replace(/\s/g, ''))));
+        } else {
+          const rawResp = await fetch(
+            `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${filePath}`,
+            { cache: 'no-store' }
+          );
+          if (!rawResp.ok) throw new Error(`Raw HTTP ${rawResp.status}`);
+          html = await rawResp.text();
+        }
 
         const parsed = parsePostHtml(html);
         populateEditorFromParsed(parsed);
