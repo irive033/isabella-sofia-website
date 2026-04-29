@@ -1144,6 +1144,45 @@
       if (/^[$€£¥]/.test(text)) return;      // already has a currency symbol
       if (/^[\d.]/.test(text)) el.textContent = '$' + text;
     });
+
+    // Wrap the product name in a link when a hero page has been published
+    // for that product (authored via product-editor.html → Page button).
+    // Best-effort: if the GitHub list call fails, names just stay plain
+    // text — never a hard failure.
+    function slugifyForPage(name) {
+      return String(name || '')
+        .toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 90);
+    }
+    (async () => {
+      try {
+        const resp = await fetch(
+          'https://api.github.com/repos/irive033/isabella-sofia-website/contents/products?ref=main',
+          { cache: 'no-store' }
+        );
+        if (!resp.ok) return;
+        const list = await resp.json();
+        if (!Array.isArray(list)) return;
+        const slugs = new Set(
+          list
+            .filter(f => f.type === 'file' && f.name.endsWith('.html'))
+            .map(f => f.name.replace(/\.html$/, ''))
+        );
+        if (slugs.size === 0) return;
+        document.querySelectorAll('.product-card h4').forEach(h4 => {
+          const slug = slugifyForPage(h4.textContent);
+          if (!slugs.has(slug)) return;
+          const a = document.createElement('a');
+          a.href = `/products/${slug}.html`;
+          a.className = 'product-name-link';
+          while (h4.firstChild) a.appendChild(h4.firstChild);
+          h4.appendChild(a);
+        });
+      } catch (e) { /* fail silently */ }
+    })();
   </script>
 
 </body>

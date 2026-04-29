@@ -233,6 +233,21 @@
       opacity: 0; transition: opacity 0.2s;
     }
     .editor-product-card:hover .edit-badge { opacity: 1; }
+    /* Hero-page editor entry. Sits left of the .edit-badge in the corner.
+       Uses the same warm tan as the product-page accent so the visual
+       cue is consistent with where the click takes you. */
+    .editor-product-card .page-badge {
+      position: absolute; top: 8px; right: 56px;
+      background: rgba(138, 111, 74, 0.92); color: #fff;
+      font-size: 0.7rem; padding: 4px 8px; border-radius: 12px;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      opacity: 0; transition: opacity 0.2s; cursor: pointer;
+      border: none; font-family: inherit;
+      z-index: 2;
+    }
+    .editor-product-card:hover .page-badge { opacity: 1; }
+    /* Hidden products don't get hero pages — suppress the badge entirely. */
+    .editor-product-card.is-hidden .page-badge { display: none; }
     .editor-product-card .card-category-tag {
       position: absolute; top: 8px; left: 8px;
       background: rgba(0,0,0,0.55); color: #fff;
@@ -394,11 +409,50 @@
     .status-msg.success { color: #2ea043; }
     .status-msg.error { color: #c00; }
     .status-msg.loading { color: #0969da; }
+    .status-msg.warn { color: #b8860b; }
 
     .loading-screen {
       min-height: 200px; display: flex; align-items: center; justify-content: center;
       color: #888; font-style: italic; font-size: 1rem;
     }
+
+    /* ===== HERO PAGE EDITOR MODAL ===== */
+    /* Compact summary strip at the top of the page-editor modal so the
+       author always knows which product they're writing about. */
+    .page-modal-product-strip {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; background: #faf7f2;
+      border: 1px solid #e8e1d4; border-radius: 6px;
+      margin-bottom: 18px;
+    }
+    .page-modal-product-strip img {
+      width: 48px; height: 48px; object-fit: cover;
+      background: #fff; border-radius: 4px; flex-shrink: 0;
+    }
+    .page-modal-product-strip .info { flex: 1; min-width: 0; }
+    .page-modal-product-strip .info .b {
+      font-size: 0.7rem; color: #888;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .page-modal-product-strip .info .t {
+      font-weight: 500; font-size: 0.95rem; line-height: 1.3; margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .page-field { margin-bottom: 14px; text-align: left; }
+    .page-field label {
+      display: block; font-size: 0.75rem; margin-bottom: 5px;
+      color: #555; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500;
+    }
+    .page-field input,
+    .page-field textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px;
+      font-family: inherit; font-size: 0.95rem; outline: none; box-sizing: border-box;
+      line-height: 1.5;
+    }
+    .page-field input:focus,
+    .page-field textarea:focus { border-color: #000; }
+    .page-field textarea { resize: vertical; min-height: 70px; }
   </style>
 </head>
 <body>
@@ -585,6 +639,59 @@
     </div>
   </div>
 
+  <!-- HERO PAGE EDITOR MODAL -->
+  <div class="modal-overlay" id="pageEditorModal">
+    <div class="modal" style="max-width: 700px;">
+      <h3>Edit Hero Page</h3>
+      <p class="modal-sub">Author the personal copy for this product's detail page. Saves directly to GitHub.</p>
+
+      <div class="page-modal-product-strip">
+        <img id="pageProductImage" src="" alt="">
+        <div class="info">
+          <div class="b" id="pageProductBrand"></div>
+          <div class="t" id="pageProductTitle"></div>
+        </div>
+      </div>
+
+      <div class="page-field">
+        <label>Why I picked this</label>
+        <textarea id="pageWhy" rows="4" placeholder="2–3 sentences. The specific scenario where it earns its spot, a sensory detail, what it replaces or outperforms."></textarea>
+      </div>
+
+      <div class="page-field">
+        <label>Best for</label>
+        <input type="text" id="pageBestFor" placeholder="One line. Who should buy this.">
+      </div>
+
+      <div class="page-field">
+        <label>How I use it</label>
+        <textarea id="pageHowUse" rows="3" placeholder="Practical usage. Morning or night? Amount? Pairs with what?"></textarea>
+      </div>
+
+      <div class="page-field">
+        <label>One honest note (the tradeoff)</label>
+        <textarea id="pageTradeoff" rows="2" placeholder="One line. The caveat — don't skip this."></textarea>
+      </div>
+
+      <div class="page-field">
+        <label>Vetting note <span style="text-transform:none; color:#999; font-weight:400; letter-spacing:0;">(optional, appended to the default)</span></label>
+        <input type="text" id="pageVetting" placeholder="e.g. No coconut oil, isopropyl myristate, or algae extract.">
+      </div>
+
+      <div class="status-msg" id="pageEditorStatus"></div>
+
+      <div class="btn-row">
+        <div class="left-btns">
+          <a id="pageViewLink" href="#" target="_blank" rel="noopener" style="display:none; font-size:0.85rem; color:#0969da; text-decoration:none; align-self:center;">View on GitHub →</a>
+        </div>
+        <div class="right-btns">
+          <button onclick="closePageEditorModal()">Cancel</button>
+          <button class="btn-primary" id="pageSaveBtn" onclick="savePageToGitHub()">Save Page</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ============================================================
     // CONFIG
@@ -765,10 +872,17 @@
         ? `<div class="card-hidden-tag">Hidden</div>`
         : '';
       const hiddenClass = p.hidden ? ' is-hidden' : '';
+      // The "Page" badge opens the hero-page editor; only meaningful for live
+      // products. Click is stopped from bubbling up so it doesn't also fire
+      // the card's openEditModal handler.
+      const pageBadgeHtml = p.hidden
+        ? ''
+        : `<button class="page-badge" onclick="event.stopPropagation(); openPageEditorModal(${p.id})">Page</button>`;
       return `
         <div class="editor-product-card${hiddenClass}" onclick="openEditModal(${p.id})">
           ${categoryTag}
           ${hiddenBadgeHtml}
+          ${pageBadgeHtml}
           <div class="edit-badge">Edit</div>
           <div class="product-image">${imageHtml}</div>
           <div class="product-info">
@@ -1636,6 +1750,436 @@ ${indentBodyHtml(bodyHtml)}
     }
     function decodeBase64(str) {
       return decodeURIComponent(escape(atob(str.replace(/\s/g, ''))));
+    }
+
+    // ============================================================
+    // HERO PAGE EDITOR
+    // ============================================================
+    // Tracks which product is open in the page editor and the GitHub SHA of
+    // the existing file (null when creating a fresh page).
+    let editingPageId = null;
+    let editingPageSha = null;
+
+    const PRODUCT_PAGE_DIR = 'products';
+
+    // Slug used as the filename of products/<slug>.html. Must be stable
+    // across the editor and the shop page so links match what the editor
+    // produces. Keep simple: lowercase, kebab-case, alphanumeric only.
+    function slugifyForPage(name) {
+      return String(name || '')
+        .toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 90);
+    }
+
+    // Best-effort retailer label from the product's source URL (e.g.
+    // "Sephora", "Amazon"). Used in the "Shop at X →" CTA on the page.
+    function retailerFromUrl(url) {
+      try {
+        const host = new URL(url).hostname.replace(/^www\./, '');
+        const root = host.split('.').slice(-2, -1)[0] || 'Retailer';
+        return root.charAt(0).toUpperCase() + root.slice(1);
+      } catch (e) { return 'Retailer'; }
+    }
+
+    // Build the full HTML for a product hero page. The structure mirrors
+    // products/atobarrier365-...html (the seed sample) so the load function
+    // can round-trip copy via the data-field selectors.
+    function generateProductPageHTML(p, copy) {
+      const enc = (s) => String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      // Convert author input (single textarea) to one or more <p> blocks,
+      // splitting on blank lines so paragraph breaks survive.
+      const paraHtml = (s) => {
+        const trimmed = String(s || '').trim();
+        if (!trimmed) return '';
+        return trimmed.split(/\n\s*\n+/)
+          .map(part => `<p>${enc(part).replace(/\n/g, '<br>')}</p>`)
+          .join('');
+      };
+      const categoryDisplay = CATEGORY_DISPLAY[p.category] || 'Skincare';
+      const retailer = retailerFromUrl(p.sourceUrl || '');
+      const priceDisplay = formatPriceDisplay(p.price);
+      const vettingExtra = (copy.vetting || '').trim()
+        ? ' ' + enc(copy.vetting.trim())
+        : '';
+
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Why I Recommend ${enc(p.title)} — Isabella Sofia</title>
+  <meta name="description" content="My honest review of ${enc(p.title)} by ${enc(p.brand)}. Why I picked it, who it's best for, and what to know before you buy." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #faf7f2;
+      --ink: #2a2621;
+      --ink-soft: #6b6458;
+      --rule: #e8e1d4;
+      --accent: #8a6f4a;
+      --safe: #5c7a5c;
+      --card: #ffffff;
+      --serif: "Cormorant Garamond", Georgia, serif;
+      --sans: "Inter", -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: var(--sans); font-weight: 300; line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    .nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.75rem 2.5rem; border-bottom: 1px solid var(--rule);
+    }
+    .nav-brand { font-family: var(--serif); font-size: 1.5rem; letter-spacing: 0.02em; }
+    .nav-links {
+      display: flex; gap: 2rem; list-style: none;
+      font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .nav-links a { color: var(--ink-soft); transition: color .2s; }
+    .nav-links a:hover { color: var(--ink); }
+    .breadcrumb {
+      max-width: 1100px; margin: 2rem auto 0; padding: 0 2rem;
+      font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .breadcrumb a:hover { color: var(--accent); }
+    .breadcrumb .sep { margin: 0 0.5rem; opacity: 0.5; }
+    .product {
+      max-width: 1100px; margin: 2rem auto 4rem; padding: 0 2rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;
+    }
+    .product-image {
+      background: var(--card); border: 1px solid var(--rule);
+      aspect-ratio: 4 / 5; overflow: hidden;
+      position: sticky; top: 2rem;
+    }
+    .product-image img { width: 100%; height: 100%; object-fit: cover; }
+    .product-info .category {
+      font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--ink-soft); margin-bottom: 0.75rem;
+    }
+    .product-info .brand {
+      font-family: var(--serif); font-style: italic;
+      font-size: 1.1rem; color: var(--accent); margin-bottom: 0.25rem;
+    }
+    .product-info h1 {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4vw, 3rem); font-weight: 400;
+      line-height: 1.1; margin-bottom: 1.25rem;
+    }
+    .product-info .price { font-size: 1.1rem; margin-bottom: 1.5rem; }
+    .safe-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.9rem; border: 1px solid var(--safe); color: var(--safe);
+      font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    .safe-badge::before { content: "\\2713"; font-size: 0.9rem; font-weight: 500; }
+    .section { margin-bottom: 2rem; }
+    .section-label {
+      font-family: var(--serif); font-style: italic;
+      font-size: 1.05rem; color: var(--accent); margin-bottom: 0.5rem;
+    }
+    .section p { font-size: 0.98rem; }
+    .section p + p { margin-top: 0.7em; }
+    .tradeoff {
+      background: rgba(138, 111, 74, 0.06); border-left: 2px solid var(--accent);
+      padding: 1rem 1.25rem; font-size: 0.95rem; margin: 2rem 0;
+    }
+    .tradeoff .section-label { margin-bottom: 0.25rem; }
+    .cta-row { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; padding: 0.9rem 2rem;
+      font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase;
+      transition: all .25s ease; border: 1px solid var(--ink);
+    }
+    .btn-primary { background: var(--ink); color: var(--bg); }
+    .btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+    .btn-secondary { background: transparent; color: var(--ink); }
+    .btn-secondary:hover { background: var(--ink); color: var(--bg); }
+    .vetting-note {
+      margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--rule);
+      font-size: 0.85rem; color: var(--ink-soft); font-style: italic;
+      font-family: var(--serif);
+    }
+    .vetting-note a { color: var(--accent); border-bottom: 1px solid var(--accent); }
+    @media (max-width: 768px) {
+      .nav { padding: 1.25rem 1.5rem; flex-wrap: wrap; }
+      .nav-links { gap: 1rem; font-size: 0.7rem; }
+      .product { grid-template-columns: 1fr; gap: 2rem; margin-top: 1rem; }
+      .product-image { position: static; aspect-ratio: 1; }
+      .cta-row { flex-direction: column; }
+      .btn { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="/index.html" class="nav-brand">Isabella Sofia</a>
+    <ul class="nav-links">
+      <li><a href="/pages/style.html">Style</a></li>
+      <li><a href="/pages/beauty.html">Beauty</a></li>
+      <li><a href="/pages/wellness.html">Lifestyle</a></li>
+      <li><a href="/pages/shop.html">Skin Safe List</a></li>
+      <li><a href="/pages/about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <div class="breadcrumb">
+    <a href="/pages/shop.html">Skin Safe List</a>
+    <span class="sep">/</span>
+    <span>${enc(categoryDisplay)}</span>
+    <span class="sep">/</span>
+    <span>${enc(p.title)}</span>
+  </div>
+
+  <article class="product">
+    <div class="product-image">
+      <img src="${enc(p.image || '')}" alt="${enc(p.title)} by ${enc(p.brand)}" />
+    </div>
+    <div class="product-info">
+      <div class="category">${enc(categoryDisplay)}</div>
+      <div class="brand">${enc(p.brand)}</div>
+      <h1>${enc(p.title)}</h1>
+      <div class="price">${enc(priceDisplay)}</div>
+
+      <div class="safe-badge">Acne-Safe Verified</div>
+
+      <div class="section" data-field="why">
+        <div class="section-label">Why I picked this</div>
+        ${paraHtml(copy.why)}
+      </div>
+
+      <div class="section" data-field="best-for">
+        <div class="section-label">Best for</div>
+        ${paraHtml(copy.bestFor)}
+      </div>
+
+      <div class="section" data-field="how">
+        <div class="section-label">How I use it</div>
+        ${paraHtml(copy.howUse)}
+      </div>
+
+      <div class="tradeoff" data-field="tradeoff">
+        <div class="section-label">One honest note</div>
+        ${paraHtml(copy.tradeoff)}
+      </div>
+
+      <div class="cta-row">
+        <a href="${enc(p.sourceUrl || '#')}" class="btn btn-primary" target="_blank" rel="noopener">
+          Shop at ${enc(retailer)} →
+        </a>
+        <a href="/pages/shop.html" class="btn btn-secondary">
+          Back to full list
+        </a>
+      </div>
+
+      <p class="vetting-note">
+        Cleared against <a href="https://acneclinicnyc.com/pore-clogging-ingredients/" target="_blank" rel="noopener">Acne Clinic NYC's Pore-Clogging Ingredients Checker</a>.<span data-field="vetting-extra">${vettingExtra}</span>
+      </p>
+    </div>
+  </article>
+
+</body>
+</html>
+`;
+    }
+
+    // Reverse of generateProductPageHTML for the four authoring fields plus
+    // the optional vetting extra. The page is parsed via the data-field
+    // attributes so the editor can round-trip copy without touching the
+    // rest of the markup.
+    function extractPageCopy(html) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const pickPara = (selector) => {
+        const el = doc.querySelector(selector);
+        if (!el) return '';
+        const ps = el.querySelectorAll('p');
+        return Array.from(ps).map(p => p.textContent.trim()).join('\n\n');
+      };
+      const vettingSpan = doc.querySelector('span[data-field="vetting-extra"]');
+      return {
+        why: pickPara('[data-field="why"]'),
+        bestFor: pickPara('[data-field="best-for"]'),
+        howUse: pickPara('[data-field="how"]'),
+        tradeoff: pickPara('[data-field="tradeoff"]'),
+        vetting: vettingSpan ? vettingSpan.textContent.trim() : '',
+      };
+    }
+
+    async function openPageEditorModal(id) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      editingPageId = id;
+      editingPageSha = null;
+
+      document.getElementById('pageProductImage').src = p.image || '';
+      document.getElementById('pageProductBrand').textContent = p.brand || '';
+      document.getElementById('pageProductTitle').textContent = p.title || '';
+
+      // Reset form
+      ['pageWhy','pageBestFor','pageHowUse','pageTradeoff','pageVetting']
+        .forEach(idAttr => { document.getElementById(idAttr).value = ''; });
+      const status = document.getElementById('pageEditorStatus');
+      status.textContent = '';
+      status.className = 'status-msg';
+      document.getElementById('pageViewLink').style.display = 'none';
+
+      document.getElementById('pageEditorModal').classList.add('visible');
+
+      // Try to load existing page from GitHub. If absent, leave the form blank.
+      const slug = slugifyForPage(p.title);
+      const filePath = `${PRODUCT_PAGE_DIR}/${slug}.html`;
+      status.textContent = 'Checking for existing page...';
+      status.className = 'status-msg loading';
+      try {
+        const resp = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`,
+          { cache: 'no-store' }
+        );
+        if (resp.ok) {
+          const data = await resp.json();
+          editingPageSha = data.sha;
+          let html;
+          if (data.encoding === 'base64' && data.content) {
+            html = decodeBase64(data.content);
+          } else {
+            const raw = await fetch(
+              `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${filePath}`,
+              { cache: 'no-store' }
+            );
+            html = await raw.text();
+          }
+          const copy = extractPageCopy(html);
+          document.getElementById('pageWhy').value = copy.why;
+          document.getElementById('pageBestFor').value = copy.bestFor;
+          document.getElementById('pageHowUse').value = copy.howUse;
+          document.getElementById('pageTradeoff').value = copy.tradeoff;
+          document.getElementById('pageVetting').value = copy.vetting;
+
+          const link = document.getElementById('pageViewLink');
+          link.href = data.html_url;
+          link.style.display = 'inline';
+
+          status.textContent = 'Loaded existing page. Edit and save to update.';
+          status.className = 'status-msg success';
+        } else if (resp.status === 404) {
+          status.textContent = 'No page yet — fill in the four sections and save to create one.';
+          status.className = 'status-msg';
+        } else {
+          throw new Error(`HTTP ${resp.status}`);
+        }
+      } catch (e) {
+        status.textContent = `Couldn't check for existing page (${e.message}). You can still save a new one.`;
+        status.className = 'status-msg warn';
+      }
+    }
+
+    function closePageEditorModal() {
+      document.getElementById('pageEditorModal').classList.remove('visible');
+      editingPageId = null;
+      editingPageSha = null;
+    }
+
+    async function savePageToGitHub() {
+      const p = products.find(x => x.id === editingPageId);
+      if (!p) return;
+      const status = document.getElementById('pageEditorStatus');
+      const btn = document.getElementById('pageSaveBtn');
+
+      let token = localStorage.getItem('github_token');
+      if (!token) {
+        token = prompt('Paste your GitHub token to save the page:');
+        if (!token) return;
+        localStorage.setItem('github_token', token);
+      }
+
+      const copy = {
+        why: document.getElementById('pageWhy').value,
+        bestFor: document.getElementById('pageBestFor').value,
+        howUse: document.getElementById('pageHowUse').value,
+        tradeoff: document.getElementById('pageTradeoff').value,
+        vetting: document.getElementById('pageVetting').value,
+      };
+
+      const empty = ['why','bestFor','howUse','tradeoff'].filter(k => !copy[k].trim());
+      if (empty.length > 0) {
+        status.textContent = 'Please fill in all four sections before saving.';
+        status.className = 'status-msg error';
+        return;
+      }
+
+      const slug = slugifyForPage(p.title);
+      const filePath = `${PRODUCT_PAGE_DIR}/${slug}.html`;
+      const html = generateProductPageHTML(p, copy);
+      const content = encodeBase64(html);
+
+      btn.disabled = true;
+      status.textContent = 'Saving page...';
+      status.className = 'status-msg loading';
+
+      try {
+        // Refresh SHA right before commit (avoids 409 if the file was
+        // modified elsewhere since the modal opened).
+        let sha = editingPageSha;
+        try {
+          const checkResp = await fetch(
+            `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`,
+            { headers: { 'Authorization': `token ${token}` }, cache: 'no-store' }
+          );
+          if (checkResp.ok) sha = (await checkResp.json()).sha;
+          else if (checkResp.status === 404) sha = null;
+        } catch (e) { /* leave sha as-is */ }
+
+        const body = {
+          message: sha ? `Update hero page: ${p.title}` : `Add hero page: ${p.title}`,
+          content,
+          branch: GITHUB_BRANCH,
+        };
+        if (sha) body.sha = sha;
+
+        const resp = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`,
+          {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          }
+        );
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.message || `HTTP ${resp.status}`);
+        }
+        const result = await resp.json();
+        editingPageSha = result.content.sha;
+
+        const link = document.getElementById('pageViewLink');
+        link.href = result.content.html_url;
+        link.style.display = 'inline';
+
+        status.innerHTML = `Saved! <a href="${result.content.html_url}" target="_blank" style="color:#0969da;">View on GitHub</a><br>Vercel will deploy in ~30s.`;
+        status.className = 'status-msg success';
+      } catch (e) {
+        status.textContent = `Failed: ${e.message}`;
+        status.className = 'status-msg error';
+      } finally {
+        btn.disabled = false;
+      }
     }
 
     // Warn before leaving with unsaved changes
