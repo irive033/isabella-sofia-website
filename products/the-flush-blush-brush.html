@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Why I Recommend The Flush Blush Brush — Isabella Sofia</title>
+  <meta name="description" content="My honest review of The Flush Blush Brush by ciele. Why I picked it, who it's best for, and what to know before you buy." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #faf7f2;
+      --ink: #2a2621;
+      --ink-soft: #6b6458;
+      --rule: #e8e1d4;
+      --accent: #8a6f4a;
+      --safe: #5c7a5c;
+      --card: #ffffff;
+      --serif: "Cormorant Garamond", Georgia, serif;
+      --sans: "Inter", -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: var(--sans); font-weight: 300; line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    .nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.75rem 2.5rem; border-bottom: 1px solid var(--rule);
+    }
+    .nav-brand { font-family: var(--serif); font-size: 1.5rem; letter-spacing: 0.02em; }
+    .nav-links {
+      display: flex; gap: 2rem; list-style: none;
+      font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .nav-links a { color: var(--ink-soft); transition: color .2s; }
+    .nav-links a:hover { color: var(--ink); }
+    .breadcrumb {
+      max-width: 1100px; margin: 2rem auto 0; padding: 0 2rem;
+      font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .breadcrumb a:hover { color: var(--accent); }
+    .breadcrumb .sep { margin: 0 0.5rem; opacity: 0.5; }
+    .product {
+      max-width: 1100px; margin: 2rem auto 4rem; padding: 0 2rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;
+    }
+    .product-image {
+      background: var(--card); border: 1px solid var(--rule);
+      aspect-ratio: 4 / 5; overflow: hidden;
+      position: sticky; top: 2rem;
+    }
+    .product-image img { width: 100%; height: 100%; object-fit: cover; }
+    .product-info .category {
+      font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--ink-soft); margin-bottom: 0.75rem;
+    }
+    .product-info .brand {
+      font-family: var(--serif); font-style: italic;
+      font-size: 1.1rem; color: var(--accent); margin-bottom: 0.25rem;
+    }
+    .product-info h1 {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4vw, 3rem); font-weight: 400;
+      line-height: 1.1; margin-bottom: 1.25rem;
+    }
+    .product-info .price { font-size: 1.1rem; margin-bottom: 1.5rem; }
+    .safe-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.9rem; border: 1px solid var(--safe); color: var(--safe);
+      font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    .safe-badge::before { content: "\2713"; font-size: 0.9rem; font-weight: 500; }
+    .section { margin-bottom: 2rem; }
+    .section-label {
+      font-family: var(--serif); font-style: italic;
+      font-size: 1.05rem; color: var(--accent); margin-bottom: 0.5rem;
+    }
+    .section p { font-size: 0.98rem; }
+    .section p + p { margin-top: 0.7em; }
+    .tradeoff {
+      background: rgba(138, 111, 74, 0.06); border-left: 2px solid var(--accent);
+      padding: 1rem 1.25rem; font-size: 0.95rem; margin: 2rem 0;
+    }
+    .tradeoff .section-label { margin-bottom: 0.25rem; }
+    .cta-row { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; padding: 0.9rem 2rem;
+      font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase;
+      transition: all .25s ease; border: 1px solid var(--ink);
+    }
+    .btn-primary { background: var(--ink); color: var(--bg); }
+    .btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+    .btn-secondary { background: transparent; color: var(--ink); }
+    .btn-secondary:hover { background: var(--ink); color: var(--bg); }
+    .vetting-note {
+      margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--rule);
+      font-size: 0.85rem; color: var(--ink-soft); font-style: italic;
+      font-family: var(--serif);
+    }
+    .vetting-note a { color: var(--accent); border-bottom: 1px solid var(--accent); }
+    @media (max-width: 768px) {
+      .nav { padding: 1.25rem 1.5rem; flex-wrap: wrap; }
+      .nav-links { gap: 1rem; font-size: 0.7rem; }
+      .product { grid-template-columns: 1fr; gap: 2rem; margin-top: 1rem; }
+      .product-image { position: static; aspect-ratio: 1; }
+      .cta-row { flex-direction: column; }
+      .btn { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="/index.html" class="nav-brand">Isabella Sofia</a>
+    <ul class="nav-links">
+      <li><a href="/pages/style.html">Style</a></li>
+      <li><a href="/pages/beauty.html">Beauty</a></li>
+      <li><a href="/pages/wellness.html">Lifestyle</a></li>
+      <li><a href="/pages/shop.html">Skin Safe List</a></li>
+      <li><a href="/pages/about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <div class="breadcrumb">
+    <a href="/pages/shop.html">Skin Safe List</a>
+    <span class="sep">/</span>
+    <span>Tools &amp; Technology</span>
+    <span class="sep">/</span>
+    <span>The Flush Blush Brush</span>
+  </div>
+
+  <article class="product">
+    <div class="product-image">
+      <img src="https://www.sephora.com/productimages/sku/s2897171-main-zoom.jpg?imwidth=3000" alt="The Flush Blush Brush by ciele" />
+    </div>
+    <div class="product-info">
+      <div class="category">Tools &amp; Technology</div>
+      <div class="brand">ciele</div>
+      <h1>The Flush Blush Brush</h1>
+      <div class="price">$32.00</div>
+
+      <div class="safe-badge">Acne-Safe Verified</div>
+
+      <div class="section" data-field="why">
+        <div class="section-label">Why I picked this</div>
+        <p>The angled duo-fiber bristles pick up just enough pigment without muddying the color or causing fallout, and the shape lets you place blush exactly where you want it.</p>
+      </div>
+
+      <div class="section" data-field="best-for">
+        <div class="section-label">Best for</div>
+        <p>Powder products, especially blush.</p>
+      </div>
+
+      <div class="section" data-field="how">
+        <div class="section-label">How I use it</div>
+        <p>Tap into the product and then tap off any excess or diffuse on the back of your hand before applying to your face. I prefer tapping motions vs sweeping.</p>
+      </div>
+
+      <div class="tradeoff" data-field="tradeoff">
+        <div class="section-label">One honest note</div>
+        <p>Designed specifically for powder blush. If you want something that handles both cream and powder formulas, the Ciele Dual-Ended Blush Brush at the same price gives you two brush ends instead of one.</p>
+      </div>
+
+      <div class="cta-row">
+        <a href="https://www.sephora.com/product/the-flush-brush-P517327?skuId=2897171&amp;icid2=products%20grid:p517327:product" class="btn btn-primary" target="_blank" rel="noopener">
+          Shop at Sephora →
+        </a>
+        <a href="/pages/shop.html" class="btn btn-secondary">
+          Back to full list
+        </a>
+      </div>
+
+      <p class="vetting-note">
+        Cleared against <a href="https://acneclinicnyc.com/pore-clogging-ingredients/" target="_blank" rel="noopener">Acne Clinic NYC's Pore-Clogging Ingredients Checker</a>.<span data-field="vetting-extra"></span>
+      </p>
+    </div>
+  </article>
+
+</body>
+</html>
