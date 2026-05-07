@@ -819,6 +819,35 @@ p {
 .post-content .img-wrap.align-right { text-align: right; }
 .post-content .img-wrap img { display: inline-block; margin: 0; }
 
+/* Image with a text column on the opposite side. The image's existing
+   width:N% is preserved (relative to the row, which is the full content
+   width), and the text fills the remaining space. */
+.post-content .img-wrap.has-side-text {
+  text-align: initial;
+}
+.post-content .img-wrap.has-side-text .img-side-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+}
+.post-content .img-wrap.has-side-text.align-right .img-side-row {
+  flex-direction: row-reverse;
+}
+.post-content .img-wrap.has-side-text .img-side-row > img {
+  flex-shrink: 0;
+  display: block;
+  margin: 0;
+}
+.post-content .img-wrap.has-side-text .img-side-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: #222;
+}
+.post-content .img-wrap.has-side-text .img-side-text > *:first-child { margin-top: 0; }
+.post-content .img-wrap.has-side-text .img-side-text > *:last-child { margin-bottom: 0; }
+
 @media (max-width: 768px) {
   .post-content .post-hero,
   .post-content .post-hero.ratio-60-40,
@@ -828,6 +857,14 @@ p {
   }
   .post-content .post-hero .hero-image {
     height: 280px;
+  }
+  .post-content .img-wrap.has-side-text .img-side-row,
+  .post-content .img-wrap.has-side-text.align-right .img-side-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .post-content .img-wrap.has-side-text .img-side-row > img {
+    width: 100% !important;
   }
   .post-gallery {
     min-height: 320px;
