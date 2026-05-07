@@ -836,8 +836,12 @@ p {
 .post-content .img-wrap.has-side-text.align-right .img-side-row {
   flex-direction: row-reverse;
 }
-.post-content .img-wrap.has-side-text .img-side-row > img {
+.post-content .img-wrap.has-side-text .img-side-row > img,
+.post-content .img-wrap.has-side-text .img-side-row > a.img-link {
   flex-shrink: 0;
+}
+.post-content .img-wrap.has-side-text .img-side-row > img,
+.post-content .img-wrap.has-side-text .img-side-row > a.img-link img {
   display: block;
   margin: 0;
 }
