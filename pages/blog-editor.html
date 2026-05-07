@@ -194,6 +194,20 @@
       font-family: inherit; color: #444;
     }
     .image-block .side-text-btn:hover { background: #f0f7ff; border-color: #0969da; color: #0969da; }
+    .image-block .image-link-row {
+      display: flex; gap: 6px; align-items: center;
+      padding: 6px 12px; background: #f4f4f4; border-radius: 6px;
+      margin-top: 6px;
+    }
+    .image-block .image-link-row label {
+      color: #555; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .image-block .image-link-row input {
+      flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px;
+      font-size: 0.8rem; font-family: inherit; outline: none;
+    }
+    .image-block .image-link-row input:focus { border-color: #000; }
+    .image-block.has-link .img-container { cursor: pointer; }
     .image-block.has-side-text { text-align: left; }
     .image-block.has-side-text .img-side-row {
       display: flex; align-items: flex-start; gap: 30px;
@@ -789,6 +803,7 @@
       block.dataset.width = '100';
       block.dataset.align = 'center';
       block.dataset.captionAlign = 'center';
+      block.dataset.link = '';
       block.innerHTML = controlsHTML() + `
         <div class="img-container" style="width:100%;">
           <img src="${dataUrl}" alt="Blog image">
@@ -810,6 +825,10 @@
             <button onclick="setCaptionAlign(this, 'right')">R</button>
           </div>
           <button class="side-text-btn" onclick="toggleSideText(this)">+ Side text</button>
+        </div>
+        <div class="image-link-row">
+          <label>Link</label>
+          <input type="url" placeholder="https://... (optional, makes image clickable to shop)" oninput="updateImageLink(this)">
         </div>
         <div class="caption" contenteditable="true" style="text-align:center;">Add caption</div>
       `;
@@ -909,6 +928,13 @@
       const btn = block.querySelector('.side-text-btn');
       if (!btn) return;
       btn.textContent = block.classList.contains('has-side-text') ? '× Side text' : '+ Side text';
+    }
+
+    function updateImageLink(input) {
+      const block = input.closest('.content-block');
+      const url = input.value.trim();
+      block.dataset.link = url;
+      block.classList.toggle('has-link', !!url);
     }
 
     // ===== GALLERY (slideshow — 1 to 5 images at a time) =====
@@ -1152,15 +1178,20 @@
           const sideTextEl = block.querySelector('.img-side-text');
           const hasSideText = block.classList.contains('has-side-text') && sideTextEl;
           const sideTextHtml = hasSideText ? sideTextEl.innerHTML.trim() : '';
+          const link = (block.dataset.link || '').trim();
+          const imgTag = `<img src="${img.src}" alt="${captionText || title}" style="width:${width}%; height:auto;">`;
+          const imgHtml = link
+            ? `<a class="img-link" href="${link}" target="_blank" rel="noopener">${imgTag}</a>`
+            : imgTag;
           const wrapClass = hasSideText ? `img-wrap align-${align} has-side-text` : `img-wrap align-${align}`;
           contentHTML += `        <div class="${wrapClass}">\n`;
           if (hasSideText) {
             contentHTML += `          <div class="img-side-row">\n`;
-            contentHTML += `            <img src="${img.src}" alt="${captionText || title}" style="width:${width}%; height:auto;">\n`;
+            contentHTML += `            ${imgHtml}\n`;
             contentHTML += `            <div class="img-side-text">${sideTextHtml}</div>\n`;
             contentHTML += `          </div>\n`;
           } else {
-            contentHTML += `          <img src="${img.src}" alt="${captionText || title}" style="width:${width}%; height:auto;">\n`;
+            contentHTML += `          ${imgHtml}\n`;
           }
           if (captionText) {
             contentHTML += `          <p style="font-size:0.85rem; color:#888; font-style:italic; text-align:${captionAlign}; margin-top:6px;">${captionText}</p>\n`;
@@ -1960,11 +1991,20 @@ ${contentHTML}
       }
 
       // Editor-generated image wrap: <div class="img-wrap align-X [has-side-text]">
-      //   Either: <img>[<p>caption</p>]
-      //   Or:     <div class="img-side-row"><img><div class="img-side-text">…</div></div>[<p>caption</p>]
+      //   Either: [<a>]<img>[</a>][<p>caption</p>]
+      //   Or:     <div class="img-side-row">[<a>]<img>[</a>]<div class="img-side-text">…</div></div>[<p>caption</p>]
       if (el.classList.contains('img-wrap')) {
         const hasSideText = el.classList.contains('has-side-text');
-        const img = el.querySelector(':scope > img, :scope > .img-side-row > img');
+        // Find the image whether it's bare or wrapped in a link
+        const img = el.querySelector(
+          ':scope > img, :scope > a > img, :scope > .img-side-row > img, :scope > .img-side-row > a > img'
+        );
+        // If the image has an <a> ancestor inside this wrap, that's the shop link
+        let link = '';
+        if (img) {
+          const anchor = img.closest('a');
+          if (anchor && el.contains(anchor)) link = anchor.getAttribute('href') || '';
+        }
         // Caption is always a direct child <p> of .img-wrap, not anything inside .img-side-text
         const cap = el.querySelector(':scope > p');
         const sideTextEl = hasSideText ? el.querySelector(':scope > .img-side-row > .img-side-text') : null;
@@ -1980,7 +2020,8 @@ ${contentHTML}
           caption: cap ? (cap.textContent || '').trim() : '',
           captionAlign,
           hasSideText,
-          sideTextHtml: sideTextEl ? sideTextEl.innerHTML.trim() : ''
+          sideTextHtml: sideTextEl ? sideTextEl.innerHTML.trim() : '',
+          link
         };
       }
 
@@ -2080,6 +2121,8 @@ ${contentHTML}
           block.dataset.width = pb.width || '100';
           block.dataset.align = pb.align || 'center';
           block.dataset.captionAlign = pb.captionAlign || 'center';
+          block.dataset.link = pb.link || '';
+          if (pb.link) block.classList.add('has-link');
           block.innerHTML = controlsHTML() + `
             <div class="img-container" style="width:${pb.width || '100'}%;">
               <img src="${pb.src}" alt="Blog image">
@@ -2101,6 +2144,10 @@ ${contentHTML}
                 <button class="${pb.captionAlign === 'right' ? 'active' : ''}" onclick="setCaptionAlign(this, 'right')">R</button>
               </div>
               <button class="side-text-btn" onclick="toggleSideText(this)">+ Side text</button>
+            </div>
+            <div class="image-link-row">
+              <label>Link</label>
+              <input type="url" placeholder="https://... (optional, makes image clickable to shop)" value="${(pb.link || '').replace(/"/g, '&quot;')}" oninput="updateImageLink(this)">
             </div>
             <div class="caption" contenteditable="true" style="text-align:${pb.captionAlign || 'center'};">${pb.caption || 'Add caption'}</div>
           `;

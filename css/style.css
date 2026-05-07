@@ -818,6 +818,9 @@ p {
 .post-content .img-wrap.align-center { text-align: center; }
 .post-content .img-wrap.align-right { text-align: right; }
 .post-content .img-wrap img { display: inline-block; margin: 0; }
+.post-content .img-wrap a.img-link { display: inline-block; line-height: 0; }
+.post-content .img-wrap a.img-link img { transition: opacity 0.2s ease; }
+.post-content .img-wrap a.img-link:hover img { opacity: 0.85; }
 
 /* Image with a text column on the opposite side. The image's existing
    width:N% is preserved (relative to the row, which is the full content
