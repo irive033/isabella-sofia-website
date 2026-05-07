@@ -174,12 +174,14 @@
       margin: 0 auto;
     }
     .image-block .image-toolbar {
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
       padding: 8px 12px; background: #f4f4f4; border-radius: 6px;
       margin-top: 10px; font-size: 0.85rem;
     }
-    .image-block .image-toolbar label { color: #555; }
-    .image-block .image-toolbar input[type="range"] { flex: 1; }
+    .image-block .image-toolbar label {
+      color: #555; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .image-block .image-toolbar input[type="range"] { flex: 1; min-width: 120px; }
     .image-block .align-buttons { display: flex; gap: 2px; }
     .image-block .align-buttons button {
       background: #fff; border: 1px solid #ccc; padding: 4px 10px;
@@ -762,6 +764,7 @@
       block.dataset.blockId = ++blockCounter;
       block.dataset.width = '100';
       block.dataset.align = 'center';
+      block.dataset.captionAlign = 'center';
       block.innerHTML = controlsHTML() + `
         <div class="img-container" style="width:100%;">
           <img src="${dataUrl}" alt="Blog image">
@@ -770,13 +773,20 @@
           <label>Width</label>
           <input type="range" min="20" max="100" value="100" oninput="updateImageWidth(this)">
           <span class="width-label">100%</span>
-          <div class="align-buttons">
+          <label>Image</label>
+          <div class="align-buttons image-align-buttons">
             <button onclick="setImageAlign(this, 'left')">L</button>
             <button class="active" onclick="setImageAlign(this, 'center')">C</button>
             <button onclick="setImageAlign(this, 'right')">R</button>
           </div>
+          <label>Caption</label>
+          <div class="align-buttons caption-align-buttons">
+            <button onclick="setCaptionAlign(this, 'left')">L</button>
+            <button class="active" onclick="setCaptionAlign(this, 'center')">C</button>
+            <button onclick="setCaptionAlign(this, 'right')">R</button>
+          </div>
         </div>
-        <div class="caption" contenteditable="true">Add caption</div>
+        <div class="caption" contenteditable="true" style="text-align:center;">Add caption</div>
       `;
       insertBlockInCanvas(block);
       applyImageAlignment(block);
@@ -794,7 +804,7 @@
     function setImageAlign(btn, align) {
       const block = btn.closest('.content-block');
       block.dataset.align = align;
-      block.querySelectorAll('.align-buttons button').forEach(b => b.classList.remove('active'));
+      block.querySelectorAll('.image-align-buttons button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       applyImageAlignment(block);
     }
@@ -806,6 +816,20 @@
       if (align === 'left') container.style.margin = '0';
       else if (align === 'right') container.style.margin = '0 0 0 auto';
       else container.style.margin = '0 auto';
+    }
+
+    function setCaptionAlign(btn, align) {
+      const block = btn.closest('.content-block');
+      block.dataset.captionAlign = align;
+      block.querySelectorAll('.caption-align-buttons button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyCaptionAlignment(block);
+    }
+
+    function applyCaptionAlignment(block) {
+      const align = block.dataset.captionAlign || 'center';
+      const caption = block.querySelector('.caption');
+      if (caption) caption.style.textAlign = align;
     }
 
     // ===== GALLERY (slideshow — 1 to 5 images at a time) =====
@@ -1043,12 +1067,13 @@
           const img = block.querySelector('img');
           const width = block.dataset.width || '100';
           const align = block.dataset.align || 'center';
+          const captionAlign = block.dataset.captionAlign || 'center';
           const caption = block.querySelector('.caption');
           const captionText = caption && caption.textContent.trim() !== 'Add caption' ? caption.textContent.trim() : '';
           contentHTML += `        <div class="img-wrap align-${align}">\n`;
           contentHTML += `          <img src="${img.src}" alt="${captionText || title}" style="width:${width}%; height:auto;">\n`;
           if (captionText) {
-            contentHTML += `          <p style="font-size:0.85rem; color:#888; font-style:italic; text-align:center; margin-top:6px;">${captionText}</p>\n`;
+            contentHTML += `          <p style="font-size:0.85rem; color:#888; font-style:italic; text-align:${captionAlign}; margin-top:6px;">${captionText}</p>\n`;
           }
           contentHTML += `        </div>\n\n`;
         } else if (type === 'gallery') {
@@ -1850,12 +1875,15 @@ ${contentHTML}
         const cap = el.querySelector('p');
         const alignCls = Array.from(el.classList).find(c => c.startsWith('align-'));
         const widthStr = img && img.style && img.style.width ? img.style.width : '100%';
+        const capAlignRaw = cap && cap.style && cap.style.textAlign ? cap.style.textAlign : '';
+        const captionAlign = ['left', 'center', 'right'].includes(capAlignRaw) ? capAlignRaw : 'center';
         return {
           type: 'image',
           src: img ? img.getAttribute('src') : '',
           align: alignCls ? alignCls.replace('align-', '') : 'center',
           width: widthStr.replace('%', '') || '100',
-          caption: cap ? (cap.textContent || '').trim() : ''
+          caption: cap ? (cap.textContent || '').trim() : '',
+          captionAlign
         };
       }
 
@@ -1954,6 +1982,7 @@ ${contentHTML}
           block.dataset.blockId = ++blockCounter;
           block.dataset.width = pb.width || '100';
           block.dataset.align = pb.align || 'center';
+          block.dataset.captionAlign = pb.captionAlign || 'center';
           block.innerHTML = controlsHTML() + `
             <div class="img-container" style="width:${pb.width || '100'}%;">
               <img src="${pb.src}" alt="Blog image">
@@ -1962,16 +1991,24 @@ ${contentHTML}
               <label>Width</label>
               <input type="range" min="20" max="100" value="${pb.width || '100'}" oninput="updateImageWidth(this)">
               <span class="width-label">${pb.width || '100'}%</span>
-              <div class="align-buttons">
+              <label>Image</label>
+              <div class="align-buttons image-align-buttons">
                 <button class="${pb.align === 'left' ? 'active' : ''}" onclick="setImageAlign(this, 'left')">L</button>
                 <button class="${(!pb.align || pb.align === 'center') ? 'active' : ''}" onclick="setImageAlign(this, 'center')">C</button>
                 <button class="${pb.align === 'right' ? 'active' : ''}" onclick="setImageAlign(this, 'right')">R</button>
               </div>
+              <label>Caption</label>
+              <div class="align-buttons caption-align-buttons">
+                <button class="${pb.captionAlign === 'left' ? 'active' : ''}" onclick="setCaptionAlign(this, 'left')">L</button>
+                <button class="${(!pb.captionAlign || pb.captionAlign === 'center') ? 'active' : ''}" onclick="setCaptionAlign(this, 'center')">C</button>
+                <button class="${pb.captionAlign === 'right' ? 'active' : ''}" onclick="setCaptionAlign(this, 'right')">R</button>
+              </div>
             </div>
-            <div class="caption" contenteditable="true">${pb.caption || 'Add caption'}</div>
+            <div class="caption" contenteditable="true" style="text-align:${pb.captionAlign || 'center'};">${pb.caption || 'Add caption'}</div>
           `;
           canvas.appendChild(block);
           applyImageAlignment(block);
+          applyCaptionAlignment(block);
         } else if (pb.type === 'gallery') {
           const block = addBlock('gallery');
           const gallery = block.querySelector('.post-gallery');
