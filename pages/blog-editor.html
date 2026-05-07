@@ -2006,7 +2006,7 @@ ${contentHTML}
             </div>
             <div class="caption" contenteditable="true" style="text-align:${pb.captionAlign || 'center'};">${pb.caption || 'Add caption'}</div>
           `;
-          canvas.appendChild(block);
+          insertBlockInCanvas(block);
           applyImageAlignment(block);
           applyCaptionAlignment(block);
         } else if (pb.type === 'gallery') {
