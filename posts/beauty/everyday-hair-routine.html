@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Everyday Hair Routine — Isabella Sofia</title>
   <link rel="stylesheet" href="../../css/style.css">
+  <meta name="date" content="2026-05-07T01:16:22.333Z">
+  <meta name="author" content="Isabella Rivera">
+  <meta name="category" content="beauty">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
     body { font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; }
@@ -24,7 +27,7 @@
       <nav class="main-nav">
         <a href="../../pages/style.html">Style</a>
         <a href="../../pages/beauty.html">Beauty</a>
-        <a href="../../pages/wellness.html">Wellness</a>
+        <a href="../../pages/wellness.html">Lifestyle</a>
         <a href="../../pages/shop.html">Skin Safe Product List</a>
         <a href="../../pages/about.html">About</a>
         <a href="../../pages/contact.html">Contact</a>
@@ -36,22 +39,34 @@
       <h1>Everyday Hair Routine</h1>
       <div class="post-meta">
         <span class="author">Isabella Rivera</span>
-        <span class="date">&middot; Jun 15, 2025</span>
+        <span class="date">&middot; May 6, 2026</span>
       </div>
     </section>
     <section class="post-body">
       <div class="post-content">
         <p>Simple, effective hair care for everyday styling. A routine that keeps your hair healthy without taking hours.</p>
 
-        <div class="post-image-placeholder">Hair routine products photo</div>
+        <p><em>[Image placeholder: Hair routine products photo]</em></p>
 
         <p>Finding the right balance between washing, conditioning, and styling can transform your hair. These are the steps and products that work for maintaining healthy, manageable hair day to day.</p>
 
-        <div class="post-image-placeholder">Styling steps photo</div>
-        <div class="post-nav">
-          <a href=\"everything-skincare-routine.html\">&larr; Previous</a>everything-skincare-routine.html
-          <a href=\"beginners-guide-to-skincare-tools.html\">Next &rarr;</a>beginners-guide-to-skincare-tools.html
+        <h3>Step 1: Treatment or Deep Cleanse</h3>
+
+        <p>Just like with your skincare, a double cleanse can transform how your hair looks, feels, and grows. It"s important to pay attention to your hair type and needs, but if you find yourself using lots of products post shower, having an oily scalp, or waiting a few days in between washes, a treatment pre shower or double cleanse may just be the thing to get you your dream hair. Whether it's glycolic acid massaged into your scalp pre shower, a ketoconazale shampoo, or a clariyfing shampoo, try adding in a product to specifically target oils, product build up, or any other concerns you notice with your hair.&nbsp;</p>
+
+        <div class="post-gallery" data-slide="0" data-visible="3">
+          <a class="gallery-slide-link active" href="https://www.easyderm.com/ketoconazole-shampoo?gc_id=23584332163&g_special_campaign=true&gad_source=1&gad_campaignid=23579739089&gbraid=0AAAAAo-1h8yUlXxEkcQVD0rNe_8X34psK&gclid=CjwKCAjwzevPBhBaEiwAplAxvjoRCGppOSaAHly5Y_vmpdQHYxnFivp5jM3mEU1YJlf67FvBPG3UsxoCpWUQAvD_BwE" target="_blank" rel="noopener"><img src="../../images/uploads/2026/05/0819a0335294.avif" alt="Gallery image"></a>
+          <a class="gallery-slide-link active" href="https://www.sephora.com/product/peptide-prep-clarifying-detox-shampoo-P501449?country_switch=us&lang=en&skuId=2592863&om_mmc=ppc-GG_17791296871___2592863__9209260_c&country_switch=us&lang=en&gclsrc=aw.ds&gad_source=1&gad_campaignid=17789880378&gbraid=0AAAAADnIXb1fWBHFYKZOF2o_PqRbY1WJp&gclid=CjwKCAjwzevPBhBaEiwAplAxvuzuzVQZ9JLDgkU5-B2oL6Fm-U_xIkXIKzLMLMJ2G6Hvg1tbvM_0shoC0jMQAvD_BwE" target="_blank" rel="noopener"><img src="../../images/uploads/2026/05/1964e19b78af.webp" alt="Gallery image"></a>
+          <a class="gallery-slide-link active" href="https://www.sephora.com/product/the-ordinary-deciem-glycolic-acid-7-toning-solution-P427406?country_switch=us&lang=en&skuId=2031508&om_mmc=ppc-GG_17791296883___2031508__9209260_c&country_switch=us&lang=en&gclsrc=aw.ds&gad_source=1&gad_campaignid=17798721803&gbraid=0AAAAADnIXb21PW9HqZm7Of_fsRsa-3jxX&gclid=CjwKCAjwzevPBhBaEiwAplAxvs79z2ll0dp497FbwFsJk1KFZ1427Vb9jeP0qg6_aogWBVi7jIUYFBoCiAEQAvD_BwE" target="_blank" rel="noopener"><img src="../../images/uploads/2026/05/0df3f515c949.webp" alt="Gallery image"></a>
         </div>
+
+        <h3>Step 2: Target Cleanse</h3>
+
+        <h3>Step 3: Condition</h3>
+
+        <h3>Step 4: Style &amp; Protect</h3>
+
+
       </div>
     </section>
     <section class="newsletter-section">
@@ -63,5 +78,30 @@
     </section>
   </main>
   <footer class="site-footer"><p>&copy; 2026 Isabella Sofia. All rights reserved.</p></footer>
+  <script>
+    // Gallery slideshow navigation (used by any .post-gallery on the page)
+    function gallerySlide(btn, dir) {
+      var gallery = btn.closest('.post-gallery');
+      if (!gallery) return;
+      var slides = gallery.querySelectorAll('.gallery-slide, .gallery-slide-link');
+      var vis = parseInt(gallery.dataset.visible || '1', 10);
+      if (slides.length <= vis) return;
+      var idx = parseInt(gallery.dataset.slide || '0', 10);
+      idx += dir * vis;
+      if (idx >= slides.length) idx = 0;
+      else if (idx < 0) idx = Math.max(0, slides.length - vis);
+      gallery.dataset.slide = idx;
+      for (var i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('active', i >= idx && i < idx + vis);
+      }
+      var counter = gallery.querySelector('.gallery-counter');
+      if (counter) {
+        var end = Math.min(idx + vis, slides.length);
+        counter.textContent = vis === 1
+          ? (idx + 1) + ' / ' + slides.length
+          : (idx + 1) + '–' + end + ' / ' + slides.length;
+      }
+    }
+  </script>
 </body>
 </html>
