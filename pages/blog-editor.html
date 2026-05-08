@@ -979,28 +979,38 @@
       const prev = gallery.querySelector('.gallery-prev');
       const next = gallery.querySelector('.gallery-next');
       const vis = getVisibleCount(gallery);
+      const total = slides.length;
 
       let idx = parseInt(gallery.dataset.slide || '0', 10);
-      if (slides.length === 0) idx = 0;
-      else if (idx >= slides.length) idx = Math.max(0, slides.length - vis);
-      else if (idx < 0) idx = 0;
+      if (total === 0) idx = 0;
+      else idx = ((idx % total) + total) % total;
       gallery.dataset.slide = idx;
 
-      // Show slides in the visible window [idx .. idx+vis-1]
+      // Always show `vis` slides starting at idx, wrapping around. CSS order
+      // puts the wrapped slides in visual rotation order (DOM order is fixed).
       slides.forEach((s, i) => {
-        s.classList.toggle('active', i >= idx && i < idx + vis);
+        const offset = total ? ((i - idx) % total + total) % total : 0;
+        const isActive = total > 0 && offset < vis;
+        s.classList.toggle('active', isActive);
+        if (isActive) s.style.order = offset;
+        else s.style.removeProperty('order');
       });
 
-      const needsNav = slides.length > vis;
+      const needsNav = total > vis;
       if (prev) prev.style.display = needsNav ? '' : 'none';
       if (next) next.style.display = needsNav ? '' : 'none';
       if (counter) {
         counter.style.display = needsNav ? '' : 'none';
-        if (vis === 1) {
-          counter.textContent = slides.length ? `${idx + 1} / ${slides.length}` : '';
+        if (total === 0) {
+          counter.textContent = '';
+        } else if (vis === 1) {
+          counter.textContent = `${idx + 1} / ${total}`;
         } else {
-          const end = Math.min(idx + vis, slides.length);
-          counter.textContent = slides.length ? `${idx + 1}–${end} / ${slides.length}` : '';
+          const startIdx = idx + 1;
+          const endIdx = ((idx + vis - 1) % total) + 1;
+          counter.textContent = endIdx >= startIdx
+            ? `${startIdx}–${endIdx} / ${total}`
+            : `${startIdx}–${total}, 1–${endIdx} / ${total}`;
         }
       }
 
@@ -1031,14 +1041,11 @@
       if (!gallery) return;
       const slides = gallery.querySelectorAll('.gallery-slide');
       const vis = getVisibleCount(gallery);
-      if (slides.length <= vis) return;
+      const total = slides.length;
+      if (total <= vis) return;
       let idx = parseInt(gallery.dataset.slide || '0', 10);
-      idx += dir * vis;
-      // Wrap around
-      if (idx >= slides.length) idx = 0;
-      else if (idx < 0) idx = Math.max(0, slides.length - vis);
+      idx = ((idx + dir * vis) % total + total) % total;
       gallery.dataset.slide = idx;
-      // Find parent block for full refresh
       const block = gallery.closest('.content-block') || gallery.parentElement;
       refreshSlideshow(block);
     }
@@ -1326,27 +1333,37 @@ ${contentHTML}
   </main>
   <footer class="site-footer"><p>&copy; ${now.getFullYear()} Isabella Sofia. All rights reserved.</p></footer>
   <script>
-    // Gallery slideshow navigation (used by any .post-gallery on the page)
+    // Gallery slideshow navigation (used by any .post-gallery on the page).
+    // Wrap-around: always show `vis` slides starting at idx, modulo total, so
+    // every position renders the same number of equally-sized slides.
     function gallerySlide(btn, dir) {
       var gallery = btn.closest('.post-gallery');
       if (!gallery) return;
       var slides = gallery.querySelectorAll('.gallery-slide, .gallery-slide-link');
       var vis = parseInt(gallery.dataset.visible || '1', 10);
-      if (slides.length <= vis) return;
+      var total = slides.length;
+      if (total <= vis) return;
       var idx = parseInt(gallery.dataset.slide || '0', 10);
-      idx += dir * vis;
-      if (idx >= slides.length) idx = 0;
-      else if (idx < 0) idx = Math.max(0, slides.length - vis);
+      idx = ((idx + dir * vis) % total + total) % total;
       gallery.dataset.slide = idx;
-      for (var i = 0; i < slides.length; i++) {
-        slides[i].classList.toggle('active', i >= idx && i < idx + vis);
+      for (var i = 0; i < total; i++) {
+        var offset = ((i - idx) % total + total) % total;
+        var isActive = offset < vis;
+        slides[i].classList.toggle('active', isActive);
+        if (isActive) slides[i].style.order = offset;
+        else slides[i].style.removeProperty('order');
       }
       var counter = gallery.querySelector('.gallery-counter');
       if (counter) {
-        var end = Math.min(idx + vis, slides.length);
-        counter.textContent = vis === 1
-          ? (idx + 1) + ' / ' + slides.length
-          : (idx + 1) + '\u2013' + end + ' / ' + slides.length;
+        if (vis === 1) {
+          counter.textContent = (idx + 1) + ' / ' + total;
+        } else {
+          var startIdx = idx + 1;
+          var endIdx = ((idx + vis - 1) % total) + 1;
+          counter.textContent = endIdx >= startIdx
+            ? startIdx + '\u2013' + endIdx + ' / ' + total
+            : startIdx + '\u2013' + total + ', 1\u2013' + endIdx + ' / ' + total;
+        }
       }
     }
   <\/script>
