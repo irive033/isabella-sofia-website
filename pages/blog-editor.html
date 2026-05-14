@@ -2129,6 +2129,18 @@ ${contentHTML}
       const blocks = [];
       if (contentEl) {
         for (const child of Array.from(contentEl.children)) {
+          // A <p class="gallery-caption"> sits as a sibling AFTER its gallery
+          // (that's how generatePostHTML emits it). On its own it would match
+          // the generic <p> text-block branch and end up as a standalone
+          // paragraph on next save — so absorb its text into the preceding
+          // gallery block here instead of dispatching it through the parser.
+          if (child.tagName.toLowerCase() === 'p' && child.classList.contains('gallery-caption')) {
+            const last = blocks[blocks.length - 1];
+            if (last && last.type === 'gallery') {
+              last.caption = (child.textContent || '').trim();
+            }
+            continue;
+          }
           const b = parseBlockFromElement(child);
           if (b) blocks.push(b);
         }
@@ -2358,6 +2370,12 @@ ${contentHTML}
             gallery.insertBefore(img, firstNav);
           });
           gallery.dataset.slide = '0';
+          // Restore the gallery caption that parsePostHtml absorbed from the
+          // sibling <p class="gallery-caption">.
+          if (pb.caption) {
+            const captionEl = block.querySelector('.caption');
+            if (captionEl) captionEl.textContent = pb.caption;
+          }
           refreshSlideshow(block);
         } else if (pb.type === 'hero') {
           const block = addBlock('hero');
