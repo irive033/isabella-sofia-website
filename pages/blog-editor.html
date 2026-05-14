@@ -300,45 +300,24 @@
 
     /* ===== PDF BLOCK ===== */
     .pdf-block .pdf-card {
-      display: flex; align-items: center; gap: 16px;
-      padding: 18px 22px; border: 1px solid #ddd;
-      background: #f9f9f9; border-radius: 8px;
+      display: block; margin: 0 auto; line-height: 0;
+      border-radius: 8px; overflow: hidden;
+      cursor: pointer; transition: opacity 0.2s;
     }
-    .pdf-block .pdf-icon {
-      width: 48px; height: 60px; background: #c0392b; color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 4px; font-size: 0.75rem; font-weight: 700;
-      letter-spacing: 0.05em; flex-shrink: 0;
+    .pdf-block .pdf-card:hover { opacity: 0.85; }
+    .pdf-block .pdf-preview {
+      display: block; width: 100%; aspect-ratio: 8.5 / 11; height: auto;
+      border: 0; background: #fff;
+      pointer-events: none; overflow: hidden;
     }
-    .pdf-block .pdf-meta { flex: 1; min-width: 0; }
-    .pdf-block .pdf-name {
-      font-size: 1.1rem; color: #222; word-break: break-word;
-    }
-    .pdf-block .pdf-hint { font-size: 0.85rem; color: #777; margin-top: 4px; }
     .pdf-block .pdf-editor-controls {
       display: flex; gap: 8px; padding: 8px 12px; background: #f4f4f4;
       border-radius: 6px; margin-top: 10px; font-size: 0.85rem;
       align-items: center; flex-wrap: wrap;
     }
-    .pdf-block .pdf-editor-controls button {
-      background: #fff; border: 1px solid #ccc; padding: 6px 12px;
-      cursor: pointer; font-size: 0.8rem; border-radius: 4px; font-family: inherit;
-    }
-    .pdf-block .pdf-editor-controls button:hover {
-      background: #0969da; color: #fff; border-color: #0969da;
-    }
-    .pdf-block .pdf-editor-controls button.active {
-      background: #0969da; color: #fff; border-color: #0969da;
-    }
     .pdf-block .pdf-editor-controls label {
       color: #555; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
     }
-    .pdf-block .pdf-preview {
-      display: none; width: 100%; aspect-ratio: 8.5 / 11; height: auto;
-      border: 1px solid #ddd; margin: 12px auto 0; background: #fff;
-      pointer-events: none; overflow: hidden;
-    }
-    .pdf-block.show-preview .pdf-preview { display: block; }
     .pdf-block .pdf-editor-controls input[type="range"] {
       flex: 1; min-width: 120px;
     }
@@ -1196,45 +1175,29 @@
       block.dataset.blockId = ++blockCounter;
       block.dataset.pdfSrc = dataUrl;
       block.dataset.pdfFilename = filename || 'document.pdf';
-      block.dataset.showPreview = 'false';
       const w = String(previewWidth || '100');
       block.dataset.previewWidth = w;
-      const displayName = prettifyPdfFilename(filename);
-      const sizeLabel = formatBytes(sizeBytes);
+      const safeFilename = escapeHtmlText(filename || 'document.pdf');
       block.innerHTML = controlsHTML() + `
-        <div class="pdf-card">
-          <div class="pdf-icon">PDF</div>
-          <div class="pdf-meta">
-            <div class="pdf-name" contenteditable="true" data-placeholder="Document title">${escapeHtmlText(displayName)}</div>
-            <div class="pdf-hint">${sizeLabel ? sizeLabel + ' — ' : ''}Click to download or open</div>
-          </div>
-        </div>
+        <a class="pdf-card" href="${dataUrl}" target="_blank" rel="noopener" download="${safeFilename}" style="width:${w}%;">
+          <iframe class="pdf-preview" src="${dataUrl}${PDF_PREVIEW_PARAMS}" loading="lazy" title="PDF preview"></iframe>
+        </a>
         <div class="pdf-editor-controls">
-          <button onclick="togglePdfPreview(this)">Show inline preview</button>
           <label>Preview width</label>
           <input type="range" min="20" max="100" value="${w}" oninput="updatePdfPreviewWidth(this)">
           <span class="pdf-width-label">${w}%</span>
           <label style="margin-left:8px;">File:</label>
-          <span style="font-family: monospace; font-size: 0.8rem; color: #555; word-break: break-all;">${escapeHtmlText(filename || 'document.pdf')}</span>
+          <span style="font-family: monospace; font-size: 0.8rem; color: #555; word-break: break-all;">${safeFilename}</span>
         </div>
-        <iframe class="pdf-preview" src="${dataUrl}${PDF_PREVIEW_PARAMS}" style="width:${w}%;" loading="lazy" title="PDF preview"></iframe>
       `;
       insertBlockInCanvas(block);
     }
 
-    function togglePdfPreview(btn) {
-      const block = btn.closest('.content-block');
-      const showing = block.classList.toggle('show-preview');
-      block.dataset.showPreview = showing ? 'true' : 'false';
-      btn.textContent = showing ? 'Hide inline preview' : 'Show inline preview';
-      btn.classList.toggle('active', showing);
-    }
-
     function updatePdfPreviewWidth(slider) {
       const block = slider.closest('.content-block');
-      const iframe = block.querySelector('.pdf-preview');
+      const card = block.querySelector('.pdf-card');
       const label = block.querySelector('.pdf-width-label');
-      if (iframe) iframe.style.width = slider.value + '%';
+      if (card) card.style.width = slider.value + '%';
       if (label) label.textContent = slider.value + '%';
       block.dataset.previewWidth = slider.value;
     }
@@ -1393,23 +1356,13 @@
         } else if (type === 'pdf') {
           const pdfSrc = block.dataset.pdfSrc || '';
           const pdfFilename = block.dataset.pdfFilename || 'document.pdf';
-          const showPreview = block.dataset.showPreview === 'true';
-          const nameEl = block.querySelector('.pdf-name');
-          const displayName = nameEl ? nameEl.textContent.trim() : prettifyPdfFilename(pdfFilename);
+          const previewWidth = block.dataset.previewWidth || '100';
           if (pdfSrc) {
-            const previewClass = showPreview ? ' show-preview' : '';
-            contentHTML += `        <div class="pdf-embed${previewClass}" data-filename="${escapeHtmlText(pdfFilename)}">\n`;
-            contentHTML += `          <a class="pdf-card" href="${pdfSrc}" target="_blank" rel="noopener" download="${escapeHtmlText(pdfFilename)}">\n`;
-            contentHTML += `            <span class="pdf-icon">PDF</span>\n`;
-            contentHTML += `            <span class="pdf-meta">\n`;
-            contentHTML += `              <span class="pdf-name">${escapeHtmlText(displayName)}</span>\n`;
-            contentHTML += `              <span class="pdf-hint">Click to download or open</span>\n`;
-            contentHTML += `            </span>\n`;
+            const titleAttr = escapeHtmlText(prettifyPdfFilename(pdfFilename));
+            contentHTML += `        <div class="pdf-embed" data-filename="${escapeHtmlText(pdfFilename)}">\n`;
+            contentHTML += `          <a class="pdf-card" href="${pdfSrc}" target="_blank" rel="noopener" download="${escapeHtmlText(pdfFilename)}" style="width:${previewWidth}%;">\n`;
+            contentHTML += `            <iframe class="pdf-preview" src="${pdfSrc}${PDF_PREVIEW_PARAMS}" loading="lazy" title="${titleAttr}"></iframe>\n`;
             contentHTML += `          </a>\n`;
-            if (showPreview) {
-              const previewWidth = block.dataset.previewWidth || '100';
-              contentHTML += `          <iframe class="pdf-preview" src="${pdfSrc}${PDF_PREVIEW_PARAMS}" style="width:${previewWidth}%;" loading="lazy" title="${escapeHtmlText(displayName)}"></iframe>\n`;
-            }
             contentHTML += `        </div>\n\n`;
           }
         } else {
@@ -2248,25 +2201,25 @@ ${contentHTML}
         };
       }
 
-      // Editor-generated PDF embed: <div class="pdf-embed" data-filename="…">
-      //   <a class="pdf-card" href="…pdf" download="…"><span class="pdf-icon">PDF</span>
-      //     <span class="pdf-meta"><span class="pdf-name">…</span>…</span></a>
-      //   [<iframe class="pdf-preview" style="width:N%" src="…pdf"></iframe>]
-      // </div>
+      // Editor-generated PDF embed (current format):
+      //   <div class="pdf-embed" data-filename="…">
+      //     <a class="pdf-card" href="…pdf" download="…" style="width:N%;">
+      //       <iframe class="pdf-preview" src="…pdf#toolbar=0…"></iframe>
+      //     </a>
+      //   </div>
+      // Legacy format had the iframe as a sibling of the <a> with the width on
+      // the iframe and an icon+name+hint card inside the <a>. Both round-trip.
       if (el.classList.contains('pdf-embed')) {
         const anchor = el.querySelector(':scope > a.pdf-card');
-        const nameEl = el.querySelector('.pdf-name');
-        const previewEl = el.querySelector(':scope > iframe.pdf-preview');
-        const previewWidthStr = previewEl && previewEl.style && previewEl.style.width
-          ? previewEl.style.width.replace('%', '')
-          : '';
+        const previewEl = el.querySelector(':scope iframe.pdf-preview');
+        const anchorWidth = anchor && anchor.style && anchor.style.width;
+        const iframeWidth = previewEl && previewEl.style && previewEl.style.width;
+        const previewWidthStr = (anchorWidth || iframeWidth || '').replace('%', '');
         return {
           type: 'pdf',
           src: anchor ? (anchor.getAttribute('href') || '') : '',
           filename: anchor ? (anchor.getAttribute('download') || el.dataset.filename || 'document.pdf')
                            : (el.dataset.filename || 'document.pdf'),
-          displayName: nameEl ? (nameEl.textContent || '').trim() : '',
-          showPreview: !!previewEl || el.classList.contains('show-preview'),
           previewWidth: previewWidthStr || '100'
         };
       }
@@ -2430,18 +2383,6 @@ ${contentHTML}
           }
         } else if (pb.type === 'pdf') {
           createPdfBlock(pb.src || '', pb.filename || 'document.pdf', null, pb.previewWidth || '100');
-          // The block was just appended to the canvas; pick it back up to
-          // restore display name and preview state from the parsed data.
-          const canvas = document.getElementById('editorCanvas');
-          const block = canvas.lastElementChild;
-          if (block && block.classList.contains('pdf-block')) {
-            const nameEl = block.querySelector('.pdf-name');
-            if (nameEl && pb.displayName) nameEl.textContent = pb.displayName;
-            if (pb.showPreview) {
-              const btn = block.querySelector('.pdf-editor-controls button');
-              if (btn) togglePdfPreview(btn);
-            }
-          }
         }
       });
     }
