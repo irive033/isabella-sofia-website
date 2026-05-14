@@ -334,8 +334,9 @@
       color: #555; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
     }
     .pdf-block .pdf-preview {
-      display: none; width: 100%; height: 600px;
+      display: none; width: 100%; aspect-ratio: 8.5 / 11; height: auto;
       border: 1px solid #ddd; margin-top: 12px; background: #fff;
+      pointer-events: none; overflow: hidden;
     }
     .pdf-block.show-preview .pdf-preview { display: block; }
 
@@ -1153,6 +1154,11 @@
     }
 
     // ===== PDF =====
+    // Hash parameters passed to Chrome/Edge's native PDF viewer to hide the
+    // toolbar/sidebar/scrollbar and fit the page horizontally so the preview
+    // reads as a static first-page screenshot. Other browsers ignore these.
+    const PDF_PREVIEW_PARAMS = '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1';
+
     function triggerPdfUpload() {
       document.getElementById('pdfInput').click();
     }
@@ -1203,7 +1209,7 @@
           <label>File:</label>
           <span style="font-family: monospace; font-size: 0.8rem; color: #555; word-break: break-all;">${escapeHtmlText(filename || 'document.pdf')}</span>
         </div>
-        <iframe class="pdf-preview" src="${dataUrl}" loading="lazy" title="PDF preview"></iframe>
+        <iframe class="pdf-preview" src="${dataUrl}${PDF_PREVIEW_PARAMS}" loading="lazy" title="PDF preview"></iframe>
       `;
       insertBlockInCanvas(block);
     }
@@ -1384,7 +1390,7 @@
             contentHTML += `            </span>\n`;
             contentHTML += `          </a>\n`;
             if (showPreview) {
-              contentHTML += `          <iframe class="pdf-preview" src="${pdfSrc}" loading="lazy" title="${escapeHtmlText(displayName)}"></iframe>\n`;
+              contentHTML += `          <iframe class="pdf-preview" src="${pdfSrc}${PDF_PREVIEW_PARAMS}" loading="lazy" title="${escapeHtmlText(displayName)}"></iframe>\n`;
             }
             contentHTML += `        </div>\n\n`;
           }

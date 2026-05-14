@@ -889,9 +889,6 @@ p {
   }
   .post-gallery .gallery-prev { left: 10px; }
   .post-gallery .gallery-next { right: 10px; }
-  .post-content .pdf-embed .pdf-preview {
-    height: 480px;
-  }
 }
 
 /* --- PDF embed (clickable download card + optional inline preview) --- */
@@ -951,10 +948,13 @@ p {
 .post-content .pdf-embed .pdf-preview {
   display: block;
   width: 100%;
-  height: 640px;
+  aspect-ratio: 8.5 / 11;
+  height: auto;
   border: 1px solid #ddd;
   margin-top: 12px;
   background: #fff;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 .post-image-placeholder {
