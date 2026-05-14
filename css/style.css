@@ -889,6 +889,72 @@ p {
   }
   .post-gallery .gallery-prev { left: 10px; }
   .post-gallery .gallery-next { right: 10px; }
+  .post-content .pdf-embed .pdf-preview {
+    height: 480px;
+  }
+}
+
+/* --- PDF embed (clickable download card + optional inline preview) --- */
+.post-content .pdf-embed {
+  margin: 30px 0;
+}
+.post-content .pdf-embed .pdf-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.post-content .pdf-embed .pdf-card:hover {
+  border-color: #000;
+  background: #f0f0f0;
+}
+.post-content .pdf-embed .pdf-icon {
+  width: 48px;
+  height: 60px;
+  background: #c0392b;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.post-content .pdf-embed .pdf-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.post-content .pdf-embed .pdf-name {
+  font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif;
+  font-size: 1.25rem;
+  line-height: 1.3;
+  color: #222;
+  word-break: break-word;
+}
+.post-content .pdf-embed .pdf-hint {
+  font-size: 0.85rem;
+  color: #777;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.post-content .pdf-embed .pdf-preview {
+  display: block;
+  width: 100%;
+  height: 640px;
+  border: 1px solid #ddd;
+  margin-top: 12px;
+  background: #fff;
 }
 
 .post-image-placeholder {

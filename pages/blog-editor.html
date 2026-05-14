@@ -298,6 +298,47 @@
       border-radius: 3px; font-family: inherit; font-size: 0.8rem;
     }
 
+    /* ===== PDF BLOCK ===== */
+    .pdf-block .pdf-card {
+      display: flex; align-items: center; gap: 16px;
+      padding: 18px 22px; border: 1px solid #ddd;
+      background: #f9f9f9; border-radius: 8px;
+    }
+    .pdf-block .pdf-icon {
+      width: 48px; height: 60px; background: #c0392b; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px; font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.05em; flex-shrink: 0;
+    }
+    .pdf-block .pdf-meta { flex: 1; min-width: 0; }
+    .pdf-block .pdf-name {
+      font-size: 1.1rem; color: #222; word-break: break-word;
+    }
+    .pdf-block .pdf-hint { font-size: 0.85rem; color: #777; margin-top: 4px; }
+    .pdf-block .pdf-editor-controls {
+      display: flex; gap: 8px; padding: 8px 12px; background: #f4f4f4;
+      border-radius: 6px; margin-top: 10px; font-size: 0.85rem;
+      align-items: center; flex-wrap: wrap;
+    }
+    .pdf-block .pdf-editor-controls button {
+      background: #fff; border: 1px solid #ccc; padding: 6px 12px;
+      cursor: pointer; font-size: 0.8rem; border-radius: 4px; font-family: inherit;
+    }
+    .pdf-block .pdf-editor-controls button:hover {
+      background: #0969da; color: #fff; border-color: #0969da;
+    }
+    .pdf-block .pdf-editor-controls button.active {
+      background: #0969da; color: #fff; border-color: #0969da;
+    }
+    .pdf-block .pdf-editor-controls label {
+      color: #555; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .pdf-block .pdf-preview {
+      display: none; width: 100%; height: 600px;
+      border: 1px solid #ddd; margin-top: 12px; background: #fff;
+    }
+    .pdf-block.show-preview .pdf-preview { display: block; }
+
     /* ===== FLOATING FORMAT BAR ===== */
     .format-bar {
       position: fixed; display: none; background: #1a1a1a; color: #fff;
@@ -466,9 +507,11 @@
       <button class="toolbar-btn" onclick="triggerImageUpload()">+ Image</button>
       <button class="toolbar-btn" onclick="addBlock('gallery')">+ Gallery</button>
       <button class="toolbar-btn" onclick="addBlock('hero')">+ Image Hero</button>
+      <button class="toolbar-btn" onclick="triggerPdfUpload()">+ PDF</button>
       <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
       <input type="file" id="galleryInput" accept="image/*" multiple style="display:none" onchange="handleGalleryUpload(event)">
       <input type="file" id="heroInput" accept="image/*" style="display:none" onchange="handleHeroUpload(event)">
+      <input type="file" id="pdfInput" accept="application/pdf,.pdf" style="display:none" onchange="handlePdfUpload(event)">
     </div>
     <div class="toolbar-group">
       <button class="toolbar-btn load-btn" onclick="showLoadPostModal()">Load Post</button>
@@ -1109,6 +1152,70 @@
       else if (select.value === '40-60') block.classList.add('ratio-40-60');
     }
 
+    // ===== PDF =====
+    function triggerPdfUpload() {
+      document.getElementById('pdfInput').click();
+    }
+
+    function handlePdfUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => createPdfBlock(e.target.result, file.name, file.size);
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes && bytes !== 0) return '';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // Build a friendly display name from a filename: strip extension,
+    // turn dashes/underscores into spaces, title-case.
+    function prettifyPdfFilename(filename) {
+      const base = (filename || 'document.pdf').replace(/\.pdf$/i, '');
+      return base.replace(/[-_]+/g, ' ').trim();
+    }
+
+    function createPdfBlock(dataUrl, filename, sizeBytes) {
+      const block = document.createElement('div');
+      block.className = 'content-block pdf-block';
+      block.dataset.blockType = 'pdf';
+      block.dataset.blockId = ++blockCounter;
+      block.dataset.pdfSrc = dataUrl;
+      block.dataset.pdfFilename = filename || 'document.pdf';
+      block.dataset.showPreview = 'false';
+      const displayName = prettifyPdfFilename(filename);
+      const sizeLabel = formatBytes(sizeBytes);
+      block.innerHTML = controlsHTML() + `
+        <div class="pdf-card">
+          <div class="pdf-icon">PDF</div>
+          <div class="pdf-meta">
+            <div class="pdf-name" contenteditable="true" data-placeholder="Document title">${escapeHtmlText(displayName)}</div>
+            <div class="pdf-hint">${sizeLabel ? sizeLabel + ' — ' : ''}Click to download or open</div>
+          </div>
+        </div>
+        <div class="pdf-editor-controls">
+          <button onclick="togglePdfPreview(this)">Show inline preview</button>
+          <label>File:</label>
+          <span style="font-family: monospace; font-size: 0.8rem; color: #555; word-break: break-all;">${escapeHtmlText(filename || 'document.pdf')}</span>
+        </div>
+        <iframe class="pdf-preview" src="${dataUrl}" loading="lazy" title="PDF preview"></iframe>
+      `;
+      insertBlockInCanvas(block);
+    }
+
+    function togglePdfPreview(btn) {
+      const block = btn.closest('.content-block');
+      const showing = block.classList.toggle('show-preview');
+      block.dataset.showPreview = showing ? 'true' : 'false';
+      btn.textContent = showing ? 'Hide inline preview' : 'Show inline preview';
+      btn.classList.toggle('active', showing);
+    }
+
     // ===== FORMAT BAR =====
     function formatCmd(command, value = null) {
       document.execCommand(command, false, value);
@@ -1258,6 +1365,27 @@
               });
             }
             contentHTML += `          </div>\n`;
+            contentHTML += `        </div>\n\n`;
+          }
+        } else if (type === 'pdf') {
+          const pdfSrc = block.dataset.pdfSrc || '';
+          const pdfFilename = block.dataset.pdfFilename || 'document.pdf';
+          const showPreview = block.dataset.showPreview === 'true';
+          const nameEl = block.querySelector('.pdf-name');
+          const displayName = nameEl ? nameEl.textContent.trim() : prettifyPdfFilename(pdfFilename);
+          if (pdfSrc) {
+            const previewClass = showPreview ? ' show-preview' : '';
+            contentHTML += `        <div class="pdf-embed${previewClass}" data-filename="${escapeHtmlText(pdfFilename)}">\n`;
+            contentHTML += `          <a class="pdf-card" href="${pdfSrc}" target="_blank" rel="noopener" download="${escapeHtmlText(pdfFilename)}">\n`;
+            contentHTML += `            <span class="pdf-icon">PDF</span>\n`;
+            contentHTML += `            <span class="pdf-meta">\n`;
+            contentHTML += `              <span class="pdf-name">${escapeHtmlText(displayName)}</span>\n`;
+            contentHTML += `              <span class="pdf-hint">Click to download or open</span>\n`;
+            contentHTML += `            </span>\n`;
+            contentHTML += `          </a>\n`;
+            if (showPreview) {
+              contentHTML += `          <iframe class="pdf-preview" src="${pdfSrc}" loading="lazy" title="${escapeHtmlText(displayName)}"></iframe>\n`;
+            }
             contentHTML += `        </div>\n\n`;
           }
         } else {
@@ -1434,7 +1562,10 @@ ${contentHTML}
     // — files that already exist in the repo are skipped, so republishing or
     // reusing an image elsewhere costs nothing.
     async function uploadEmbeddedImages(html, headers, statusEl) {
-      const re = /data:image\/([a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)/g;
+      // Match either an image data URI or an application/pdf data URI. Both
+      // go through the same hash-dedup-upload pipeline; only the destination
+      // folder and commit message differ by kind.
+      const re = /data:(image\/[a-zA-Z0-9.+-]+|application\/pdf);base64,([A-Za-z0-9+/=]+)/g;
       const unique = new Map(); // b64 -> mime
       let m;
       while ((m = re.exec(html)) !== null) {
@@ -1444,21 +1575,27 @@ ${contentHTML}
 
       const mimeToExt = (mime) => {
         let ext = mime.toLowerCase();
+        // image/jpeg → jpg, image/svg+xml → svg, image/x-icon → icon, etc.
+        ext = ext.replace(/^image\//, '').replace(/^application\//, '');
         if (ext === 'jpeg') return 'jpg';
         if (ext === 'svg+xml') return 'svg';
         if (ext.startsWith('x-')) ext = ext.slice(2);
         return ext.split('+')[0];
       };
+      const isImage = (mime) => mime.startsWith('image/');
 
       const now = new Date();
-      const dirPath = `images/uploads/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const ym = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const imageDir = `images/uploads/${ym}`;
+      const fileDir = `files/uploads/${ym}`;
 
       const replacements = new Map();
       let i = 0;
       for (const [b64, mime] of unique) {
         i++;
+        const kind = isImage(mime) ? 'image' : 'file';
         if (statusEl) {
-          statusEl.textContent = `Uploading image ${i} of ${unique.size}...`;
+          statusEl.textContent = `Uploading ${kind} ${i} of ${unique.size}...`;
           statusEl.className = 'status-msg loading';
         }
 
@@ -1472,7 +1609,8 @@ ${contentHTML}
           .map(b => b.toString(16).padStart(2, '0'))
           .join('')
           .slice(0, 12);
-        const repoPath = `${dirPath}/${hash}.${mimeToExt(mime)}`;
+        const ext = mimeToExt(mime);
+        const repoPath = `${isImage(mime) ? imageDir : fileDir}/${hash}.${ext}`;
 
         // If the same content already lives at this path, no PUT needed.
         const checkResp = await fetch(
@@ -1486,7 +1624,7 @@ ${contentHTML}
               method: 'PUT',
               headers,
               body: JSON.stringify({
-                message: `Upload image: ${hash}.${mimeToExt(mime)}`,
+                message: `Upload ${kind}: ${hash}.${ext}`,
                 content: b64,
                 branch: GITHUB_BRANCH,
               }),
@@ -1494,7 +1632,7 @@ ${contentHTML}
           );
           if (!putResp.ok) {
             const err = await putResp.json().catch(() => ({}));
-            throw new Error(`Image upload failed: ${err.message || putResp.statusText}`);
+            throw new Error(`${kind[0].toUpperCase() + kind.slice(1)} upload failed: ${err.message || putResp.statusText}`);
           }
         }
         replacements.set(b64, `../../${repoPath}`);
@@ -2074,6 +2212,25 @@ ${contentHTML}
         };
       }
 
+      // Editor-generated PDF embed: <div class="pdf-embed" data-filename="…">
+      //   <a class="pdf-card" href="…pdf" download="…"><span class="pdf-icon">PDF</span>
+      //     <span class="pdf-meta"><span class="pdf-name">…</span>…</span></a>
+      //   [<iframe class="pdf-preview" src="…pdf"></iframe>]
+      // </div>
+      if (el.classList.contains('pdf-embed')) {
+        const anchor = el.querySelector(':scope > a.pdf-card');
+        const nameEl = el.querySelector('.pdf-name');
+        const previewEl = el.querySelector(':scope > iframe.pdf-preview');
+        return {
+          type: 'pdf',
+          src: anchor ? (anchor.getAttribute('href') || '') : '',
+          filename: anchor ? (anchor.getAttribute('download') || el.dataset.filename || 'document.pdf')
+                           : (el.dataset.filename || 'document.pdf'),
+          displayName: nameEl ? (nameEl.textContent || '').trim() : '',
+          showPreview: !!previewEl || el.classList.contains('show-preview')
+        };
+      }
+
       // Editor-generated hero: <div class="post-hero [ratio-X-Y]"><img.hero-image><div.hero-text>…</div></div>
       if (el.classList.contains('post-hero')) {
         const heroImg = el.querySelector('.hero-image');
@@ -2224,6 +2381,20 @@ ${contentHTML}
             if (h && pb.headingHtml) h.innerHTML = pb.headingHtml;
             const p = heroText.querySelector('p');
             if (p && pb.bodyHtml) p.innerHTML = pb.bodyHtml;
+          }
+        } else if (pb.type === 'pdf') {
+          createPdfBlock(pb.src || '', pb.filename || 'document.pdf', null);
+          // The block was just appended to the canvas; pick it back up to
+          // restore display name and preview state from the parsed data.
+          const canvas = document.getElementById('editorCanvas');
+          const block = canvas.lastElementChild;
+          if (block && block.classList.contains('pdf-block')) {
+            const nameEl = block.querySelector('.pdf-name');
+            if (nameEl && pb.displayName) nameEl.textContent = pb.displayName;
+            if (pb.showPreview) {
+              const btn = block.querySelector('.pdf-editor-controls button');
+              if (btn) togglePdfPreview(btn);
+            }
           }
         }
       });
