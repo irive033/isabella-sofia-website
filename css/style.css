@@ -891,13 +891,19 @@ p {
   .post-gallery .gallery-next { right: 10px; }
 }
 
-/* --- PDF embed (the screenshot itself is the clickable download link) --- */
+/* --- PDF embed (the screenshot itself is the clickable download link) ---
+   The .pdf-card holds the letter aspect-ratio + overflow-clip; the iframe
+   inside extends ~8px beyond on every side so Chrome's PDF viewer can paint
+   its intrinsic page bezel/shadow OUTSIDE the visible area — the clip crops
+   it away and the embed reads as a clean screenshot. */
 .post-content .pdf-embed {
   margin: 30px 0;
 }
 .post-content .pdf-embed .pdf-card {
   display: block;
   margin: 0 auto;
+  position: relative;
+  aspect-ratio: 8.5 / 11;
   line-height: 0;
   border-radius: 8px;
   overflow: hidden;
@@ -909,14 +915,13 @@ p {
   opacity: 0.85;
 }
 .post-content .pdf-embed .pdf-preview {
-  display: block;
-  width: 100%;
-  aspect-ratio: 8.5 / 11;
-  height: auto;
+  position: absolute;
+  inset: -8px;
+  width: calc(100% + 16px);
+  height: calc(100% + 16px);
   border: 0;
   background: #fff;
   pointer-events: none;
-  overflow: hidden;
 }
 
 .post-image-placeholder {

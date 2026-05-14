@@ -299,16 +299,24 @@
     }
 
     /* ===== PDF BLOCK ===== */
+    /* The .pdf-card holds the letter aspect-ratio + overflow-clip; the iframe
+       inside extends ~8px beyond on every side so Chrome's PDF viewer can
+       paint its intrinsic page bezel/shadow OUTSIDE the visible area —
+       the clip crops it away and the embed reads as a clean screenshot. */
     .pdf-block .pdf-card {
-      display: block; margin: 0 auto; line-height: 0;
+      display: block; margin: 0 auto; position: relative;
+      aspect-ratio: 8.5 / 11;
       border-radius: 8px; overflow: hidden;
-      cursor: pointer; transition: opacity 0.2s;
+      cursor: pointer; transition: opacity 0.2s; line-height: 0;
     }
     .pdf-block .pdf-card:hover { opacity: 0.85; }
     .pdf-block .pdf-preview {
-      display: block; width: 100%; aspect-ratio: 8.5 / 11; height: auto;
+      position: absolute;
+      inset: -8px;
+      width: calc(100% + 16px);
+      height: calc(100% + 16px);
       border: 0; background: #fff;
-      pointer-events: none; overflow: hidden;
+      pointer-events: none;
     }
     .pdf-block .pdf-editor-controls {
       display: flex; gap: 8px; padding: 8px 12px; background: #f4f4f4;
