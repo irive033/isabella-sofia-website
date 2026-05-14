@@ -951,7 +951,7 @@ p {
   aspect-ratio: 8.5 / 11;
   height: auto;
   border: 1px solid #ddd;
-  margin-top: 12px;
+  margin: 12px auto 0;
   background: #fff;
   pointer-events: none;
   overflow: hidden;

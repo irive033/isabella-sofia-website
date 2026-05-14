@@ -335,10 +335,13 @@
     }
     .pdf-block .pdf-preview {
       display: none; width: 100%; aspect-ratio: 8.5 / 11; height: auto;
-      border: 1px solid #ddd; margin-top: 12px; background: #fff;
+      border: 1px solid #ddd; margin: 12px auto 0; background: #fff;
       pointer-events: none; overflow: hidden;
     }
     .pdf-block.show-preview .pdf-preview { display: block; }
+    .pdf-block .pdf-editor-controls input[type="range"] {
+      flex: 1; min-width: 120px;
+    }
 
     /* ===== FLOATING FORMAT BAR ===== */
     .format-bar {
@@ -1186,7 +1189,7 @@
       return base.replace(/[-_]+/g, ' ').trim();
     }
 
-    function createPdfBlock(dataUrl, filename, sizeBytes) {
+    function createPdfBlock(dataUrl, filename, sizeBytes, previewWidth) {
       const block = document.createElement('div');
       block.className = 'content-block pdf-block';
       block.dataset.blockType = 'pdf';
@@ -1194,6 +1197,8 @@
       block.dataset.pdfSrc = dataUrl;
       block.dataset.pdfFilename = filename || 'document.pdf';
       block.dataset.showPreview = 'false';
+      const w = String(previewWidth || '100');
+      block.dataset.previewWidth = w;
       const displayName = prettifyPdfFilename(filename);
       const sizeLabel = formatBytes(sizeBytes);
       block.innerHTML = controlsHTML() + `
@@ -1206,10 +1211,13 @@
         </div>
         <div class="pdf-editor-controls">
           <button onclick="togglePdfPreview(this)">Show inline preview</button>
-          <label>File:</label>
+          <label>Preview width</label>
+          <input type="range" min="20" max="100" value="${w}" oninput="updatePdfPreviewWidth(this)">
+          <span class="pdf-width-label">${w}%</span>
+          <label style="margin-left:8px;">File:</label>
           <span style="font-family: monospace; font-size: 0.8rem; color: #555; word-break: break-all;">${escapeHtmlText(filename || 'document.pdf')}</span>
         </div>
-        <iframe class="pdf-preview" src="${dataUrl}${PDF_PREVIEW_PARAMS}" loading="lazy" title="PDF preview"></iframe>
+        <iframe class="pdf-preview" src="${dataUrl}${PDF_PREVIEW_PARAMS}" style="width:${w}%;" loading="lazy" title="PDF preview"></iframe>
       `;
       insertBlockInCanvas(block);
     }
@@ -1220,6 +1228,15 @@
       block.dataset.showPreview = showing ? 'true' : 'false';
       btn.textContent = showing ? 'Hide inline preview' : 'Show inline preview';
       btn.classList.toggle('active', showing);
+    }
+
+    function updatePdfPreviewWidth(slider) {
+      const block = slider.closest('.content-block');
+      const iframe = block.querySelector('.pdf-preview');
+      const label = block.querySelector('.pdf-width-label');
+      if (iframe) iframe.style.width = slider.value + '%';
+      if (label) label.textContent = slider.value + '%';
+      block.dataset.previewWidth = slider.value;
     }
 
     // ===== FORMAT BAR =====
@@ -1390,7 +1407,8 @@
             contentHTML += `            </span>\n`;
             contentHTML += `          </a>\n`;
             if (showPreview) {
-              contentHTML += `          <iframe class="pdf-preview" src="${pdfSrc}${PDF_PREVIEW_PARAMS}" loading="lazy" title="${escapeHtmlText(displayName)}"></iframe>\n`;
+              const previewWidth = block.dataset.previewWidth || '100';
+              contentHTML += `          <iframe class="pdf-preview" src="${pdfSrc}${PDF_PREVIEW_PARAMS}" style="width:${previewWidth}%;" loading="lazy" title="${escapeHtmlText(displayName)}"></iframe>\n`;
             }
             contentHTML += `        </div>\n\n`;
           }
@@ -2233,19 +2251,23 @@ ${contentHTML}
       // Editor-generated PDF embed: <div class="pdf-embed" data-filename="…">
       //   <a class="pdf-card" href="…pdf" download="…"><span class="pdf-icon">PDF</span>
       //     <span class="pdf-meta"><span class="pdf-name">…</span>…</span></a>
-      //   [<iframe class="pdf-preview" src="…pdf"></iframe>]
+      //   [<iframe class="pdf-preview" style="width:N%" src="…pdf"></iframe>]
       // </div>
       if (el.classList.contains('pdf-embed')) {
         const anchor = el.querySelector(':scope > a.pdf-card');
         const nameEl = el.querySelector('.pdf-name');
         const previewEl = el.querySelector(':scope > iframe.pdf-preview');
+        const previewWidthStr = previewEl && previewEl.style && previewEl.style.width
+          ? previewEl.style.width.replace('%', '')
+          : '';
         return {
           type: 'pdf',
           src: anchor ? (anchor.getAttribute('href') || '') : '',
           filename: anchor ? (anchor.getAttribute('download') || el.dataset.filename || 'document.pdf')
                            : (el.dataset.filename || 'document.pdf'),
           displayName: nameEl ? (nameEl.textContent || '').trim() : '',
-          showPreview: !!previewEl || el.classList.contains('show-preview')
+          showPreview: !!previewEl || el.classList.contains('show-preview'),
+          previewWidth: previewWidthStr || '100'
         };
       }
 
@@ -2407,7 +2429,7 @@ ${contentHTML}
             if (p && pb.bodyHtml) p.innerHTML = pb.bodyHtml;
           }
         } else if (pb.type === 'pdf') {
-          createPdfBlock(pb.src || '', pb.filename || 'document.pdf', null);
+          createPdfBlock(pb.src || '', pb.filename || 'document.pdf', null, pb.previewWidth || '100');
           // The block was just appended to the canvas; pick it back up to
           // restore display name and preview state from the parsed data.
           const canvas = document.getElementById('editorCanvas');
