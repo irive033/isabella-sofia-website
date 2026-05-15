@@ -151,6 +151,9 @@
       outline: none; min-height: 1.5em; padding: 4px;
     }
     .content-block p[contenteditable] { font-size: 1.15rem; line-height: 1.9; color: #222; }
+    .content-block p.lede[contenteditable] {
+      font-size: 1.35rem; line-height: 1.7; color: #333;
+    }
     .content-block h2[contenteditable] { font-size: 2rem; margin: 20px 0; text-transform: none; }
     .content-block h3[contenteditable] { font-size: 1.5rem; margin: 15px 0; text-transform: none; }
     .content-block blockquote[contenteditable] {
@@ -487,6 +490,7 @@
     <div class="toolbar-group">
       <span class="toolbar-label">Add</span>
       <button class="toolbar-btn" onclick="addBlock('p')">+ Text</button>
+      <button class="toolbar-btn" onclick="addBlock('lede')">+ Lede</button>
       <button class="toolbar-btn" onclick="addBlock('h2')">+ H2</button>
       <button class="toolbar-btn" onclick="addBlock('h3')">+ H3</button>
       <button class="toolbar-btn" onclick="addBlock('blockquote')">+ Quote</button>
@@ -734,6 +738,8 @@
 
       if (type === 'ul' || type === 'ol') {
         block.innerHTML = controlsHTML() + `<${type} contenteditable="true"><li>${content || 'List item'}</li></${type}>`;
+      } else if (type === 'lede') {
+        block.innerHTML = controlsHTML() + `<p class="lede" contenteditable="true">${content || 'Lede paragraph — your intro'}</p>`;
       } else if (type === 'gallery') {
         block.classList.add('gallery-block');
         block.innerHTML = controlsHTML() + `
@@ -794,7 +800,7 @@
       const editable = block.querySelector('[contenteditable]');
       if (editable && type !== 'gallery' && type !== 'hero') {
         editable.focus();
-        if (['Start typing...', 'Heading', 'Subheading'].includes(editable.textContent)) {
+        if (['Start typing...', 'Heading', 'Subheading', 'Lede paragraph — your intro'].includes(editable.textContent)) {
           document.execCommand('selectAll');
         }
       }
@@ -1378,8 +1384,10 @@
           if (editable) {
             const tag = editable.tagName.toLowerCase();
             const html = editable.innerHTML.trim();
-            if (html && !['Start typing...', 'Heading', 'Subheading'].includes(html)) {
-              contentHTML += `        <${tag}>${html}</${tag}>\n\n`;
+            const cls = editable.className.trim();
+            const classAttr = cls ? ` class="${cls}"` : '';
+            if (html && !['Start typing...', 'Heading', 'Subheading', 'Lede paragraph — your intro'].includes(html)) {
+              contentHTML += `        <${tag}${classAttr}>${html}</${tag}>\n\n`;
             }
           }
         }
@@ -2249,6 +2257,13 @@ ${contentHTML}
         };
       }
 
+      // Lede paragraph: <p class="lede"> — return ahead of the generic <p>
+      // branch so it round-trips as its own block type instead of getting
+      // flattened into a normal text block on next save.
+      if (tag === 'p' && el.classList.contains('lede')) {
+        return { type: 'lede', html: el.innerHTML };
+      }
+
       // Standard text / heading / list / blockquote blocks
       if (['p', 'h2', 'h3', 'blockquote', 'ul', 'ol'].includes(tag)) {
         return { type: tag, html: el.innerHTML };
@@ -2287,7 +2302,7 @@ ${contentHTML}
       blockCounter = 0;
 
       parsed.blocks.forEach(pb => {
-        if (['p', 'h2', 'h3', 'blockquote', 'ul', 'ol'].includes(pb.type)) {
+        if (['p', 'h2', 'h3', 'blockquote', 'ul', 'ol', 'lede'].includes(pb.type)) {
           const block = addBlock(pb.type);
           const editable = block.querySelector('[contenteditable]');
           if (editable) editable.innerHTML = pb.html || '';

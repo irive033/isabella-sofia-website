@@ -596,6 +596,17 @@ p {
   color: #222;
 }
 
+/* Lede paragraph — the intro sentence(s) just after the byline. Same
+   regular weight as body copy but a step larger, slightly tighter
+   leading, and a hair lighter so it reads as introduction rather than
+   competing with H2/H3 section headings. */
+.post-content p.lede {
+  font-size: 1.35rem;
+  line-height: 1.7;
+  margin-bottom: 35px;
+  color: #333;
+}
+
 .post-content h2 {
   font-size: 2rem;
   margin: 50px 0 20px;
