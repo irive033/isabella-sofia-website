@@ -680,6 +680,7 @@
       <button class="toolbar-btn" onclick="triggerPdfUpload()">+ PDF</button>
       <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
       <input type="file" id="galleryInput" accept="image/*" multiple style="display:none" onchange="handleGalleryUpload(event)">
+      <input type="file" id="galleryReplaceInput" accept="image/*" style="display:none" onchange="handleGalleryReplace(event)">
       <input type="file" id="heroInput" accept="image/*" style="display:none" onchange="handleHeroUpload(event)">
       <input type="file" id="pdfInput" accept="application/pdf,.pdf" style="display:none" onchange="handlePdfUpload(event)">
     </div>
@@ -983,6 +984,7 @@
           </div>
           <div class="gallery-editor-controls">
             <button onclick="addSlideshowImage(this)">+ Add Image</button>
+            <button onclick="replaceCurrentSlideImage(this)">Replace current image</button>
             <button onclick="removeCurrentSlide(this)">Remove current slide</button>
             <label>Layout</label>
             <select onchange="setGalleryLayout(this)">
@@ -1341,6 +1343,37 @@
         };
         reader.readAsDataURL(file);
       });
+      event.target.value = '';
+    }
+
+    // Replace the image on the gallery's current slide without touching its
+    // link / caption / price metadata. Triggered by the "Replace current
+    // image" button; uses a separate single-file input so it doesn't
+    // collide with the multi-select Add Image flow.
+    function replaceCurrentSlideImage(btn) {
+      activeGalleryBlock = btn.closest('.content-block');
+      const gallery = activeGalleryBlock.querySelector('.post-gallery');
+      const figures = gallery.querySelectorAll('.gallery-figure');
+      if (!figures.length) {
+        alert('No image to replace — add an image first with + Add Image.');
+        return;
+      }
+      document.getElementById('galleryReplaceInput').click();
+    }
+
+    function handleGalleryReplace(event) {
+      const file = event.target.files[0];
+      if (!file || !activeGalleryBlock) return;
+      const gallery = activeGalleryBlock.querySelector('.post-gallery');
+      const figures = gallery.querySelectorAll('.gallery-figure');
+      const idx = parseInt(gallery.dataset.slide || '0', 10);
+      const fig = figures[idx];
+      if (!fig) return;
+      const img = fig.querySelector('img');
+      if (!img) return;
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      reader.readAsDataURL(file);
       event.target.value = '';
     }
 
