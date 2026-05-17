@@ -2245,6 +2245,90 @@ ${contentHTML}
       return html.replace(re, (full, _mime, b64) => replacements.get(b64) || full);
     }
 
+    // Pull title / date / category / header image out of the rewritten post
+    // HTML (after uploadEmbeddedImages has replaced data URIs with repo
+    // paths). Used to update posts/index.json so the category landing
+    // pages can render without ever hitting the GitHub Contents API.
+    function extractIndexMetaFromHtml(html, fallbackTitle, fallbackCategory, fallbackDate) {
+      const pick = (pattern) => {
+        const m = html.match(pattern);
+        return m ? m[1].trim() : '';
+      };
+      const titleRaw = pick(/<section[^>]*class=["'][^"']*post-header[^"']*["'][^>]*>[\s\S]*?<h1[^>]*>([\s\S]*?)<\/h1>/i)
+                    || fallbackTitle || '';
+      const date = pick(/<meta\s+name=["']date["']\s+content=["']([^"']+)["']/i) || fallbackDate || '';
+      const rawCategory = pick(/<meta\s+name=["']category["']\s+content=["']([^"']+)["']/i);
+      const category = (rawCategory || fallbackCategory || '').toLowerCase().trim();
+      let image = pick(/class=["']post-header[^"']*["'][^>]*style=["'][^"']*background-image:\s*url\(['"]?([^'")]+)['"]?\)/i);
+      if (!image) image = pick(/<section[^>]*class=["'][^"']*post-body[^"']*["'][^>]*>[\s\S]*?<img[^>]+src=["']([^"']+)["']/i);
+      if (!image) image = pick(/<img[^>]+src=["']([^"']+)["']/i);
+      return {
+        title: titleRaw.replace(/<[^>]+>/g, '').trim(),
+        date,
+        // Normalize legacy 'wellness' to 'lifestyle' so the index matches
+        // what post-index.js compares against on the Lifestyle page.
+        category: category === 'wellness' ? 'lifestyle' : category,
+        image
+      };
+    }
+
+    // Maintain posts/index.json — list of {path, folder, title, date,
+    // category, image} for every post. Re-fetches the current index from
+    // GitHub (so we don't clobber a concurrent edit), drops any row that
+    // matches either the new path or an old path being deleted, inserts the
+    // new row, sorts newest-first, and PUTs it back. Failures are silent —
+    // the post itself is already committed; the index just won't update
+    // until the next successful publish.
+    async function updatePostsIndex(headers, statusEl, newPath, postMeta, oldPathToRemove) {
+      try { if (statusEl) { statusEl.textContent = 'Updating posts index...'; statusEl.className = 'status-msg loading'; } } catch (e) {}
+      const indexPath = 'posts/index.json';
+      let indexData = { posts: [] };
+      let indexSha = null;
+      try {
+        const r = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/${indexPath}?ref=${GITHUB_BRANCH}`,
+          { headers: { Authorization: headers.Authorization }, cache: 'no-store' }
+        );
+        if (r.ok) {
+          const meta = await r.json();
+          indexSha = meta.sha;
+          try {
+            const decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
+            const parsed = JSON.parse(decoded);
+            if (parsed && Array.isArray(parsed.posts)) indexData = parsed;
+            else if (Array.isArray(parsed)) indexData = { posts: parsed };
+          } catch (e) {}
+        }
+      } catch (e) {}
+      if (!indexData || !Array.isArray(indexData.posts)) indexData = { posts: [] };
+
+      const folder = (newPath.split('/')[1] || '');
+      const name = newPath.split('/').pop();
+      const newEntry = {
+        title: postMeta.title || '',
+        date: postMeta.date || '',
+        category: postMeta.category || folder,
+        image: postMeta.image || '',
+        path: newPath,
+        folder
+      };
+      const next = indexData.posts
+        .filter(p => p && p.path !== newPath && (!oldPathToRemove || p.path !== oldPathToRemove))
+        .concat([newEntry]);
+      next.sort((a, b) => ((b && b.date) || '').localeCompare((a && a.date) || ''));
+
+      const payload = { posts: next, updated: new Date().toISOString() };
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+      const body = { message: `Update posts index: ${newEntry.title || newPath}`, content, branch: GITHUB_BRANCH };
+      if (indexSha) body.sha = indexSha;
+      try {
+        await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/contents/${indexPath}`,
+          { method: 'PUT', headers, body: JSON.stringify(body) }
+        );
+      } catch (e) { /* best-effort */ }
+    }
+
     async function publishToGitHub() {
       const status = document.getElementById('publishStatus');
       const token = document.getElementById('githubToken').value.trim();
@@ -2348,6 +2432,13 @@ ${contentHTML}
           editingFilePath = targetPath;
           document.getElementById('editingBannerPath').textContent = targetPath;
         }
+
+        // Keep posts/index.json in sync so category pages don't have to
+        // hit the rate-limited GitHub Contents API to discover posts.
+        // The extractor reads the date from the post HTML's <meta name="date">
+        // tag, which generatePostHTML always emits — no fallback needed.
+        const indexMeta = extractIndexMetaFromHtml(html, postTitle, category, '');
+        await updatePostsIndex(headers, status, targetPath, indexMeta, oldPathToDelete);
 
         const verb = oldPathToDelete ? 'Moved and updated' : (editingFilePath ? 'Updated' : 'Published');
         status.innerHTML = `${verb}! <a href="${result.content.html_url}" target="_blank" style="color:#0969da;">View on GitHub</a><br>Vercel will auto-deploy shortly.`;

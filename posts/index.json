@@ -1,0 +1,77 @@
+{
+  "posts": [
+    {
+      "title": "Minimal SPF Makeup Routine",
+      "date": "2026-05-17T22:44:43.055Z",
+      "category": "beauty",
+      "image": "../../images/uploads/2026/05/4d90d4f00592.png",
+      "path": "posts/beauty/minimal-makeup-routine.html",
+      "folder": "beauty"
+    },
+    {
+      "title": "My Favorite East West Bags",
+      "date": "2026-05-17T22:00:08.422Z",
+      "category": "style",
+      "image": "../../images/uploads/2026/05/77a0e39be201.png",
+      "path": "posts/style/my-favorite-east-west-bags.html",
+      "folder": "style"
+    },
+    {
+      "title": "Morgan Stewart's Capsule Wardrobe",
+      "date": "2026-05-07T19:16:01.999Z",
+      "category": "style",
+      "image": "../../images/uploads/2026/05/80a64a32c314.webp",
+      "path": "posts/style/morgan-stewart-s-capsule-wardrobe.html",
+      "folder": "style"
+    },
+    {
+      "title": "Everyday Hair Routine",
+      "date": "2026-05-07T17:57:06.705Z",
+      "category": "beauty",
+      "image": "../../images/uploads/2026/05/51c1b6912b22.jpg",
+      "path": "posts/beauty/everyday-hair-routine.html",
+      "folder": "beauty"
+    },
+    {
+      "title": "Building a Capsule Wardrobe for Miami",
+      "date": "2026-04-27T03:20:55.054Z",
+      "category": "style",
+      "image": "../../images/uploads/2026/05/ea519aa2f0ea.jpg",
+      "path": "posts/style/how-to-build-a-capsule-wardrobe-for-miami.html",
+      "folder": "style"
+    },
+    {
+      "title": "Morning & Nighttime Skincare Routine",
+      "date": "2026-04-16T03:29:08.177Z",
+      "category": "beauty",
+      "image": "../../images/uploads/2026/05/89cba8e67fc7.webp",
+      "path": "posts/beauty/morning-amp-nightime-skincare-routine.html",
+      "folder": "beauty"
+    },
+    {
+      "title": "Summer Dresses",
+      "date": "2026-04-16T03:24:33.745Z",
+      "category": "style",
+      "image": "https://isabella-sofia-website.vercel.app/images/uploads/2026/05/b38ca382268c.avif",
+      "path": "posts/style/summer-dresses.html",
+      "folder": "style"
+    },
+    {
+      "title": "Sandals for your next Pool Day",
+      "date": "2026-04-16T03:24:10.129Z",
+      "category": "style",
+      "image": "../../images/uploads/2026/05/8dc3a954c14a.webp",
+      "path": "posts/style/sandals-for-your-next-pool-day.html",
+      "folder": "style"
+    },
+    {
+      "title": "Hotel Spotlight: Five 5-Star Stays",
+      "date": "2026-04-15T21:04:31.697Z",
+      "category": "lifestyle",
+      "image": "",
+      "path": "posts/beauty/hotel-spotlight-five-5-star-stays.html",
+      "folder": "beauty"
+    }
+  ],
+  "updated": null
+}

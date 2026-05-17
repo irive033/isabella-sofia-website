@@ -4,10 +4,15 @@
 // links going stale when posts are deleted or moved between categories.
 //
 // How it works:
-//   1. List every HTML file across posts/beauty/, /lifestyle/, /style/.
-//      Folders that don't exist are silently skipped (404 ignored).
-//   2. For each file, fetch the raw HTML and pull out title / date /
-//      category / header image via regex.
+//   1. Fetch posts/index.json from raw.githubusercontent. This file is
+//      maintained by the editor (publishToGitHub re-writes it after each
+//      publish). raw.githubusercontent is anonymous-cached, so it doesn't
+//      eat into the 60/hour Contents-API rate limit that prevents page
+//      loads when Isabella has been editing heavily.
+//   2. If the index isn't available (legacy sites, first-run before the
+//      editor re-publishes), fall back to the original behavior: list
+//      every HTML file across posts/<category>/ via the Contents API and
+//      fetch each one's metadata via regex.
 //   3. Filter by the category the caller asked for (or 'all'), sort
 //      newest-first by ISO date, and render into the container.
 //
@@ -40,6 +45,36 @@
         .map(f => ({ folder: cat, name: f.name, path: `posts/${cat}/${f.name}` }));
     } catch (e) {
       return [];
+    }
+  }
+
+  // Pre-built index of every post's metadata, maintained by the editor.
+  // Returns an array of {path, folder, name, title, date, category, image}
+  // matching the shape fetchPostMeta would produce — so the rest of the
+  // pipeline (filter / sort / render) doesn't care which source filled it.
+  // Returns null (not []) on failure so callers can fall back to the
+  // Contents-API path; [] would falsely look like "no posts exist".
+  async function fetchPostIndex() {
+    try {
+      const r = await fetch(
+        `https://raw.githubusercontent.com/${REPO}/${BRANCH}/posts/index.json`,
+        { cache: 'no-store' }
+      );
+      if (!r.ok) return null;
+      const data = await r.json();
+      const list = Array.isArray(data) ? data : (data && data.posts);
+      if (!Array.isArray(list)) return null;
+      return list.map(p => ({
+        folder: p.folder || (p.path ? p.path.split('/')[1] : ''),
+        name: p.name || (p.path ? p.path.split('/').pop() : ''),
+        path: p.path,
+        title: p.title || '',
+        date: p.date || '',
+        category: normalizeCategorySlug(p.category || ''),
+        image: p.image || ''
+      }));
+    } catch (e) {
+      return null;
     }
   }
 
@@ -122,16 +157,23 @@
     if (!container) return;
     container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#888; font-style:italic;">Loading posts...</div>';
     try {
-      // Step 1: listings across all category folders
-      const listings = await Promise.all(CATEGORIES.map(listCategoryFolder));
-      const files = listings.flat();
-      if (files.length === 0) {
+      // Step 1: prefer the pre-built index (single fetch, no rate limit).
+      // Fall back to the Contents API only if the index is missing.
+      let posts = await fetchPostIndex();
+      if (!posts) {
+        const listings = await Promise.all(CATEGORIES.map(listCategoryFolder));
+        const files = listings.flat();
+        if (files.length === 0) {
+          container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#888; font-style:italic;">No posts yet.</div>';
+          return;
+        }
+        posts = (await Promise.all(files.map(fetchPostMeta))).filter(Boolean);
+      }
+      if (posts.length === 0) {
         container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#888; font-style:italic;">No posts yet.</div>';
         return;
       }
-      // Step 2: fetch each post's HTML to pull out metadata
-      const posts = (await Promise.all(files.map(fetchPostMeta))).filter(Boolean);
-      // Step 3: filter + sort
+      // Step 2: filter + sort
       const filtered = categoryFilter === 'all'
         ? posts
         : posts.filter(p => effectiveCategory(p) === categoryFilter);
@@ -173,10 +215,15 @@
 
   // Shared fetch + filter helper used by both the grid and carousel renderers.
   async function getFilteredPosts(categoryFilter, { limit } = {}) {
-    const listings = await Promise.all(CATEGORIES.map(listCategoryFolder));
-    const files = listings.flat();
-    if (files.length === 0) return [];
-    const posts = (await Promise.all(files.map(fetchPostMeta))).filter(Boolean);
+    // Prefer the pre-built index; fall back to Contents API + per-file
+    // metadata fetch if it's missing or unparseable.
+    let posts = await fetchPostIndex();
+    if (!posts) {
+      const listings = await Promise.all(CATEGORIES.map(listCategoryFolder));
+      const files = listings.flat();
+      if (files.length === 0) return [];
+      posts = (await Promise.all(files.map(fetchPostMeta))).filter(Boolean);
+    }
     const filtered = categoryFilter === 'all'
       ? posts
       : posts.filter(p => effectiveCategory(p) === categoryFilter);
