@@ -145,6 +145,9 @@
     .block-ctrl-btn:hover { background: #555; color: #fff; }
     .block-ctrl-btn.delete { background: #5c1a1a; color: #f88; }
     .block-ctrl-btn.delete:hover { background: #7a2020; }
+    /* Heading-only bold toggle — italicized B icon, lights up when active */
+    .block-ctrl-btn.header-bold-toggle { font-weight: 700; font-family: serif; }
+    .block-ctrl-btn.header-bold-toggle.active { background: #c5a76a; color: #fff; }
 
     /* Editable text */
     .content-block [contenteditable] {
@@ -174,6 +177,11 @@
       content: ''; flex: 1;
       height: 1px; background: #d6ccba;
     }
+    /* Bold variant — mirrors the production .is-bold rule so the editor
+       shows the same weight Isabella will see on the live post. */
+    .content-block h2.is-bold[contenteditable],
+    .content-block h3.is-bold[contenteditable] { font-weight: 700; }
+    .content-block h4.is-bold[contenteditable] { font-weight: 700; color: #1a1a1a; }
     .content-block blockquote[contenteditable] {
       border-left: 3px solid #000; padding-left: 25px;
       font-style: italic; color: #444; font-size: 1.15rem; line-height: 1.9;
@@ -700,14 +708,29 @@
     }
 
     // ===== BLOCK CONTROLS TEMPLATE =====
-    function controlsHTML() {
+    function controlsHTML(opts = {}) {
+      const boldBtn = opts.bold
+        ? `<button class="block-ctrl-btn header-bold-toggle" onclick="event.stopPropagation(); toggleHeaderBold(this)" title="Toggle bold">B</button>`
+        : '';
       return `
         <div class="block-controls">
           <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlock(this.closest('.content-block'), -1)" title="Move up">&uarr;</button>
           <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlock(this.closest('.content-block'), 1)" title="Move down">&darr;</button>
+          ${boldBtn}
           <button class="block-ctrl-btn delete" onclick="event.stopPropagation(); deleteBlock(this.closest('.content-block'))" title="Delete">&times;</button>
         </div>
       `;
+    }
+
+    // Toggle the bold variant on the heading inside this block. The class
+    // round-trips through the publisher (which preserves editable.className)
+    // and the parser (which now reads .is-bold back into pb.bold).
+    function toggleHeaderBold(btn) {
+      const block = btn.closest('.content-block');
+      const editable = block && block.querySelector('[contenteditable]');
+      if (!editable) return;
+      editable.classList.toggle('is-bold');
+      btn.classList.toggle('active', editable.classList.contains('is-bold'));
     }
 
     // ===== BLOCK SELECTION (insert-after target) =====
@@ -813,7 +836,8 @@
                           : type === 'h3' ? 'Subheading'
                           : type === 'h4' ? 'Section label'
                           : '';
-        block.innerHTML = controlsHTML() + `<${type} contenteditable="true">${content || placeholder}</${type}>`;
+        const isHeading = ['h1', 'h2', 'h3', 'h4'].includes(type);
+        block.innerHTML = controlsHTML({ bold: isHeading }) + `<${type} contenteditable="true">${content || placeholder}</${type}>`;
       }
 
       insertBlockInCanvas(block);
@@ -2360,7 +2384,12 @@ ${contentHTML}
 
       // Standard text / heading / list / blockquote blocks
       if (['p', 'h2', 'h3', 'h4', 'blockquote', 'ul', 'ol'].includes(tag)) {
-        return { type: tag, html: el.innerHTML };
+        const block = { type: tag, html: el.innerHTML };
+        // Headings carry an optional .is-bold class for bold weight
+        if (['h2', 'h3', 'h4'].includes(tag) && el.classList.contains('is-bold')) {
+          block.bold = true;
+        }
+        return block;
       }
 
       // Gallery caption emitted by generatePostHTML as a <p.gallery-caption>
@@ -2400,6 +2429,12 @@ ${contentHTML}
           const block = addBlock(pb.type);
           const editable = block.querySelector('[contenteditable]');
           if (editable) editable.innerHTML = pb.html || '';
+          // Restore bold state on heading blocks (round-trip from .is-bold class)
+          if (pb.bold && editable) {
+            editable.classList.add('is-bold');
+            const boldBtn = block.querySelector('.header-bold-toggle');
+            if (boldBtn) boldBtn.classList.add('active');
+          }
         } else if (pb.type === 'image-placeholder') {
           // Legacy Squarespace placeholder — insert as a text block with a note.
           // User can replace with a real image block later.

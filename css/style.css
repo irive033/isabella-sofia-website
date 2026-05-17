@@ -651,6 +651,20 @@ p {
   background: #d6ccba;
 }
 
+/* Bold-weight variant for any post heading — toggled per-block in the
+   editor. Overrides the default 400 weight set on h1–h4 globally and
+   the h4-specific 400 inside .post-content. Color also bumps to pure
+   black on h4 so the bold reads clearly against its small label size. */
+.post-content h2.is-bold,
+.post-content h3.is-bold,
+.post-header h1.is-bold {
+  font-weight: 700;
+}
+.post-content h4.is-bold {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
 .post-content img {
   width: 100%;
   margin: 30px 0;
