@@ -839,8 +839,10 @@
         : '';
       return `
         <div class="block-controls">
+          <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlockToEdge(this.closest('.content-block'), -1)" title="Move to top">&#x2912;</button>
           <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlock(this.closest('.content-block'), -1)" title="Move up">&uarr;</button>
           <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlock(this.closest('.content-block'), 1)" title="Move down">&darr;</button>
+          <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlockToEdge(this.closest('.content-block'), 1)" title="Move to bottom">&#x2913;</button>
           ${boldBtn}
           <button class="block-ctrl-btn delete" onclick="event.stopPropagation(); deleteBlock(this.closest('.content-block'))" title="Delete">&times;</button>
         </div>
@@ -1033,6 +1035,21 @@
         if (direction === -1) block.parentNode.insertBefore(block, sibling);
         else block.parentNode.insertBefore(sibling, block);
       }
+    }
+
+    // Jump a block straight to the top (direction -1) or bottom (+1) of
+    // the canvas, skipping the one-at-a-time step the ↑/↓ buttons do.
+    // Scrolls the moved block into view so the user can see it land.
+    function moveBlockToEdge(block, direction) {
+      const canvas = document.getElementById('editorCanvas');
+      if (!canvas || !canvas.contains(block)) return;
+      if (direction === -1) {
+        canvas.insertBefore(block, canvas.firstChild);
+      } else {
+        canvas.appendChild(block);
+      }
+      selectBlock(block);
+      block.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
 
     // ===== SINGLE IMAGE UPLOAD =====
