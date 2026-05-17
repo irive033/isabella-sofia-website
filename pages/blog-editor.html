@@ -1709,12 +1709,17 @@
           if (eyebrow2Text) contentHTML += `          <div class="post-cta-eyebrow-2">${escapeHtmlText(eyebrow2Text)}</div>\n`;
           if (titleText) contentHTML += `          <h2 class="post-cta-title">${escapeHtmlText(titleText)}</h2>\n`;
           if (subtitleText) contentHTML += `          <p class="post-cta-subtitle">${escapeHtmlText(subtitleText)}</p>\n`;
-          if (buttons.length) {
+          // Collect only buttons with text — an empty button is dropped
+          // entirely. When one of the two is empty, the other renders
+          // alone and is centered by the container's justify-content. When
+          // both are empty, we skip the wrapper div too so the published
+          // markup doesn't carry an empty shell.
+          const filledButtons = Array.from(buttons).filter(b => b.textContent.trim());
+          if (filledButtons.length) {
             contentHTML += `          <div class="post-cta-buttons">\n`;
-            buttons.forEach(btn => {
+            filledButtons.forEach(btn => {
               const text = btn.textContent.trim();
               const link = (btn.dataset.link || '').trim();
-              if (!text) return;
               if (link) {
                 contentHTML += `            <a class="cta-btn" href="${link}" target="_blank" rel="noopener">${escapeHtmlText(text)}</a>\n`;
               } else {
