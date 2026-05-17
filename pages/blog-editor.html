@@ -187,36 +187,69 @@
       border: 0; height: 1px; background: #d6ccba;
       margin: 20px 0; width: 100%;
     }
-    /* CTA block — preview the published layout inside the canvas. */
+    /* CTA block — preview the published layout inside the canvas.
+       All four text pieces (eyebrow / title / subtitle / each button) are
+       contenteditable; the dashed-border hover + solid-border focus state
+       makes that obvious. */
     .content-block.cta-block .post-cta {
       background: #f4efe5;
       border-top: 1px solid #d6ccba; border-bottom: 1px solid #d6ccba;
       padding: 50px 30px; text-align: center;
     }
+    .content-block.cta-block [contenteditable="true"] {
+      cursor: text;
+      border: 1px dashed transparent;
+      border-radius: 3px;
+      padding: 4px 6px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .content-block.cta-block [contenteditable="true"]:hover {
+      border-color: #b8b0a0;
+    }
+    .content-block.cta-block [contenteditable="true"]:focus {
+      outline: none;
+      border-color: #0969da;
+      border-style: solid;
+      background: rgba(255,255,255,0.6);
+    }
     .content-block.cta-block .post-cta-eyebrow {
       font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
       font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase;
-      color: #a8a29d; margin: 0 0 18px; outline: none; padding: 4px;
+      color: #a8a29d; margin: 0 0 18px;
     }
     .content-block.cta-block .post-cta-title {
       font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif;
       font-style: italic; font-size: 2.2rem; font-weight: 400;
       color: #3a3530; margin: 0 0 12px; line-height: 1.2;
-      text-transform: none; letter-spacing: 0; outline: none; padding: 4px;
+      text-transform: none; letter-spacing: 0;
     }
     .content-block.cta-block .post-cta-subtitle {
       font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
       font-size: 1.05rem; color: #7a7773; margin: 0 0 28px;
-      line-height: 1.5; outline: none; padding: 4px;
+      line-height: 1.5;
     }
     .content-block.cta-block .post-cta-buttons {
       display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;
     }
     .content-block.cta-block .post-cta-buttons .cta-btn {
-      display: inline-block; padding: 12px 28px; border: 1px solid #b8b0a0;
-      border-radius: 2px; font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+      display: inline-block; padding: 12px 28px;
+      font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
       font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase;
-      color: #3a3530; background: transparent; outline: none;
+      color: #3a3530; background: transparent;
+      border: 1px solid #b8b0a0; border-radius: 2px;
+    }
+    /* Override the generic dashed-border-on-buttons so the button keeps its
+       solid outline; only swap to focus blue when it's actually focused. */
+    .content-block.cta-block .post-cta-buttons .cta-btn[contenteditable="true"] {
+      border-style: solid;
+      border-color: #b8b0a0;
+    }
+    .content-block.cta-block .post-cta-buttons .cta-btn[contenteditable="true"]:hover {
+      border-color: #7a7773;
+    }
+    .content-block.cta-block .post-cta-buttons .cta-btn[contenteditable="true"]:focus {
+      border-color: #0969da;
+      background: rgba(255,255,255,0.6);
     }
     .content-block.cta-block .cta-editor-controls {
       display: flex; flex-direction: column; gap: 6px; margin-top: 10px;
