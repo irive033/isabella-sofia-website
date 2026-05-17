@@ -1002,6 +1002,9 @@
               <option value="9">9</option>
             </select>
             <label class="show-at-a-time-label">at a time</label>
+            <label>Spacing</label>
+            <input type="range" min="0" max="32" step="2" value="8" class="gallery-gap-slider" oninput="setGallerySpacing(this)">
+            <span class="gallery-gap-label">8px</span>
             <div class="gallery-link-row">
               <label>Link</label>
               <input type="url" placeholder="https://..." oninput="updateSlideLink(this)">
@@ -1522,6 +1525,20 @@
       refreshSlideshow(block);
     }
 
+    // Adjust the gap between images. The same property works for both
+    // layouts — `gap` is honored by flex (slideshow) and grid (grid). Stored
+    // on both data-gap (for the publisher) and inline style (so the editor
+    // and published page render identically without an extra CSS rule).
+    function setGallerySpacing(slider) {
+      const block = slider.closest('.content-block');
+      const gallery = block.querySelector('.post-gallery');
+      const px = parseInt(slider.value, 10) || 0;
+      gallery.dataset.gap = px;
+      gallery.style.gap = px + 'px';
+      const label = block.querySelector('.gallery-gap-label');
+      if (label) label.textContent = px + 'px';
+    }
+
     function updateSlideLink(input) {
       const block = input.closest('.content-block');
       const gallery = block.querySelector('.post-gallery');
@@ -1787,7 +1804,13 @@
             // (there's no slide window). data-visible is still emitted so
             // a switch back to slideshow inside the editor keeps the value.
             const layoutAttr = isGrid ? ` data-layout="grid"` : '';
-            contentHTML += `        <div class="post-gallery" data-slide="0" data-visible="${vis}"${layoutAttr}>\n`;
+            // Spacing: only emit when the user has actually set a value.
+            // Both flex (slideshow) and grid honor `gap`, so a single
+            // inline style works in either layout.
+            const gapRaw = galleryEl.dataset.gap;
+            const gapNum = gapRaw === undefined || gapRaw === '' ? NaN : parseInt(gapRaw, 10);
+            const styleAttr = !isNaN(gapNum) ? ` style="gap: ${gapNum}px;"` : '';
+            contentHTML += `        <div class="post-gallery" data-slide="0" data-visible="${vis}"${layoutAttr}${styleAttr}>\n`;
             figures.forEach((fig, i) => {
               const isActive = isGrid || i < visNum;
               const link = (fig.dataset.link || '').trim();
@@ -2778,10 +2801,16 @@ ${contentHTML}
             }
           });
         }
+        // Pick up the spacing override if the publisher emitted one as
+        // an inline `gap: Npx` style. Stays null otherwise so the
+        // CSS default takes over.
+        const gapStyle = (el.getAttribute('style') || '').match(/gap\s*:\s*(\d+)px/i);
+        const gap = gapStyle ? gapStyle[1] : null;
         return {
           type: 'gallery',
           visible: el.dataset.visible || '1',
           layout: el.dataset.layout === 'grid' ? 'grid' : 'slideshow',
+          gap,
           slides
         };
       }
@@ -3027,6 +3056,15 @@ ${contentHTML}
           if (layoutSelect) layoutSelect.value = layout;
           const visSelect = block.querySelector('.show-at-a-time-select');
           if (visSelect) visSelect.value = pb.visible || '1';
+          // Restore spacing (only when the source post had an inline gap)
+          if (pb.gap !== null && pb.gap !== undefined) {
+            gallery.dataset.gap = pb.gap;
+            gallery.style.gap = pb.gap + 'px';
+            const gapSlider = block.querySelector('.gallery-gap-slider');
+            const gapLabel = block.querySelector('.gallery-gap-label');
+            if (gapSlider) gapSlider.value = pb.gap;
+            if (gapLabel) gapLabel.textContent = pb.gap + 'px';
+          }
           // Build a figure for each parsed slide with its per-image link
           // and caption. Legacy slides (no caption parsed) get an empty
           // figcaption that the user can fill in via the caption input.
