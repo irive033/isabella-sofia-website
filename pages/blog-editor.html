@@ -285,10 +285,6 @@
       font-size: 0.8rem; font-family: inherit; outline: none;
     }
     .gallery-block .gallery-link-row input:focus { border-color: #000; }
-    .gallery-block .caption {
-      font-size: 0.85rem; color: #888; font-style: italic;
-      text-align: center; margin-top: 8px;
-    }
 
     /* ===== HERO BLOCK ===== */
     .hero-block .hero-grid {
@@ -784,8 +780,11 @@
               <label>Link</label>
               <input type="url" placeholder="https://..." oninput="updateSlideLink(this)">
             </div>
+            <div class="gallery-link-row">
+              <label>Caption</label>
+              <input type="text" placeholder="Caption for the current image" oninput="updateSlideCaption(this)">
+            </div>
           </div>
-          <div class="caption" contenteditable="true">Add caption</div>
         `;
       } else if (type === 'hero') {
         block.classList.add('hero-block');
@@ -1016,19 +1015,32 @@
       files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
-          const img = document.createElement('img');
-          img.className = 'gallery-slide';
-          img.src = e.target.result;
-          img.alt = 'Gallery image';
-          img.dataset.link = '';
-          gallery.insertBefore(img, firstNav);
-          const allSlides = gallery.querySelectorAll('.gallery-slide');
-          gallery.dataset.slide = (allSlides.length - 1).toString();
+          const fig = createGalleryFigure(e.target.result, '', '');
+          gallery.insertBefore(fig, firstNav);
+          const allFigures = gallery.querySelectorAll('.gallery-figure');
+          gallery.dataset.slide = (allFigures.length - 1).toString();
           refreshSlideshow(activeGalleryBlock);
         };
         reader.readAsDataURL(file);
       });
       event.target.value = '';
+    }
+
+    // Build a single <figure class="gallery-figure"> containing the image
+    // and its caption. The link (if any) is stored on the figure's
+    // data-link and used to wrap the image in an <a> only at publish time.
+    function createGalleryFigure(src, link, caption) {
+      const fig = document.createElement('figure');
+      fig.className = 'gallery-figure';
+      fig.dataset.link = link || '';
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = caption || 'Gallery image';
+      fig.appendChild(img);
+      const cap = document.createElement('figcaption');
+      cap.textContent = caption || '';
+      fig.appendChild(cap);
+      return fig;
     }
 
     function getVisibleCount(gallery) {
@@ -1037,12 +1049,12 @@
 
     function refreshSlideshow(block) {
       const gallery = block.querySelector('.post-gallery');
-      const slides = gallery.querySelectorAll('.gallery-slide');
+      const figures = gallery.querySelectorAll('.gallery-figure');
       const counter = gallery.querySelector('.gallery-counter');
       const prev = gallery.querySelector('.gallery-prev');
       const next = gallery.querySelector('.gallery-next');
       const vis = getVisibleCount(gallery);
-      const total = slides.length;
+      const total = figures.length;
 
       let idx = parseInt(gallery.dataset.slide || '0', 10);
       if (total === 0) idx = 0;
@@ -1051,7 +1063,7 @@
 
       // Always show `vis` slides starting at idx, wrapping around. CSS order
       // puts the wrapped slides in visual rotation order (DOM order is fixed).
-      slides.forEach((s, i) => {
+      figures.forEach((s, i) => {
         const offset = total ? ((i - idx) % total + total) % total : 0;
         const isActive = total > 0 && offset < vis;
         s.classList.toggle('active', isActive);
@@ -1079,7 +1091,7 @@
 
       // Empty-state hint
       let hint = gallery.querySelector('.empty-hint');
-      if (slides.length === 0) {
+      if (total === 0) {
         if (!hint) {
           hint = document.createElement('span');
           hint.className = 'empty-hint';
@@ -1090,21 +1102,27 @@
         hint.remove();
       }
 
-      // Sync link input to current slide
-      const linkInput = block.querySelector('.gallery-link-row input');
-      if (linkInput && slides.length > 0) {
-        linkInput.value = slides[idx].dataset.link || '';
-      } else if (linkInput) {
-        linkInput.value = '';
+      // Sync link + caption inputs to whichever figure is "current" (idx).
+      const linkInput = block.querySelector('input[oninput*="updateSlideLink"]');
+      const capInput = block.querySelector('input[oninput*="updateSlideCaption"]');
+      if (total > 0) {
+        if (linkInput) linkInput.value = figures[idx].dataset.link || '';
+        if (capInput) {
+          const cap = figures[idx].querySelector('figcaption');
+          capInput.value = cap ? cap.textContent : '';
+        }
+      } else {
+        if (linkInput) linkInput.value = '';
+        if (capInput) capInput.value = '';
       }
     }
 
     function gallerySlide(btn, dir) {
       const gallery = btn.closest('.post-gallery');
       if (!gallery) return;
-      const slides = gallery.querySelectorAll('.gallery-slide');
+      const figures = gallery.querySelectorAll('.gallery-figure');
       const vis = getVisibleCount(gallery);
-      const total = slides.length;
+      const total = figures.length;
       if (total <= vis) return;
       let idx = parseInt(gallery.dataset.slide || '0', 10);
       idx = ((idx + dir * vis) % total + total) % total;
@@ -1116,10 +1134,10 @@
     function removeCurrentSlide(btn) {
       const block = btn.closest('.content-block');
       const gallery = block.querySelector('.post-gallery');
-      const slides = gallery.querySelectorAll('.gallery-slide');
-      if (!slides.length) return;
+      const figures = gallery.querySelectorAll('.gallery-figure');
+      if (!figures.length) return;
       let idx = parseInt(gallery.dataset.slide || '0', 10);
-      slides[idx].remove();
+      figures[idx].remove();
       refreshSlideshow(block);
     }
 
@@ -1134,11 +1152,25 @@
     function updateSlideLink(input) {
       const block = input.closest('.content-block');
       const gallery = block.querySelector('.post-gallery');
-      const slides = gallery.querySelectorAll('.gallery-slide');
+      const figures = gallery.querySelectorAll('.gallery-figure');
       const idx = parseInt(gallery.dataset.slide || '0', 10);
-      if (slides[idx]) {
-        slides[idx].dataset.link = input.value.trim();
+      if (figures[idx]) {
+        figures[idx].dataset.link = input.value.trim();
       }
+    }
+
+    function updateSlideCaption(input) {
+      const block = input.closest('.content-block');
+      const gallery = block.querySelector('.post-gallery');
+      const figures = gallery.querySelectorAll('.gallery-figure');
+      const idx = parseInt(gallery.dataset.slide || '0', 10);
+      if (!figures[idx]) return;
+      let cap = figures[idx].querySelector('figcaption');
+      if (!cap) {
+        cap = document.createElement('figcaption');
+        figures[idx].appendChild(cap);
+      }
+      cap.textContent = input.value;
     }
 
     // ===== HERO =====
@@ -1338,35 +1370,39 @@
           }
           contentHTML += `        </div>\n\n`;
         } else if (type === 'gallery') {
-          const imgs = block.querySelectorAll('.post-gallery .gallery-slide');
-          if (imgs.length) {
+          const figures = block.querySelectorAll('.post-gallery .gallery-figure');
+          if (figures.length) {
             const vis = block.querySelector('.post-gallery').dataset.visible || '1';
             const visNum = parseInt(vis, 10);
+            const total = figures.length;
             contentHTML += `        <div class="post-gallery" data-slide="0" data-visible="${vis}">\n`;
-            imgs.forEach((img, i) => {
+            figures.forEach((fig, i) => {
               const isActive = i < visNum;
-              const link = img.dataset.link || '';
+              const link = (fig.dataset.link || '').trim();
+              const img = fig.querySelector('img');
+              const capEl = fig.querySelector('figcaption');
+              const capText = capEl ? capEl.textContent.trim() : '';
+              const altText = capText || 'Gallery image';
+              const cls = isActive ? 'gallery-figure active' : 'gallery-figure';
+              contentHTML += `          <figure class="${cls}">\n`;
               if (link) {
-                const cls = isActive ? 'gallery-slide-link active' : 'gallery-slide-link';
-                contentHTML += `          <a class="${cls}" href="${link}" target="_blank" rel="noopener"><img src="${img.src}" alt="Gallery image"></a>\n`;
+                contentHTML += `            <a class="gallery-figure-link" href="${link}" target="_blank" rel="noopener"><img src="${img.src}" alt="${escapeHtmlText(altText)}"></a>\n`;
               } else {
-                const cls = isActive ? 'gallery-slide active' : 'gallery-slide';
-                contentHTML += `          <img class="${cls}" src="${img.src}" alt="Gallery image">\n`;
+                contentHTML += `            <img src="${img.src}" alt="${escapeHtmlText(altText)}">\n`;
               }
+              if (capText) {
+                contentHTML += `            <figcaption>${escapeHtmlText(capText)}</figcaption>\n`;
+              }
+              contentHTML += `          </figure>\n`;
             });
-            if (imgs.length > visNum) {
+            if (total > visNum) {
               contentHTML += `          <button class="gallery-nav gallery-prev" onclick="gallerySlide(this,-1)" aria-label="Previous">&#10094;</button>\n`;
               contentHTML += `          <button class="gallery-nav gallery-next" onclick="gallerySlide(this,1)" aria-label="Next">&#10095;</button>\n`;
-              const end = Math.min(visNum, imgs.length);
-              const counterText = visNum === 1 ? `1 / ${imgs.length}` : `1–${end} / ${imgs.length}`;
+              const end = Math.min(visNum, total);
+              const counterText = visNum === 1 ? `1 / ${total}` : `1–${end} / ${total}`;
               contentHTML += `          <div class="gallery-counter">${counterText}</div>\n`;
             }
-            contentHTML += `        </div>\n`;
-            const cap = block.querySelector('.caption');
-            if (cap && cap.textContent.trim() && cap.textContent.trim() !== 'Add caption') {
-              contentHTML += `        <p class="gallery-caption" style="font-size:0.85rem; color:#888; font-style:italic; text-align:center; margin-top:-20px; margin-bottom:30px;">${cap.textContent.trim()}</p>\n`;
-            }
-            contentHTML += `\n`;
+            contentHTML += `        </div>\n\n`;
           }
         } else if (type === 'hero') {
           const img = block.querySelector('.hero-image-slot img');
@@ -1480,10 +1516,12 @@ ${contentHTML}
     // Gallery slideshow navigation (used by any .post-gallery on the page).
     // Wrap-around: always show vis slides starting at idx, modulo total, so
     // every position renders the same number of equally-sized slides.
+    // Queries figures (current format) AND legacy .gallery-slide elements
+    // so already-published posts that haven't been re-saved still work.
     function gallerySlide(btn, dir) {
       var gallery = btn.closest('.post-gallery');
       if (!gallery) return;
-      var slides = gallery.querySelectorAll('.gallery-slide, .gallery-slide-link');
+      var slides = gallery.querySelectorAll('.gallery-figure, .gallery-slide, .gallery-slide-link');
       var vis = parseInt(gallery.dataset.visible || '1', 10);
       var total = slides.length;
       if (total <= vis) return;
@@ -2146,14 +2184,22 @@ ${contentHTML}
       if (contentEl) {
         for (const child of Array.from(contentEl.children)) {
           // A <p class="gallery-caption"> sits as a sibling AFTER its gallery
-          // (that's how generatePostHTML emits it). On its own it would match
-          // the generic <p> text-block branch and end up as a standalone
-          // paragraph on next save — so absorb its text into the preceding
-          // gallery block here instead of dispatching it through the parser.
+          // (that's how the legacy gallery-level caption used to be emitted).
+          // Galleries now have per-image figcaptions, so we migrate: if the
+          // old single caption is pipe-separated and the segment count
+          // matches the slide count, split and assign to each slide. Either
+          // way swallow the <p> so it doesn't end up as a stray text block.
           if (child.tagName.toLowerCase() === 'p' && child.classList.contains('gallery-caption')) {
             const last = blocks[blocks.length - 1];
             if (last && last.type === 'gallery') {
-              last.caption = (child.textContent || '').trim();
+              const text = (child.textContent || '').trim();
+              last.caption = text;
+              const parts = text.split('|').map(p => p.trim()).filter(Boolean);
+              if (parts.length === (last.slides || []).length) {
+                last.slides.forEach((slide, i) => {
+                  if (!slide.caption && parts[i]) slide.caption = parts[i];
+                });
+              }
             }
             continue;
           }
@@ -2217,22 +2263,47 @@ ${contentHTML}
         };
       }
 
-      // Editor-generated gallery: <div class="post-gallery" data-visible="N">
-      //   <img class="gallery-slide"> or <a class="gallery-slide-link"><img></a>
+      // Editor-generated gallery (current format):
+      //   <div class="post-gallery">
+      //     <figure class="gallery-figure">
+      //       [<a><img></a> | <img>]
+      //       <figcaption>…</figcaption>
+      //     </figure>
+      //   </div>
+      // Legacy format had bare <img class="gallery-slide"> or
+      // <a class="gallery-slide-link"><img></a> as direct children of
+      // .post-gallery, with a separate <p class="gallery-caption"> sibling.
+      // Both shapes round-trip; legacy slides are re-emitted as figures on save.
       if (el.classList.contains('post-gallery')) {
         const slides = [];
-        // Collect both bare <img> slides and <a>-wrapped slides
-        el.querySelectorAll('.gallery-slide, .gallery-slide-link').forEach(node => {
-          if (node.tagName === 'IMG') {
-            slides.push({ src: node.getAttribute('src'), link: '' });
-          } else if (node.tagName === 'A') {
-            const img = node.querySelector('img');
+        // New format: <figure class="gallery-figure">
+        const figures = el.querySelectorAll(':scope > figure.gallery-figure');
+        if (figures.length > 0) {
+          figures.forEach(fig => {
+            const a = fig.querySelector(':scope > a');
+            const img = fig.querySelector('img');
+            const capEl = fig.querySelector(':scope > figcaption');
             slides.push({
               src: img ? img.getAttribute('src') : '',
-              link: node.getAttribute('href') || ''
+              link: a ? (a.getAttribute('href') || '') : '',
+              caption: capEl ? (capEl.textContent || '').trim() : ''
             });
-          }
-        });
+          });
+        } else {
+          // Legacy: bare slides as direct children of .post-gallery
+          el.querySelectorAll(':scope > .gallery-slide, :scope > .gallery-slide-link').forEach(node => {
+            if (node.tagName === 'IMG') {
+              slides.push({ src: node.getAttribute('src'), link: '', caption: '' });
+            } else if (node.tagName === 'A') {
+              const img = node.querySelector('img');
+              slides.push({
+                src: img ? img.getAttribute('src') : '',
+                link: node.getAttribute('href') || '',
+                caption: ''
+              });
+            }
+          });
+        }
         return {
           type: 'gallery',
           visible: el.dataset.visible || '1',
@@ -2387,22 +2458,14 @@ ${contentHTML}
           gallery.dataset.visible = pb.visible || '1';
           const visSelect = block.querySelector('.gallery-editor-controls select');
           if (visSelect) visSelect.value = pb.visible || '1';
-          // Add slides with per-image links
+          // Build a figure for each parsed slide with its per-image link
+          // and caption. Legacy slides (no caption parsed) get an empty
+          // figcaption that the user can fill in via the caption input.
           (pb.slides || []).forEach(slide => {
-            const img = document.createElement('img');
-            img.className = 'gallery-slide';
-            img.src = slide.src || '';
-            img.alt = 'Gallery image';
-            img.dataset.link = slide.link || '';
-            gallery.insertBefore(img, firstNav);
+            const fig = createGalleryFigure(slide.src || '', slide.link || '', slide.caption || '');
+            gallery.insertBefore(fig, firstNav);
           });
           gallery.dataset.slide = '0';
-          // Restore the gallery caption that parsePostHtml absorbed from the
-          // sibling <p class="gallery-caption">.
-          if (pb.caption) {
-            const captionEl = block.querySelector('.caption');
-            if (captionEl) captionEl.textContent = pb.caption;
-          }
           refreshSlideshow(block);
         } else if (pb.type === 'hero') {
           const block = addBlock('hero');

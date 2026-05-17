@@ -721,7 +721,10 @@ p {
 .post-gallery[data-visible="4"],
 .post-gallery[data-visible="5"] {
   gap: 6px;
-  align-items: stretch;
+  /* flex-start so figure-based slides take their intrinsic height (image +
+     caption) instead of stretching uniformly; the explicit height on the
+     inner image keeps every image cell the same size. */
+  align-items: flex-start;
   min-height: 320px;
 }
 
@@ -751,6 +754,73 @@ p {
   object-fit: cover;
   display: block;
 }
+
+/* Figure-based slides (current format): each <figure class="gallery-figure">
+   wraps the image (or a linked image) and its <figcaption>, so each image
+   gets its own caption directly underneath. Images get an explicit fixed
+   height so every gallery cell renders at the same size regardless of the
+   source image's native aspect ratio. */
+.post-gallery .gallery-figure {
+  display: none;
+  margin: 0;
+  flex-direction: column;
+  min-width: 0;
+}
+.post-gallery .gallery-figure.active {
+  display: flex;
+}
+.post-gallery .gallery-figure > img,
+.post-gallery .gallery-figure > .gallery-figure-link {
+  display: block;
+  width: 100%;
+}
+.post-gallery .gallery-figure > img,
+.post-gallery .gallery-figure > .gallery-figure-link img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.post-gallery .gallery-figure > figcaption {
+  font-size: 0.85rem;
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+/* Single-visible galleries: figure spans full width, image hugs the
+   bottom of the gallery box (matches legacy single-slide behaviour). */
+.post-gallery[data-visible="1"] .gallery-figure.active {
+  width: 100%;
+}
+.post-gallery[data-visible="1"] .gallery-figure.active > img,
+.post-gallery[data-visible="1"] .gallery-figure.active > .gallery-figure-link img {
+  max-height: 600px;
+  height: auto;
+}
+
+/* Multi-visible galleries: figures share the row evenly, image height is
+   fixed at 350 px so every cell is the same height. The figcaption sits
+   directly under each image. */
+.post-gallery[data-visible="2"] .gallery-figure.active,
+.post-gallery[data-visible="3"] .gallery-figure.active,
+.post-gallery[data-visible="4"] .gallery-figure.active,
+.post-gallery[data-visible="5"] .gallery-figure.active {
+  flex: 1 1 0;
+}
+.post-gallery[data-visible="2"] .gallery-figure.active > img,
+.post-gallery[data-visible="3"] .gallery-figure.active > img,
+.post-gallery[data-visible="4"] .gallery-figure.active > img,
+.post-gallery[data-visible="5"] .gallery-figure.active > img,
+.post-gallery[data-visible="2"] .gallery-figure.active > .gallery-figure-link,
+.post-gallery[data-visible="3"] .gallery-figure.active > .gallery-figure-link,
+.post-gallery[data-visible="4"] .gallery-figure.active > .gallery-figure-link,
+.post-gallery[data-visible="5"] .gallery-figure.active > .gallery-figure-link {
+  height: 350px;
+}
+
 
 .post-gallery .gallery-nav {
   position: absolute;
