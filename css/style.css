@@ -590,9 +590,9 @@ p {
 }
 
 .post-content p {
-  font-size: 1.15rem;
-  line-height: 1.9;
-  margin-bottom: 25px;
+  font-size: 1rem;
+  line-height: 1.85;
+  margin-bottom: 22px;
   color: #222;
 }
 
@@ -601,9 +601,9 @@ p {
    leading, and a hair lighter so it reads as introduction rather than
    competing with H2/H3 section headings. */
 .post-content p.lede {
-  font-size: 1.35rem;
+  font-size: 1.18rem;
   line-height: 1.7;
-  margin-bottom: 35px;
+  margin-bottom: 32px;
   color: #333;
   text-transform: none;
   letter-spacing: normal;
