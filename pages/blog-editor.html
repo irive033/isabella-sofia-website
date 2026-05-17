@@ -2287,17 +2287,20 @@ ${contentHTML}
       status.textContent = editingFilePath ? 'Fetching latest file...' : 'Publishing...';
       status.className = 'status-msg loading';
       try {
-        // Always refresh the SHA right before PUT to avoid 409 conflicts.
-        // Only needed when overwriting — a fresh path doesn't have a SHA.
+        // Always probe the target path for an existing file and grab its
+        // SHA if present. Needed for the obvious "overwrite when editing"
+        // case AND for the case where Isabella drafts a "new" post whose
+        // generated filename collides with one already on main (e.g. she
+        // reloaded the editor after publishing, lost editingFilePath, and
+        // tried to publish the same post again). Without the SHA, GitHub
+        // returns "sha wasn't supplied" on the PUT.
         let sha = null;
-        if (targetPath === editingFilePath) {
-          try {
-            const checkResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${targetPath}?ref=${GITHUB_BRANCH}`, {
-              headers: { 'Authorization': `token ${token}` }, cache: 'no-store'
-            });
-            if (checkResp.ok) { sha = (await checkResp.json()).sha; }
-          } catch (e) {}
-        }
+        try {
+          const checkResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${targetPath}?ref=${GITHUB_BRANCH}`, {
+            headers: { 'Authorization': `token ${token}` }, cache: 'no-store'
+          });
+          if (checkResp.ok) { sha = (await checkResp.json()).sha; }
+        } catch (e) {}
         const postTitle = document.getElementById('postTitle').value;
         const commitMsg = oldPathToDelete
           ? `Move to ${category}: ${postTitle || targetPath}`
