@@ -182,6 +182,11 @@
     .content-block h2.is-bold[contenteditable],
     .content-block h3.is-bold[contenteditable] { font-weight: 700; }
     .content-block h4.is-bold[contenteditable] { font-weight: 700; color: #1a1a1a; }
+    /* Hairline divider — matches the production .post-divider rule */
+    .content-block hr.post-divider {
+      border: 0; height: 1px; background: #d6ccba;
+      margin: 20px 0; width: 100%;
+    }
     .content-block blockquote[contenteditable] {
       border-left: 3px solid #000; padding-left: 25px;
       font-style: italic; color: #444; font-size: 1.15rem; line-height: 1.9;
@@ -516,6 +521,7 @@
       <button class="toolbar-btn" onclick="addBlock('h2')">+ H2</button>
       <button class="toolbar-btn" onclick="addBlock('h3')">+ H3</button>
       <button class="toolbar-btn" onclick="addBlock('h4')">+ H4</button>
+      <button class="toolbar-btn" onclick="addBlock('divider')">+ Divider</button>
       <button class="toolbar-btn" onclick="addBlock('blockquote')">+ Quote</button>
       <button class="toolbar-btn" onclick="addBlock('ul')">+ List</button>
       <button class="toolbar-btn" onclick="addBlock('ol')">+ Num List</button>
@@ -776,6 +782,8 @@
 
       if (type === 'ul' || type === 'ol') {
         block.innerHTML = controlsHTML() + `<${type} contenteditable="true"><li>${content || 'List item'}</li></${type}>`;
+      } else if (type === 'divider') {
+        block.innerHTML = controlsHTML() + `<hr class="post-divider">`;
       } else if (type === 'lede') {
         block.innerHTML = controlsHTML() + `<p class="lede" contenteditable="true">${content || 'Lede paragraph — your intro'}</p>`;
       } else if (type === 'gallery') {
@@ -1474,6 +1482,8 @@
             contentHTML += `          </a>\n`;
             contentHTML += `        </div>\n\n`;
           }
+        } else if (type === 'divider') {
+          contentHTML += `        <hr class="post-divider">\n\n`;
         } else {
           const editable = block.querySelector('[contenteditable]');
           if (editable) {
@@ -2394,6 +2404,11 @@ ${contentHTML}
         return { type: 'lede', html: el.innerHTML };
       }
 
+      // Hairline divider — emitted by the editor as <hr class="post-divider">
+      if (tag === 'hr') {
+        return { type: 'divider' };
+      }
+
       // Standard text / heading / list / blockquote blocks
       if (['p', 'h2', 'h3', 'h4', 'blockquote', 'ul', 'ol'].includes(tag)) {
         const block = { type: tag, html: el.innerHTML };
@@ -2447,6 +2462,8 @@ ${contentHTML}
             const boldBtn = block.querySelector('.header-bold-toggle');
             if (boldBtn) boldBtn.classList.add('active');
           }
+        } else if (pb.type === 'divider') {
+          addBlock('divider');
         } else if (pb.type === 'image-placeholder') {
           // Legacy Squarespace placeholder — insert as a text block with a note.
           // User can replace with a real image block later.

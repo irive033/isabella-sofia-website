@@ -651,6 +651,18 @@ p {
   background: #d6ccba;
 }
 
+/* Hairline divider — same color and weight as the H4 section-label
+   hairlines, but spanning the full content width with no text. Used as
+   a standalone block between sections when a section-label heading
+   isn't needed. */
+.post-content hr.post-divider {
+  border: 0;
+  height: 1px;
+  background: #d6ccba;
+  margin: 50px 0;
+  width: 100%;
+}
+
 /* Bold-weight variant for any post heading — toggled per-block in the
    editor. Overrides the default 400 weight set on h1–h4 globally and
    the h4-specific 400 inside .post-content. Color also bumps to pure
