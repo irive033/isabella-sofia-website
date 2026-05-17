@@ -187,6 +187,53 @@
       border: 0; height: 1px; background: #d6ccba;
       margin: 20px 0; width: 100%;
     }
+    /* CTA block — preview the published layout inside the canvas. */
+    .content-block.cta-block .post-cta {
+      background: #f4efe5;
+      border-top: 1px solid #d6ccba; border-bottom: 1px solid #d6ccba;
+      padding: 50px 30px; text-align: center;
+    }
+    .content-block.cta-block .post-cta-eyebrow {
+      font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+      font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase;
+      color: #a8a29d; margin: 0 0 18px; outline: none; padding: 4px;
+    }
+    .content-block.cta-block .post-cta-title {
+      font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif;
+      font-style: italic; font-size: 2.2rem; font-weight: 400;
+      color: #3a3530; margin: 0 0 12px; line-height: 1.2;
+      text-transform: none; letter-spacing: 0; outline: none; padding: 4px;
+    }
+    .content-block.cta-block .post-cta-subtitle {
+      font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+      font-size: 1.05rem; color: #7a7773; margin: 0 0 28px;
+      line-height: 1.5; outline: none; padding: 4px;
+    }
+    .content-block.cta-block .post-cta-buttons {
+      display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;
+    }
+    .content-block.cta-block .post-cta-buttons .cta-btn {
+      display: inline-block; padding: 12px 28px; border: 1px solid #b8b0a0;
+      border-radius: 2px; font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+      font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase;
+      color: #3a3530; background: transparent; outline: none;
+    }
+    .content-block.cta-block .cta-editor-controls {
+      display: flex; flex-direction: column; gap: 6px; margin-top: 10px;
+      padding: 10px 12px; background: #f4f4f4; border-radius: 6px;
+    }
+    .content-block.cta-block .cta-link-row {
+      display: flex; gap: 6px; align-items: center;
+    }
+    .content-block.cta-block .cta-link-row label {
+      color: #555; font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 0.08em; min-width: 110px;
+    }
+    .content-block.cta-block .cta-link-row input {
+      flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px;
+      font-size: 0.8rem; font-family: inherit; outline: none;
+    }
+    .content-block.cta-block .cta-link-row input:focus { border-color: #000; }
     .content-block blockquote[contenteditable] {
       border-left: 3px solid #000; padding-left: 25px;
       font-style: italic; color: #444; font-size: 1.15rem; line-height: 1.9;
@@ -522,6 +569,7 @@
       <button class="toolbar-btn" onclick="addBlock('h3')">+ H3</button>
       <button class="toolbar-btn" onclick="addBlock('h4')">+ H4</button>
       <button class="toolbar-btn" onclick="addBlock('divider')">+ Divider</button>
+      <button class="toolbar-btn" onclick="addBlock('cta')">+ CTA</button>
       <button class="toolbar-btn" onclick="addBlock('blockquote')">+ Quote</button>
       <button class="toolbar-btn" onclick="addBlock('ul')">+ List</button>
       <button class="toolbar-btn" onclick="addBlock('ol')">+ Num List</button>
@@ -784,6 +832,29 @@
         block.innerHTML = controlsHTML() + `<${type} contenteditable="true"><li>${content || 'List item'}</li></${type}>`;
       } else if (type === 'divider') {
         block.innerHTML = controlsHTML() + `<hr class="post-divider">`;
+      } else if (type === 'cta') {
+        block.classList.add('cta-block');
+        block.innerHTML = controlsHTML() + `
+          <div class="post-cta">
+            <div class="post-cta-eyebrow" contenteditable="true">THE FULL CAPSULE COLLECTION</div>
+            <h2 class="post-cta-title" contenteditable="true">Twenty-one pieces, endless looks</h2>
+            <p class="post-cta-subtitle" contenteditable="true">Built for the humidity, designed for the long run.</p>
+            <div class="post-cta-buttons">
+              <span class="cta-btn" contenteditable="true" data-link="">SAVE THE GUIDE</span>
+              <span class="cta-btn" contenteditable="true" data-link="">PIN TO PINTEREST</span>
+            </div>
+          </div>
+          <div class="cta-editor-controls">
+            <div class="cta-link-row">
+              <label>Button 1 link</label>
+              <input type="url" placeholder="https://..." oninput="updateCtaButtonLink(this, 0)">
+            </div>
+            <div class="cta-link-row">
+              <label>Button 2 link</label>
+              <input type="url" placeholder="https://..." oninput="updateCtaButtonLink(this, 1)">
+            </div>
+          </div>
+        `;
       } else if (type === 'lede') {
         block.innerHTML = controlsHTML() + `<p class="lede" contenteditable="true">${content || 'Lede paragraph — your intro'}</p>`;
       } else if (type === 'gallery') {
@@ -1046,6 +1117,15 @@
     function updateImagePrice(input) {
       const block = input.closest('.content-block');
       block.dataset.price = input.value.trim();
+    }
+
+    // CTA block: write the URL onto the corresponding button's data-link.
+    // generatePostHTML emits each button as <a href> if a link is set,
+    // otherwise as a plain <span> — matches how galleries handle slides.
+    function updateCtaButtonLink(input, idx) {
+      const block = input.closest('.content-block');
+      const buttons = block.querySelectorAll('.post-cta-buttons .cta-btn');
+      if (buttons[idx]) buttons[idx].dataset.link = input.value.trim();
     }
 
     // ===== GALLERY (slideshow — 1 to 5 images at a time) =====
@@ -1564,6 +1644,33 @@
           }
         } else if (type === 'divider') {
           contentHTML += `        <hr class="post-divider">\n\n`;
+        } else if (type === 'cta') {
+          const eyebrow = block.querySelector('.post-cta-eyebrow');
+          const title = block.querySelector('.post-cta-title');
+          const subtitle = block.querySelector('.post-cta-subtitle');
+          const buttons = block.querySelectorAll('.post-cta-buttons .cta-btn');
+          const eyebrowText = eyebrow ? eyebrow.textContent.trim() : '';
+          const titleText = title ? title.textContent.trim() : '';
+          const subtitleText = subtitle ? subtitle.textContent.trim() : '';
+          contentHTML += `        <div class="post-cta">\n`;
+          if (eyebrowText) contentHTML += `          <div class="post-cta-eyebrow">${escapeHtmlText(eyebrowText)}</div>\n`;
+          if (titleText) contentHTML += `          <h2 class="post-cta-title">${escapeHtmlText(titleText)}</h2>\n`;
+          if (subtitleText) contentHTML += `          <p class="post-cta-subtitle">${escapeHtmlText(subtitleText)}</p>\n`;
+          if (buttons.length) {
+            contentHTML += `          <div class="post-cta-buttons">\n`;
+            buttons.forEach(btn => {
+              const text = btn.textContent.trim();
+              const link = (btn.dataset.link || '').trim();
+              if (!text) return;
+              if (link) {
+                contentHTML += `            <a class="cta-btn" href="${link}" target="_blank" rel="noopener">${escapeHtmlText(text)}</a>\n`;
+              } else {
+                contentHTML += `            <span class="cta-btn">${escapeHtmlText(text)}</span>\n`;
+              }
+            });
+            contentHTML += `          </div>\n`;
+          }
+          contentHTML += `        </div>\n\n`;
         } else {
           const editable = block.querySelector('[contenteditable]');
           if (editable) {
@@ -2496,6 +2603,27 @@ ${contentHTML}
         return { type: 'divider' };
       }
 
+      // Call-to-action block — pulled apart into its eyebrow / title /
+      // subtitle / 2 buttons (each with optional href) so the editor can
+      // restore them into separate contenteditable fields and link inputs.
+      if (el.classList.contains('post-cta')) {
+        const eyebrowEl = el.querySelector('.post-cta-eyebrow');
+        const titleEl = el.querySelector('.post-cta-title');
+        const subtitleEl = el.querySelector('.post-cta-subtitle');
+        const btnEls = el.querySelectorAll('.post-cta-buttons .cta-btn');
+        const buttons = Array.from(btnEls).map(b => ({
+          text: (b.textContent || '').trim(),
+          link: b.tagName.toLowerCase() === 'a' ? (b.getAttribute('href') || '') : ''
+        }));
+        return {
+          type: 'cta',
+          eyebrow: eyebrowEl ? (eyebrowEl.textContent || '').trim() : '',
+          title: titleEl ? (titleEl.textContent || '').trim() : '',
+          subtitle: subtitleEl ? (subtitleEl.textContent || '').trim() : '',
+          buttons
+        };
+      }
+
       // Standard text / heading / list / blockquote blocks
       if (['p', 'h2', 'h3', 'h4', 'blockquote', 'ul', 'ol'].includes(tag)) {
         const block = { type: tag, html: el.innerHTML };
@@ -2551,6 +2679,23 @@ ${contentHTML}
           }
         } else if (pb.type === 'divider') {
           addBlock('divider');
+        } else if (pb.type === 'cta') {
+          const block = addBlock('cta');
+          const eyebrow = block.querySelector('.post-cta-eyebrow');
+          const title = block.querySelector('.post-cta-title');
+          const subtitle = block.querySelector('.post-cta-subtitle');
+          const btns = block.querySelectorAll('.post-cta-buttons .cta-btn');
+          const linkInputs = block.querySelectorAll('.cta-link-row input');
+          if (eyebrow && pb.eyebrow) eyebrow.textContent = pb.eyebrow;
+          if (title && pb.title) title.textContent = pb.title;
+          if (subtitle && pb.subtitle) subtitle.textContent = pb.subtitle;
+          (pb.buttons || []).forEach((b, i) => {
+            if (btns[i]) {
+              if (b.text) btns[i].textContent = b.text;
+              btns[i].dataset.link = b.link || '';
+            }
+            if (linkInputs[i]) linkInputs[i].value = b.link || '';
+          });
         } else if (pb.type === 'image-placeholder') {
           // Legacy Squarespace placeholder — insert as a text block with a note.
           // User can replace with a real image block later.

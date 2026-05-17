@@ -693,6 +693,72 @@ p {
   font-style: italic;
 }
 
+/* Call-to-action block — eyebrow label + italic serif headline +
+   subtitle + a pair of outlined buttons. Sits inside .post-body (white)
+   on a warm cream panel that bleeds slightly past the .post-content
+   max-width using a negative horizontal margin and matching padding. */
+.post-content .post-cta {
+  background: #f4efe5;
+  border-top: 1px solid #d6ccba;
+  border-bottom: 1px solid #d6ccba;
+  margin: 60px -4vw;
+  padding: 70px 4vw;
+  text-align: center;
+}
+.post-content .post-cta-eyebrow {
+  font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #a8a29d;
+  margin: 0 0 24px;
+}
+.post-content .post-cta-title {
+  font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif;
+  font-style: italic;
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: #3a3530;
+  margin: 0 0 16px;
+  line-height: 1.2;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.post-content .post-cta-subtitle {
+  font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+  font-size: 1.05rem;
+  color: #7a7773;
+  margin: 0 0 36px;
+  font-style: normal;
+  line-height: 1.5;
+}
+.post-content .post-cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.post-content .post-cta-buttons .cta-btn {
+  display: inline-block;
+  padding: 14px 32px;
+  border: 1px solid #b8b0a0;
+  border-radius: 2px;
+  font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #3a3530;
+  background: transparent;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  cursor: pointer;
+}
+.post-content .post-cta-buttons .cta-btn:hover {
+  background: #d6ccba;
+  border-color: #d6ccba;
+  color: #1a1a1a;
+}
+
 /* Hairline divider — same color and weight as the H4 section-label
    hairlines, but spanning the full content width with no text. Used as
    a standalone block between sections when a section-label heading
