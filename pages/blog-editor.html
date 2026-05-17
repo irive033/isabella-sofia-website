@@ -281,6 +281,30 @@
       font-size: 0.8rem; font-family: inherit; outline: none;
     }
     .content-block.cta-block .cta-link-row input:focus { border-color: #000; }
+    /* PDF-upload row sits under each link row — same layout, plus a
+       "Choose PDF" trigger, a filename badge, and a clear button. */
+    .content-block.cta-block .cta-pdf-row {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .content-block.cta-block .cta-pdf-row label {
+      color: #555; font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 0.08em; min-width: 110px;
+    }
+    .content-block.cta-block .cta-pdf-pick {
+      padding: 5px 12px; border: 1px solid #ccc; background: #fff;
+      border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+      font-family: inherit; color: #333;
+    }
+    .content-block.cta-block .cta-pdf-pick:hover { background: #f0f0f0; }
+    .content-block.cta-block .cta-pdf-label {
+      flex: 1; font-family: monospace; font-size: 0.75rem; color: #555;
+      word-break: break-all; min-width: 0;
+    }
+    .content-block.cta-block .cta-pdf-clear {
+      border: none; background: transparent; color: #c00;
+      cursor: pointer; font-size: 1rem; padding: 0 6px; line-height: 1;
+    }
+    .content-block.cta-block .cta-pdf-clear:hover { color: #f00; }
     .content-block blockquote[contenteditable] {
       border-left: 3px solid #000; padding-left: 25px;
       font-style: italic; color: #444; font-size: 1.15rem; line-height: 1.9;
@@ -893,13 +917,27 @@
             </div>
           </div>
           <div class="cta-editor-controls">
-            <div class="cta-link-row">
+            <div class="cta-link-row" data-btn-idx="0">
               <label>Button 1 link</label>
               <input type="url" placeholder="https://..." oninput="updateCtaButtonLink(this, 0)">
             </div>
-            <div class="cta-link-row">
+            <div class="cta-pdf-row" data-btn-idx="0">
+              <label>Or upload PDF</label>
+              <button type="button" class="cta-pdf-pick" onclick="triggerCtaPdfUpload(this, 0)">Choose PDF</button>
+              <span class="cta-pdf-label"></span>
+              <button type="button" class="cta-pdf-clear" style="display:none" onclick="clearCtaPdf(this, 0)" title="Remove PDF">&times;</button>
+              <input type="file" accept="application/pdf,.pdf" style="display:none" onchange="handleCtaPdfUpload(this, 0)">
+            </div>
+            <div class="cta-link-row" data-btn-idx="1">
               <label>Button 2 link</label>
               <input type="url" placeholder="https://..." oninput="updateCtaButtonLink(this, 1)">
+            </div>
+            <div class="cta-pdf-row" data-btn-idx="1">
+              <label>Or upload PDF</label>
+              <button type="button" class="cta-pdf-pick" onclick="triggerCtaPdfUpload(this, 1)">Choose PDF</button>
+              <span class="cta-pdf-label"></span>
+              <button type="button" class="cta-pdf-clear" style="display:none" onclick="clearCtaPdf(this, 1)" title="Remove PDF">&times;</button>
+              <input type="file" accept="application/pdf,.pdf" style="display:none" onchange="handleCtaPdfUpload(this, 1)">
             </div>
           </div>
         `;
@@ -1174,6 +1212,53 @@
       const block = input.closest('.content-block');
       const buttons = block.querySelectorAll('.post-cta-buttons .cta-btn');
       if (buttons[idx]) buttons[idx].dataset.link = input.value.trim();
+    }
+
+    // CTA PDF upload: each button can carry a PDF attachment. The base64
+    // data URI is stashed on the button's data-pdf-src and surfaces in the
+    // published HTML as the anchor's href; uploadEmbeddedImages then turns
+    // it into a real file in files/uploads/YYYY/MM/ at publish time.
+    // PDF wins over URL link if both are set.
+    function triggerCtaPdfUpload(btn, idx) {
+      const block = btn.closest('.content-block');
+      const row = block.querySelector(`.cta-pdf-row[data-btn-idx="${idx}"]`);
+      const fileInput = row && row.querySelector('input[type="file"]');
+      if (fileInput) fileInput.click();
+    }
+
+    function handleCtaPdfUpload(input, idx) {
+      const block = input.closest('.content-block');
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const buttons = block.querySelectorAll('.post-cta-buttons .cta-btn');
+        if (buttons[idx]) {
+          buttons[idx].dataset.pdfSrc = e.target.result;
+          buttons[idx].dataset.pdfFilename = file.name;
+        }
+        const row = block.querySelector(`.cta-pdf-row[data-btn-idx="${idx}"]`);
+        if (row) {
+          row.querySelector('.cta-pdf-label').textContent = file.name;
+          row.querySelector('.cta-pdf-clear').style.display = '';
+        }
+      };
+      reader.readAsDataURL(file);
+      input.value = '';
+    }
+
+    function clearCtaPdf(btn, idx) {
+      const block = btn.closest('.content-block');
+      const buttons = block.querySelectorAll('.post-cta-buttons .cta-btn');
+      if (buttons[idx]) {
+        buttons[idx].dataset.pdfSrc = '';
+        buttons[idx].dataset.pdfFilename = '';
+      }
+      const row = block.querySelector(`.cta-pdf-row[data-btn-idx="${idx}"]`);
+      if (row) {
+        row.querySelector('.cta-pdf-label').textContent = '';
+        row.querySelector('.cta-pdf-clear').style.display = 'none';
+      }
     }
 
     // ===== GALLERY (slideshow — 1 to 5 images at a time) =====
@@ -1720,7 +1805,15 @@
             filledButtons.forEach(btn => {
               const text = btn.textContent.trim();
               const link = (btn.dataset.link || '').trim();
-              if (link) {
+              const pdfSrc = (btn.dataset.pdfSrc || '').trim();
+              const pdfFilename = (btn.dataset.pdfFilename || '').trim();
+              // PDF wins over a plain URL when both are set. The data URI
+              // gets rewritten to a files/uploads/ path by
+              // uploadEmbeddedImages during publish.
+              if (pdfSrc) {
+                const dlName = escapeHtmlText(pdfFilename || 'document.pdf');
+                contentHTML += `            <a class="cta-btn" href="${pdfSrc}" download="${dlName}">${escapeHtmlText(text)}</a>\n`;
+              } else if (link) {
                 contentHTML += `            <a class="cta-btn" href="${link}" target="_blank" rel="noopener">${escapeHtmlText(text)}</a>\n`;
               } else {
                 contentHTML += `            <span class="cta-btn">${escapeHtmlText(text)}</span>\n`;
@@ -2671,10 +2764,22 @@ ${contentHTML}
         const titleEl = el.querySelector('.post-cta-title');
         const subtitleEl = el.querySelector('.post-cta-subtitle');
         const btnEls = el.querySelectorAll('.post-cta-buttons .cta-btn');
-        const buttons = Array.from(btnEls).map(b => ({
-          text: (b.textContent || '').trim(),
-          link: b.tagName.toLowerCase() === 'a' ? (b.getAttribute('href') || '') : ''
-        }));
+        const buttons = Array.from(btnEls).map(b => {
+          const text = (b.textContent || '').trim();
+          if (b.tagName.toLowerCase() !== 'a') {
+            return { text, link: '', pdfSrc: '', pdfFilename: '' };
+          }
+          const href = b.getAttribute('href') || '';
+          const download = b.getAttribute('download') || '';
+          // PDF anchor: has download attribute. The href is either a data
+          // URI (pre-publish) or a relative path to files/uploads/.../*.pdf
+          // (post-publish). Either way the editor stores it back on
+          // data-pdf-src so a re-publish keeps the binding.
+          if (download) {
+            return { text, link: '', pdfSrc: href, pdfFilename: download };
+          }
+          return { text, link: href, pdfSrc: '', pdfFilename: '' };
+        });
         return {
           type: 'cta',
           eyebrow: eyebrowEl ? (eyebrowEl.textContent || '').trim() : '',
@@ -2756,8 +2861,19 @@ ${contentHTML}
             if (btns[i]) {
               if (b.text) btns[i].textContent = b.text;
               btns[i].dataset.link = b.link || '';
+              btns[i].dataset.pdfSrc = b.pdfSrc || '';
+              btns[i].dataset.pdfFilename = b.pdfFilename || '';
             }
             if (linkInputs[i]) linkInputs[i].value = b.link || '';
+            // If the button has a PDF binding, surface it in the
+            // pick-row's filename label and reveal the clear button.
+            if (b.pdfFilename || b.pdfSrc) {
+              const pdfRow = block.querySelector(`.cta-pdf-row[data-btn-idx="${i}"]`);
+              if (pdfRow) {
+                pdfRow.querySelector('.cta-pdf-label').textContent = b.pdfFilename || 'attached.pdf';
+                pdfRow.querySelector('.cta-pdf-clear').style.display = '';
+              }
+            }
           });
         } else if (pb.type === 'image-placeholder') {
           // Legacy Squarespace placeholder — insert as a text block with a note.
