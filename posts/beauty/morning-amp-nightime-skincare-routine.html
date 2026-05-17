@@ -27,7 +27,7 @@
       <nav class="main-nav">
         <a href="../../pages/style.html">Style</a>
         <a href="../../pages/beauty.html">Beauty</a>
-        <a href="../../pages/wellness.html">Wellness</a>
+        <a href="../../pages/wellness.html">Lifestyle</a>
         <a href="../../pages/shop.html">Skin Safe Product List</a>
         <a href="../../pages/about.html">About</a>
         <a href="../../pages/contact.html">Contact</a>
@@ -48,18 +48,29 @@
 
         <p>Introduce active ingredients slowly and alternate benzoyl peroxide and retinol on different nights initially to allow skin adjustment and minimize irritation.</p>
 
-        <h2>AM</h2>
-
-        <p><em>[Image placeholder: Morning routine products photo]</em></p>
+        <h2><b><font face="Georgia">AM</font></b></h2>
 
         <ol><li><strong>Gentle cleanse</strong> with a pH-balancing formula</li>
           <li><strong>Antimicrobial mist</strong> (optional) for targeted concerns</li>
           <li><strong>Vitamin C gel moisturizer</strong> for hydration and brightness</li>
           <li><strong>Broad-spectrum SPF sunscreen</strong> to protect and prevent dark spots</li></ol>
 
-        <h2>PM</h2>
+        <div class="post-gallery" data-slide="0" data-visible="4" style="gap: 0px;">
+          <figure class="gallery-figure active">
+            <img src="../../images/uploads/2026/05/89cba8e67fc7.webp" alt="Gallery image">
+          </figure>
+          <figure class="gallery-figure active">
+            <img src="../../images/uploads/2026/05/164b20521b40.avif" alt="Gallery image">
+          </figure>
+          <figure class="gallery-figure active">
+            <img src="../../images/uploads/2026/05/8456dd9970e4.webp" alt="Gallery image">
+          </figure>
+          <figure class="gallery-figure active">
+            <img src="../../images/uploads/2026/05/820add863e20.jpg" alt="Gallery image">
+          </figure>
+        </div>
 
-        <p><em>[Image placeholder: Evening routine products photo]</em></p>
+        <h2><b><font face="Georgia">PM</font></b></h2>
 
         <ol><li><strong>Cleansing balm</strong> to remove makeup and SPF</li>
           <li><strong>Treatment or gentle cleanser</strong> (alternating recommended)</li>
@@ -80,20 +91,40 @@
   </main>
   <footer class="site-footer"><p>&copy; 2026 Isabella Sofia. All rights reserved.</p></footer>
   <script>
-    // Gallery slideshow navigation (used by any .post-gallery on the page)
+    // Gallery slideshow navigation (used by any .post-gallery on the page).
+    // Wrap-around: always show vis slides starting at idx, modulo total, so
+    // every position renders the same number of equally-sized slides.
+    // Queries figures (current format) AND legacy .gallery-slide elements
+    // so already-published posts that haven't been re-saved still work.
     function gallerySlide(btn, dir) {
       var gallery = btn.closest('.post-gallery');
       if (!gallery) return;
-      var slides = gallery.querySelectorAll('.gallery-slide');
-      if (slides.length < 2) return;
+      var slides = gallery.querySelectorAll('.gallery-figure, .gallery-slide, .gallery-slide-link');
+      var vis = parseInt(gallery.dataset.visible || '1', 10);
+      var total = slides.length;
+      if (total <= vis) return;
       var idx = parseInt(gallery.dataset.slide || '0', 10);
-      idx = (idx + dir + slides.length) % slides.length;
+      idx = ((idx + dir * vis) % total + total) % total;
       gallery.dataset.slide = idx;
-      for (var i = 0; i < slides.length; i++) {
-        slides[i].classList.toggle('active', i === idx);
+      for (var i = 0; i < total; i++) {
+        var offset = ((i - idx) % total + total) % total;
+        var isActive = offset < vis;
+        slides[i].classList.toggle('active', isActive);
+        if (isActive) slides[i].style.order = offset;
+        else slides[i].style.removeProperty('order');
       }
       var counter = gallery.querySelector('.gallery-counter');
-      if (counter) counter.textContent = (idx + 1) + ' / ' + slides.length;
+      if (counter) {
+        if (vis === 1) {
+          counter.textContent = (idx + 1) + ' / ' + total;
+        } else {
+          var startIdx = idx + 1;
+          var endIdx = ((idx + vis - 1) % total) + 1;
+          counter.textContent = endIdx >= startIdx
+            ? startIdx + '–' + endIdx + ' / ' + total
+            : startIdx + '–' + total + ', 1–' + endIdx + ' / ' + total;
+        }
+      }
     }
   </script>
 </body>
