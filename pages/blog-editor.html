@@ -443,6 +443,15 @@
     .gallery-block.grid-mode .gallery-editor-controls .show-at-a-time-select {
       display: none;
     }
+    /* Click affordance — every gallery figure in the canvas is selectable
+       so Replace / Remove / caption controls can target it. The figure at
+       gallery.dataset.slide gets .current-selected and shows a blue
+       outline so it's obvious which one the next action will touch. */
+    .gallery-block .post-gallery .gallery-figure { cursor: pointer; }
+    .gallery-block .post-gallery .gallery-figure.current-selected {
+      outline: 2px solid #0969da;
+      outline-offset: 2px;
+    }
 
     /* ===== HERO BLOCK ===== */
     .hero-block .hero-grid {
@@ -1424,6 +1433,21 @@
       const cap = document.createElement('figcaption');
       cap.textContent = caption || '';
       fig.appendChild(cap);
+      // Editor-only click handler — picks this figure as "current" so that
+      // Replace / Remove / caption / link / price inputs target it. Stored
+      // as gallery.dataset.slide. The handler isn't serialized at publish
+      // time (we re-emit a clean <figure> in generatePostHTML), so the
+      // published page is unaffected.
+      fig.addEventListener('click', () => {
+        const block = fig.closest('.content-block');
+        const gallery = fig.closest('.post-gallery');
+        if (!block || !gallery) return;
+        const figures = gallery.querySelectorAll('.gallery-figure');
+        const idx = Array.from(figures).indexOf(fig);
+        if (idx < 0) return;
+        gallery.dataset.slide = idx;
+        refreshSlideshow(block);
+      });
       return fig;
     }
 
@@ -1449,8 +1473,11 @@
       // Grid: every figure is always active and laid out in DOM order, with
       // no slide window or wrapping. Slideshow: show `vis` figures starting
       // at idx, wrapping around (CSS `order` puts wrapped figures in
-      // visual rotation order while DOM order stays stable).
+      // visual rotation order while DOM order stays stable). The figure at
+      // `idx` is always tagged .current-selected so click-to-edit lights up
+      // visually and the user can see which figure Replace / Remove target.
       figures.forEach((s, i) => {
+        s.classList.toggle('current-selected', total > 0 && i === idx);
         if (isGrid) {
           s.classList.add('active');
           s.style.removeProperty('order');
