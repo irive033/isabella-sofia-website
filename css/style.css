@@ -744,6 +744,7 @@ p {
   display: none;
   flex: 1 1 0;
   min-width: 0;
+  border: none;
 }
 .post-gallery a.gallery-slide-link.active {
   display: block;
@@ -774,6 +775,7 @@ p {
 .post-gallery .gallery-figure > .gallery-figure-link {
   display: block;
   width: 100%;
+  border: none;
 }
 .post-gallery .gallery-figure > img,
 .post-gallery .gallery-figure > .gallery-figure-link img {
