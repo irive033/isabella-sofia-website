@@ -12,6 +12,26 @@
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
     body { font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; }
     h1, h2, h3, h4 { font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif; }
+
+    /* Two-line gallery captions: title on top, price below */
+    .post-gallery .gallery-figure > figcaption {
+      font-style: normal;
+    }
+    .post-gallery .gallery-figure > figcaption .cap-title {
+      display: block;
+      font-size: 0.95rem;
+      color: #7a7a7a;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+    .post-gallery .gallery-figure > figcaption .cap-price {
+      display: block;
+      font-size: 0.8rem;
+      color: #a8a8a8;
+      font-style: italic;
+      margin-top: 2px;
+      line-height: 1.35;
+    }
   </style>
 </head>
 <body>
@@ -512,6 +532,20 @@
         }
       }
     }
+  </script>
+  <script>
+    // Split each figcaption on the last comma into a title line + price line
+    document.querySelectorAll('.post-gallery .gallery-figure > figcaption').forEach(function (cap) {
+      var text = cap.textContent.trim();
+      var idx = text.lastIndexOf(',');
+      if (idx > 0) {
+        var title = text.slice(0, idx).trim();
+        var price = text.slice(idx + 1).trim();
+        cap.innerHTML = '<span class="cap-title"></span><span class="cap-price"></span>';
+        cap.firstChild.textContent = title;
+        cap.lastChild.textContent = price;
+      }
+    });
   </script>
 </body>
 </html>
