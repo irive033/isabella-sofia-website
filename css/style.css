@@ -1403,6 +1403,13 @@ p {
   justify-content: center;
 }
 
+/* Category landing pages (Style / Beauty / Lifestyle) — swap the
+   default grey hero panel for the soft light blue swatch. About,
+   Contact, and Shop still get the grey. */
+body.category-page .page-hero {
+  background: #DAE1E4;
+}
+
 .page-hero h1 {
   color: #000;
   font-size: 3rem;
