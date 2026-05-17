@@ -101,6 +101,15 @@ p {
   border-bottom: 1px solid #eee;
 }
 
+/* Category landing pages (Style / Beauty / Lifestyle) — header sits on
+   the same light blue-grey as the body so the top of the page reads
+   as a single tonal block instead of a white bar over a tinted bg.
+   The hairline border is dropped for the same reason. */
+body.category-page .site-header {
+  background: #DAE1E4;
+  border-bottom: none;
+}
+
 .header-inner {
   max-width: 1500px;
   margin: 0 auto;
