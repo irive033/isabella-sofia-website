@@ -705,13 +705,20 @@ p {
   padding: 70px 4vw;
   text-align: center;
 }
-.post-content .post-cta-eyebrow {
+.post-content .post-cta-eyebrow,
+.post-content .post-cta-eyebrow-2 {
   font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
   font-size: 0.8rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: #a8a29d;
   margin: 0 0 24px;
+}
+/* Optional second eyebrow line sits tight beneath the first. The
+   publisher skips emitting this element entirely when it's blank, so
+   if you see it on the live page it's because text was entered. */
+.post-content .post-cta-eyebrow + .post-cta-eyebrow-2 {
+  margin-top: -18px;
 }
 .post-content .post-cta-title {
   font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif;

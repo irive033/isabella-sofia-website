@@ -212,10 +212,24 @@
       border-style: solid;
       background: rgba(255,255,255,0.6);
     }
-    .content-block.cta-block .post-cta-eyebrow {
+    .content-block.cta-block .post-cta-eyebrow,
+    .content-block.cta-block .post-cta-eyebrow-2 {
       font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
       font-size: 0.8rem; letter-spacing: 0.25em; text-transform: uppercase;
       color: #a8a29d; margin: 0 0 18px;
+    }
+    /* Second eyebrow sits tight beneath the first in the canvas too */
+    .content-block.cta-block .post-cta-eyebrow + .post-cta-eyebrow-2 {
+      margin-top: -14px;
+    }
+    /* Placeholder so an empty second line doesn't look broken in the editor.
+       Hidden once the user types — the :empty selector handles that. The
+       published page never sees this hint because the publisher only emits
+       the element when it's non-empty. */
+    .content-block.cta-block .post-cta-eyebrow-2:empty::before {
+      content: 'Optional second line (leave empty to hide)';
+      color: #c5beae; font-style: italic;
+      letter-spacing: 0.05em; text-transform: none;
     }
     .content-block.cta-block .post-cta-title {
       font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif;
@@ -870,6 +884,7 @@
         block.innerHTML = controlsHTML() + `
           <div class="post-cta">
             <div class="post-cta-eyebrow" contenteditable="true">THE FULL CAPSULE COLLECTION</div>
+            <div class="post-cta-eyebrow-2" contenteditable="true"></div>
             <h2 class="post-cta-title" contenteditable="true">Twenty-one pieces, endless looks</h2>
             <p class="post-cta-subtitle" contenteditable="true">Built for the humidity, designed for the long run.</p>
             <div class="post-cta-buttons">
@@ -1679,14 +1694,19 @@
           contentHTML += `        <hr class="post-divider">\n\n`;
         } else if (type === 'cta') {
           const eyebrow = block.querySelector('.post-cta-eyebrow');
+          const eyebrow2 = block.querySelector('.post-cta-eyebrow-2');
           const title = block.querySelector('.post-cta-title');
           const subtitle = block.querySelector('.post-cta-subtitle');
           const buttons = block.querySelectorAll('.post-cta-buttons .cta-btn');
           const eyebrowText = eyebrow ? eyebrow.textContent.trim() : '';
+          const eyebrow2Text = eyebrow2 ? eyebrow2.textContent.trim() : '';
           const titleText = title ? title.textContent.trim() : '';
           const subtitleText = subtitle ? subtitle.textContent.trim() : '';
           contentHTML += `        <div class="post-cta">\n`;
           if (eyebrowText) contentHTML += `          <div class="post-cta-eyebrow">${escapeHtmlText(eyebrowText)}</div>\n`;
+          // Second eyebrow is fully optional — omit the element entirely
+          // when blank so it leaves no DOM trace on the published page.
+          if (eyebrow2Text) contentHTML += `          <div class="post-cta-eyebrow-2">${escapeHtmlText(eyebrow2Text)}</div>\n`;
           if (titleText) contentHTML += `          <h2 class="post-cta-title">${escapeHtmlText(titleText)}</h2>\n`;
           if (subtitleText) contentHTML += `          <p class="post-cta-subtitle">${escapeHtmlText(subtitleText)}</p>\n`;
           if (buttons.length) {
@@ -2636,11 +2656,13 @@ ${contentHTML}
         return { type: 'divider' };
       }
 
-      // Call-to-action block — pulled apart into its eyebrow / title /
-      // subtitle / 2 buttons (each with optional href) so the editor can
-      // restore them into separate contenteditable fields and link inputs.
+      // Call-to-action block — pulled apart into its eyebrow / optional
+      // second eyebrow / title / subtitle / 2 buttons (each with optional
+      // href) so the editor can restore them into separate contenteditable
+      // fields and link inputs.
       if (el.classList.contains('post-cta')) {
         const eyebrowEl = el.querySelector('.post-cta-eyebrow');
+        const eyebrow2El = el.querySelector('.post-cta-eyebrow-2');
         const titleEl = el.querySelector('.post-cta-title');
         const subtitleEl = el.querySelector('.post-cta-subtitle');
         const btnEls = el.querySelectorAll('.post-cta-buttons .cta-btn');
@@ -2651,6 +2673,7 @@ ${contentHTML}
         return {
           type: 'cta',
           eyebrow: eyebrowEl ? (eyebrowEl.textContent || '').trim() : '',
+          eyebrow2: eyebrow2El ? (eyebrow2El.textContent || '').trim() : '',
           title: titleEl ? (titleEl.textContent || '').trim() : '',
           subtitle: subtitleEl ? (subtitleEl.textContent || '').trim() : '',
           buttons
@@ -2715,11 +2738,13 @@ ${contentHTML}
         } else if (pb.type === 'cta') {
           const block = addBlock('cta');
           const eyebrow = block.querySelector('.post-cta-eyebrow');
+          const eyebrow2 = block.querySelector('.post-cta-eyebrow-2');
           const title = block.querySelector('.post-cta-title');
           const subtitle = block.querySelector('.post-cta-subtitle');
           const btns = block.querySelectorAll('.post-cta-buttons .cta-btn');
           const linkInputs = block.querySelectorAll('.cta-link-row input');
           if (eyebrow && pb.eyebrow) eyebrow.textContent = pb.eyebrow;
+          if (eyebrow2 && pb.eyebrow2) eyebrow2.textContent = pb.eyebrow2;
           if (title && pb.title) title.textContent = pb.title;
           if (subtitle && pb.subtitle) subtitle.textContent = pb.subtitle;
           (pb.buttons || []).forEach((b, i) => {
