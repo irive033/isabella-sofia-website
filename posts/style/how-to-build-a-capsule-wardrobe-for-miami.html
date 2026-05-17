@@ -12,26 +12,6 @@
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
     body { font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; }
     h1, h2, h3, h4 { font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif; }
-
-    /* Two-line gallery captions: title on top, price below */
-    .post-gallery .gallery-figure > figcaption {
-      font-style: normal;
-    }
-    .post-gallery .gallery-figure > figcaption .cap-title {
-      display: block;
-      font-size: 0.95rem;
-      color: #7a7a7a;
-      font-weight: 500;
-      line-height: 1.35;
-    }
-    .post-gallery .gallery-figure > figcaption .cap-price {
-      display: block;
-      font-size: 0.8rem;
-      color: #a8a8a8;
-      font-style: italic;
-      margin-top: 2px;
-      line-height: 1.35;
-    }
   </style>
 </head>
 <body>
@@ -78,7 +58,7 @@
           <img src="https://isabella-sofia-website.vercel.app/images/uploads/2026/05/a86118cbb097.png" alt="Building a Capsule Wardrobe for Miami" style="width:100%; height:auto;">
         </div>
 
-        <h2>Tops</h2>
+        <h2 class="is-bold">Tops</h2>
 
         <p>Arguably the start to any outfit, your top can really set the tone for your look, just like it can for your capsule wardrobe. You need something versatile enough that if needed, it can go from day to night, pool to party, and coffee to cocktails. Start with a basic tee made from 100% cotton. You can wear this with virtually everything, dress it up or down, and the breathable cotton will be much more forgiving during the day than viscose, or another synthetic material. The Renggli Crop Tee, Venroy Baby Tee, and Magda Butrym Side Knot Draped Tee are some of my faves, but choose something you look forward to wearing, whether thats cropped, v-neck, or boat-neck.</p>
 
@@ -137,7 +117,7 @@
           </figure>
         </div>
 
-        <h2>Bottoms</h2>
+        <h2 class="is-bold">Bottoms</h2>
 
         <p>The second half of your outfit is where things can get fun. You'll need to determine your preferences and lifestyle, but I think a mix of pants, shorts, and skirts is a good way to maximize your looks. This is where linens and silks shine, but keep an open mind to cotton and even lightweight wool or cashmere for daytime and more casual wear.&nbsp;</p>
 
@@ -198,7 +178,7 @@
           </figure>
         </div>
 
-        <h2>Dresses</h2>
+        <h2 class="is-bold">Dresses</h2>
 
         <p>For the heat and humidity in Miami, there's no better choice than a dress when done right. Whether for work, fun or somewhere in between, a dress can instantly elevate your capsule collection while offering a multitude of styling options. For daytime, opt for linens and cottons and at night go for silk. When it comes to the former, Matteau is one of my favorite places to shop. I especially love their smocked cotton dresses in both the mini and maxi versions.</p>
 
@@ -312,7 +292,7 @@
           </figure>
         </div>
 
-        <h2>Shoes</h2>
+        <h2 class="is-bold">Shoes</h2>
 
         <p>Shoes really are a girls best friend (amongst other things). When chosen wisely, the proper shoe can take you through every season and every occasion. Elevating an otherwise simple outfit into something intentional and thoughtfully curated. For day-to-day I opt for a shoe that I can walk miles in if needed. A ballet flat, thong sandal, or loafer are all great choices depending on your style.&nbsp;</p>
 
@@ -366,7 +346,7 @@
           </figure>
         </div>
 
-        <h2>Bags</h2>
+        <h2 class="is-bold">Bags</h2>
 
         <p>text</p>
 
@@ -421,7 +401,7 @@
           </figure>
         </div>
 
-        <h2>Accessories</h2>
+        <h2 class="is-bold">Accessories</h2>
 
         <h4>Casual</h4>
 
@@ -532,20 +512,6 @@
         }
       }
     }
-  </script>
-  <script>
-    // Split each figcaption on the last comma into a title line + price line
-    document.querySelectorAll('.post-gallery .gallery-figure > figcaption').forEach(function (cap) {
-      var text = cap.textContent.trim();
-      var idx = text.lastIndexOf(',');
-      if (idx > 0) {
-        var title = text.slice(0, idx).trim();
-        var price = text.slice(idx + 1).trim();
-        cap.innerHTML = '<span class="cap-title"></span><span class="cap-price"></span>';
-        cap.firstChild.textContent = title;
-        cap.lastChild.textContent = price;
-      }
-    });
   </script>
 </body>
 </html>
