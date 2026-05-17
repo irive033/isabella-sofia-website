@@ -436,6 +436,13 @@
       font-size: 0.8rem; font-family: inherit; outline: none;
     }
     .gallery-block .gallery-link-row input:focus { border-color: #000; }
+    /* Grid-mode galleries: hide the "Show N at a time" pair (it only
+       applies to slideshow rows) — the layout select stays visible so
+       Isabella can switch back. */
+    .gallery-block.grid-mode .gallery-editor-controls .show-at-a-time-label,
+    .gallery-block.grid-mode .gallery-editor-controls .show-at-a-time-select {
+      display: none;
+    }
 
     /* ===== HERO BLOCK ===== */
     .hero-block .hero-grid {
@@ -968,7 +975,7 @@
       } else if (type === 'gallery') {
         block.classList.add('gallery-block');
         block.innerHTML = controlsHTML() + `
-          <div class="post-gallery" data-slide="0" data-visible="1">
+          <div class="post-gallery" data-slide="0" data-visible="1" data-layout="slideshow">
             <span class="empty-hint">No images yet &mdash; click + Add Image below</span>
             <button class="gallery-nav gallery-prev" onclick="gallerySlide(this,-1)" aria-label="Previous" style="display:none">&#10094;</button>
             <button class="gallery-nav gallery-next" onclick="gallerySlide(this,1)" aria-label="Next" style="display:none">&#10095;</button>
@@ -977,15 +984,24 @@
           <div class="gallery-editor-controls">
             <button onclick="addSlideshowImage(this)">+ Add Image</button>
             <button onclick="removeCurrentSlide(this)">Remove current slide</button>
-            <label>Show</label>
-            <select onchange="setGalleryVisible(this)">
+            <label>Layout</label>
+            <select onchange="setGalleryLayout(this)">
+              <option value="slideshow">Slideshow</option>
+              <option value="grid">Grid</option>
+            </select>
+            <label class="show-at-a-time-label">Show</label>
+            <select class="show-at-a-time-select" onchange="setGalleryVisible(this)">
               <option value="1">1</option>
               <option value="2">2</option>
               <option value="3">3</option>
               <option value="4">4</option>
               <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
             </select>
-            <label>at a time</label>
+            <label class="show-at-a-time-label">at a time</label>
             <div class="gallery-link-row">
               <label>Link</label>
               <input type="url" placeholder="https://..." oninput="updateSlideLink(this)">
@@ -1385,6 +1401,7 @@
       const counter = gallery.querySelector('.gallery-counter');
       const prev = gallery.querySelector('.gallery-prev');
       const next = gallery.querySelector('.gallery-next');
+      const isGrid = gallery.dataset.layout === 'grid';
       const vis = getVisibleCount(gallery);
       const total = figures.length;
 
@@ -1393,9 +1410,16 @@
       else idx = ((idx % total) + total) % total;
       gallery.dataset.slide = idx;
 
-      // Always show `vis` slides starting at idx, wrapping around. CSS order
-      // puts the wrapped slides in visual rotation order (DOM order is fixed).
+      // Grid: every figure is always active and laid out in DOM order, with
+      // no slide window or wrapping. Slideshow: show `vis` figures starting
+      // at idx, wrapping around (CSS `order` puts wrapped figures in
+      // visual rotation order while DOM order stays stable).
       figures.forEach((s, i) => {
+        if (isGrid) {
+          s.classList.add('active');
+          s.style.removeProperty('order');
+          return;
+        }
         const offset = total ? ((i - idx) % total + total) % total : 0;
         const isActive = total > 0 && offset < vis;
         s.classList.toggle('active', isActive);
@@ -1403,7 +1427,8 @@
         else s.style.removeProperty('order');
       });
 
-      const needsNav = total > vis;
+      // Grid has no slide window, so the nav + counter never appear there.
+      const needsNav = !isGrid && total > vis;
       if (prev) prev.style.display = needsNav ? '' : 'none';
       if (next) next.style.display = needsNav ? '' : 'none';
       if (counter) {
@@ -1480,6 +1505,19 @@
       const block = select.closest('.content-block');
       const gallery = block.querySelector('.post-gallery');
       gallery.dataset.visible = select.value;
+      gallery.dataset.slide = '0';
+      refreshSlideshow(block);
+    }
+
+    // Switch between Slideshow (one row, prev/next nav) and Grid (all
+    // images visible in a 3-column grid). The "Show N at a time" select
+    // and the prev/next nav are only relevant in slideshow mode — both
+    // are hidden via .grid-mode on the block when grid is active.
+    function setGalleryLayout(select) {
+      const block = select.closest('.content-block');
+      const gallery = block.querySelector('.post-gallery');
+      gallery.dataset.layout = select.value;
+      block.classList.toggle('grid-mode', select.value === 'grid');
       gallery.dataset.slide = '0';
       refreshSlideshow(block);
     }
@@ -1739,12 +1777,19 @@
         } else if (type === 'gallery') {
           const figures = block.querySelectorAll('.post-gallery .gallery-figure');
           if (figures.length) {
-            const vis = block.querySelector('.post-gallery').dataset.visible || '1';
+            const galleryEl = block.querySelector('.post-gallery');
+            const vis = galleryEl.dataset.visible || '1';
             const visNum = parseInt(vis, 10);
             const total = figures.length;
-            contentHTML += `        <div class="post-gallery" data-slide="0" data-visible="${vis}">\n`;
+            const layout = galleryEl.dataset.layout === 'grid' ? 'grid' : 'slideshow';
+            const isGrid = layout === 'grid';
+            // Grid: emit data-layout="grid" and mark every figure active
+            // (there's no slide window). data-visible is still emitted so
+            // a switch back to slideshow inside the editor keeps the value.
+            const layoutAttr = isGrid ? ` data-layout="grid"` : '';
+            contentHTML += `        <div class="post-gallery" data-slide="0" data-visible="${vis}"${layoutAttr}>\n`;
             figures.forEach((fig, i) => {
-              const isActive = i < visNum;
+              const isActive = isGrid || i < visNum;
               const link = (fig.dataset.link || '').trim();
               const img = fig.querySelector('img');
               const capEl = fig.querySelector('figcaption');
@@ -1769,7 +1814,8 @@
               }
               contentHTML += `          </figure>\n`;
             });
-            if (total > visNum) {
+            // Grid never needs prev/next nav — every figure is visible.
+            if (!isGrid && total > visNum) {
               contentHTML += `          <button class="gallery-nav gallery-prev" onclick="gallerySlide(this,-1)" aria-label="Previous">&#10094;</button>\n`;
               contentHTML += `          <button class="gallery-nav gallery-next" onclick="gallerySlide(this,1)" aria-label="Next">&#10095;</button>\n`;
               const end = Math.min(visNum, total);
@@ -2735,6 +2781,7 @@ ${contentHTML}
         return {
           type: 'gallery',
           visible: el.dataset.visible || '1',
+          layout: el.dataset.layout === 'grid' ? 'grid' : 'slideshow',
           slides
         };
       }
@@ -2971,9 +3018,14 @@ ${contentHTML}
           const block = addBlock('gallery');
           const gallery = block.querySelector('.post-gallery');
           const firstNav = gallery.querySelector('.gallery-nav');
-          // Set visible count
+          // Restore Layout (slideshow / grid) and the slideshow visible count
+          const layout = pb.layout === 'grid' ? 'grid' : 'slideshow';
+          gallery.dataset.layout = layout;
           gallery.dataset.visible = pb.visible || '1';
-          const visSelect = block.querySelector('.gallery-editor-controls select');
+          block.classList.toggle('grid-mode', layout === 'grid');
+          const layoutSelect = block.querySelector('select[onchange*="setGalleryLayout"]');
+          if (layoutSelect) layoutSelect.value = layout;
+          const visSelect = block.querySelector('.show-at-a-time-select');
           if (visSelect) visSelect.value = pb.visible || '1';
           // Build a figure for each parsed slide with its per-image link
           // and caption. Legacy slides (no caption parsed) get an empty
