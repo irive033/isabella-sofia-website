@@ -1317,10 +1317,22 @@
           ? container.parentElement.closest('[contenteditable]')
           : container.closest('[contenteditable]');
         if (editable && document.querySelector('.editor-canvas').contains(editable)) {
-          const rect = range.getBoundingClientRect();
-          bar.style.top = (rect.top + window.scrollY - 50) + 'px';
-          bar.style.left = Math.max(10, rect.left + rect.width / 2 - 140) + 'px';
+          // Measure the bar so we can clamp inside the viewport, then position
+          // it relative to the viewport (the bar is position: fixed, so coords
+          // must NOT include window.scrollY — adding it pushed the bar
+          // scrollY-pixels off-screen as soon as the user scrolled).
           bar.classList.add('visible');
+          const rect = range.getBoundingClientRect();
+          const barWidth = bar.offsetWidth || 280;
+          const barHeight = bar.offsetHeight || 40;
+          // Prefer above the selection; flip below if there's no room up top
+          let top = rect.top - barHeight - 8;
+          if (top < 8) top = rect.bottom + 8;
+          // Horizontally center over the selection, clamped to viewport
+          let left = rect.left + rect.width / 2 - barWidth / 2;
+          left = Math.max(8, Math.min(left, window.innerWidth - barWidth - 8));
+          bar.style.top = top + 'px';
+          bar.style.left = left + 'px';
           return;
         }
       }
