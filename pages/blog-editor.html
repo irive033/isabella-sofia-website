@@ -1058,6 +1058,24 @@
       event.target.value = '';
     }
 
+    // Pull the canonical "Title, $Price" string out of a <figcaption>,
+    // whether it was emitted in the new <span> form (cap-title + cap-price)
+    // or the legacy single-text-node form. Used by the parser so posts
+    // round-trip cleanly — the editor canvas always stores the figcaption
+    // as plain text; the spans are only baked back in at publish time.
+    function extractCaptionText(capEl) {
+      if (!capEl) return '';
+      const title = capEl.querySelector('.cap-title');
+      const price = capEl.querySelector('.cap-price');
+      if (title && price) {
+        const t = (title.textContent || '').trim();
+        const p = (price.textContent || '').trim();
+        if (t && p) return `${t}, ${p}`;
+        return t || p;
+      }
+      return (capEl.textContent || '').trim();
+    }
+
     // Build a single <figure class="gallery-figure"> containing the image
     // and its caption. The link (if any) is stored on the figure's
     // data-link and used to wrap the image in an <a> only at publish time.
@@ -1435,7 +1453,18 @@
                 contentHTML += `            <img src="${img.src}" alt="${escapeHtmlText(altText)}">\n`;
               }
               if (capText) {
-                contentHTML += `            <figcaption>${escapeHtmlText(capText)}</figcaption>\n`;
+                // Split "Title, $Price" into two stacked lines. Splits on the
+                // FIRST ", $" so prices that contain commas (e.g. $1,230) stay
+                // intact on the right-hand side. Captions without a $-price
+                // fall back to a single-line figcaption.
+                const splitMatch = capText.match(/^(.+?),\s*(\$.+)$/);
+                if (splitMatch) {
+                  const titlePart = escapeHtmlText(splitMatch[1].trim());
+                  const pricePart = escapeHtmlText(splitMatch[2].trim());
+                  contentHTML += `            <figcaption><span class="cap-title">${titlePart}</span><span class="cap-price">${pricePart}</span></figcaption>\n`;
+                } else {
+                  contentHTML += `            <figcaption>${escapeHtmlText(capText)}</figcaption>\n`;
+                }
               }
               contentHTML += `          </figure>\n`;
             });
@@ -2332,7 +2361,7 @@ ${contentHTML}
             slides.push({
               src: img ? img.getAttribute('src') : '',
               link: a ? (a.getAttribute('href') || '') : '',
-              caption: capEl ? (capEl.textContent || '').trim() : ''
+              caption: extractCaptionText(capEl)
             });
           });
         } else {

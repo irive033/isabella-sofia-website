@@ -651,6 +651,29 @@ p {
   background: #d6ccba;
 }
 
+/* Gallery figcaptions render as two lines: a darker title above a
+   lighter, italic price. The split is baked into the markup at publish
+   time (see generatePostHTML in blog-editor.html), so each <figcaption>
+   contains <span class="cap-title"> + <span class="cap-price">. */
+.post-gallery .gallery-figure > figcaption {
+  font-style: normal;
+}
+.post-gallery .gallery-figure > figcaption .cap-title {
+  display: block;
+  font-size: 0.95rem;
+  color: #7a7a7a;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.post-gallery .gallery-figure > figcaption .cap-price {
+  display: block;
+  font-size: 0.8rem;
+  color: #a8a8a8;
+  font-style: italic;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
 /* Hairline divider — same color and weight as the H4 section-label
    hairlines, but spanning the full content width with no text. Used as
    a standalone block between sections when a section-label heading
