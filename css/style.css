@@ -621,6 +621,36 @@ p {
   text-transform: none;
 }
 
+/* Section label — small uppercase title flanked by a short left hairline
+   and a long right hairline. Editorial divider style for sub-sections
+   within an H2 (e.g. "CASUAL", "FORMAL", "FUN" inside a category). */
+.post-content h4 {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #777;
+  margin: 50px 0 25px;
+  line-height: 1.3;
+}
+.post-content h4::before {
+  content: '';
+  flex-shrink: 0;
+  width: 50px;
+  height: 1px;
+  background: #d6ccba;
+}
+.post-content h4::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #d6ccba;
+}
+
 .post-content img {
   width: 100%;
   margin: 30px 0;

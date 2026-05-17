@@ -157,6 +157,23 @@
     }
     .content-block h2[contenteditable] { font-size: 2rem; margin: 20px 0; text-transform: none; }
     .content-block h3[contenteditable] { font-size: 1.5rem; margin: 15px 0; text-transform: none; }
+    /* Section label — small uppercase title flanked by a short left
+       hairline and a long right hairline (extends to fill the row). */
+    .content-block h4[contenteditable] {
+      display: flex; align-items: center; gap: 16px;
+      font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+      font-size: 0.9rem; font-weight: 400;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: #777; margin: 30px 0;
+    }
+    .content-block h4[contenteditable]::before {
+      content: ''; flex-shrink: 0;
+      width: 50px; height: 1px; background: #d6ccba;
+    }
+    .content-block h4[contenteditable]::after {
+      content: ''; flex: 1;
+      height: 1px; background: #d6ccba;
+    }
     .content-block blockquote[contenteditable] {
       border-left: 3px solid #000; padding-left: 25px;
       font-style: italic; color: #444; font-size: 1.15rem; line-height: 1.9;
@@ -494,6 +511,7 @@
       <button class="toolbar-btn" onclick="addBlock('lede')">+ Lede</button>
       <button class="toolbar-btn" onclick="addBlock('h2')">+ H2</button>
       <button class="toolbar-btn" onclick="addBlock('h3')">+ H3</button>
+      <button class="toolbar-btn" onclick="addBlock('h4')">+ H4</button>
       <button class="toolbar-btn" onclick="addBlock('blockquote')">+ Quote</button>
       <button class="toolbar-btn" onclick="addBlock('ul')">+ List</button>
       <button class="toolbar-btn" onclick="addBlock('ol')">+ Num List</button>
@@ -791,7 +809,11 @@
           </div>
         `;
       } else {
-        const placeholder = type === 'p' ? 'Start typing...' : (type === 'h2' ? 'Heading' : (type === 'h3' ? 'Subheading' : ''));
+        const placeholder = type === 'p' ? 'Start typing...'
+                          : type === 'h2' ? 'Heading'
+                          : type === 'h3' ? 'Subheading'
+                          : type === 'h4' ? 'Section label'
+                          : '';
         block.innerHTML = controlsHTML() + `<${type} contenteditable="true">${content || placeholder}</${type}>`;
       }
 
@@ -801,7 +823,7 @@
       const editable = block.querySelector('[contenteditable]');
       if (editable && type !== 'gallery' && type !== 'hero') {
         editable.focus();
-        if (['Start typing...', 'Heading', 'Subheading', 'Lede paragraph — your intro'].includes(editable.textContent)) {
+        if (['Start typing...', 'Heading', 'Subheading', 'Section label', 'Lede paragraph — your intro'].includes(editable.textContent)) {
           document.execCommand('selectAll');
         }
       }
@@ -1387,7 +1409,7 @@
             const html = editable.innerHTML.trim();
             const cls = editable.className.trim();
             const classAttr = cls ? ` class="${cls}"` : '';
-            if (html && !['Start typing...', 'Heading', 'Subheading', 'Lede paragraph — your intro'].includes(html)) {
+            if (html && !['Start typing...', 'Heading', 'Subheading', 'Section label', 'Lede paragraph — your intro'].includes(html)) {
               contentHTML += `        <${tag}${classAttr}>${html}</${tag}>\n\n`;
             }
           }
@@ -2266,7 +2288,7 @@ ${contentHTML}
       }
 
       // Standard text / heading / list / blockquote blocks
-      if (['p', 'h2', 'h3', 'blockquote', 'ul', 'ol'].includes(tag)) {
+      if (['p', 'h2', 'h3', 'h4', 'blockquote', 'ul', 'ol'].includes(tag)) {
         return { type: tag, html: el.innerHTML };
       }
 
@@ -2303,7 +2325,7 @@ ${contentHTML}
       blockCounter = 0;
 
       parsed.blocks.forEach(pb => {
-        if (['p', 'h2', 'h3', 'blockquote', 'ul', 'ol', 'lede'].includes(pb.type)) {
+        if (['p', 'h2', 'h3', 'h4', 'blockquote', 'ul', 'ol', 'lede'].includes(pb.type)) {
           const block = addBlock(pb.type);
           const editable = block.querySelector('[contenteditable]');
           if (editable) editable.innerHTML = pb.html || '';
