@@ -148,6 +148,26 @@
     /* Heading-only bold toggle — italicized B icon, lights up when active */
     .block-ctrl-btn.header-bold-toggle { font-weight: 700; font-family: serif; }
     .block-ctrl-btn.header-bold-toggle.active { background: #c5a76a; color: #fff; }
+    /* "Move to top" / "Move to bottom" — draw the bar as a CSS pseudo
+       element so it renders thick and high-contrast regardless of how the
+       OS font handles ⤒ / ⤓. The arrow text inside shifts a couple px to
+       make room for the bar. */
+    .block-ctrl-btn.to-edge {
+      position: relative;
+      line-height: 1;
+    }
+    .block-ctrl-btn.to-edge::after {
+      content: '';
+      position: absolute;
+      left: 2px; right: 2px;
+      height: 3px;
+      background: currentColor;
+      border-radius: 1px;
+    }
+    .block-ctrl-btn.to-edge.to-top::after { top: 2px; }
+    .block-ctrl-btn.to-edge.to-bottom::after { bottom: 2px; }
+    .block-ctrl-btn.to-edge.to-top { padding-top: 5px; }
+    .block-ctrl-btn.to-edge.to-bottom { padding-bottom: 5px; }
 
     /* Editable text */
     .content-block [contenteditable] {
@@ -839,10 +859,10 @@
         : '';
       return `
         <div class="block-controls">
-          <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlockToEdge(this.closest('.content-block'), -1)" title="Move to top">&#x2912;</button>
+          <button class="block-ctrl-btn to-edge to-top" onclick="event.stopPropagation(); moveBlockToEdge(this.closest('.content-block'), -1)" title="Move to top">&uarr;</button>
           <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlock(this.closest('.content-block'), -1)" title="Move up">&uarr;</button>
           <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlock(this.closest('.content-block'), 1)" title="Move down">&darr;</button>
-          <button class="block-ctrl-btn" onclick="event.stopPropagation(); moveBlockToEdge(this.closest('.content-block'), 1)" title="Move to bottom">&#x2913;</button>
+          <button class="block-ctrl-btn to-edge to-bottom" onclick="event.stopPropagation(); moveBlockToEdge(this.closest('.content-block'), 1)" title="Move to bottom">&darr;</button>
           ${boldBtn}
           <button class="block-ctrl-btn delete" onclick="event.stopPropagation(); deleteBlock(this.closest('.content-block'))" title="Delete">&times;</button>
         </div>
