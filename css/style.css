@@ -651,27 +651,46 @@ p {
   background: #d6ccba;
 }
 
-/* Gallery figcaptions render as two lines: a darker title above a
-   lighter, italic price. The split is baked into the markup at publish
-   time (see generatePostHTML in blog-editor.html), so each <figcaption>
-   contains <span class="cap-title"> + <span class="cap-price">. */
+/* Two-line captions used by gallery figcaptions AND standalone image
+   captions (<p class="image-caption">). The editor emits each caption
+   with a separate Caption + Price field; when both are present the
+   markup contains <span class="cap-title"> + <span class="cap-price">,
+   producing a darker title line above a lighter, italic price line. */
 .post-gallery .gallery-figure > figcaption {
   font-style: normal;
 }
-.post-gallery .gallery-figure > figcaption .cap-title {
+.post-content .cap-title {
   display: block;
   font-size: 0.95rem;
   color: #7a7a7a;
   font-weight: 500;
   line-height: 1.35;
 }
-.post-gallery .gallery-figure > figcaption .cap-price {
+.post-content .cap-price {
   display: block;
   font-size: 0.8rem;
   color: #a8a8a8;
   font-style: italic;
   margin-top: 2px;
   line-height: 1.35;
+}
+/* Standalone image caption — same paragraph the single-image block has
+   always emitted, now styled so it can host the cap-title/cap-price
+   pair without the inherited paragraph styling fighting the spans. */
+.post-content p.image-caption {
+  margin: 6px 0 0;
+  line-height: 1.35;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #888;
+}
+/* Inside an image-caption, the spans take over the line styling */
+.post-content p.image-caption .cap-title,
+.post-content p.image-caption .cap-price {
+  font-style: normal;
+}
+.post-content p.image-caption .cap-price {
+  font-style: italic;
 }
 
 /* Hairline divider — same color and weight as the H4 section-label

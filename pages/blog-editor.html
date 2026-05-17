@@ -813,7 +813,11 @@
             </div>
             <div class="gallery-link-row">
               <label>Caption</label>
-              <input type="text" placeholder="Caption for the current image" oninput="updateSlideCaption(this)">
+              <input type="text" placeholder="e.g. Renggli Crop" oninput="updateSlideCaption(this)">
+            </div>
+            <div class="gallery-link-row">
+              <label>Price</label>
+              <input type="text" placeholder="e.g. $120" oninput="updateSlidePrice(this)">
             </div>
           </div>
         `;
@@ -898,6 +902,7 @@
       block.dataset.align = 'center';
       block.dataset.captionAlign = 'center';
       block.dataset.link = '';
+      block.dataset.price = '';
       block.innerHTML = controlsHTML() + `
         <div class="img-container" style="width:100%;">
           <img src="${dataUrl}" alt="Blog image">
@@ -925,6 +930,10 @@
           <input type="url" placeholder="https://... (optional, makes image clickable to shop)" oninput="updateImageLink(this)">
         </div>
         <div class="caption" contenteditable="true" style="text-align:center;">Add caption</div>
+        <div class="image-link-row">
+          <label>Price</label>
+          <input type="text" placeholder="e.g. $120 (optional)" oninput="updateImagePrice(this)">
+        </div>
       `;
       insertBlockInCanvas(block);
       applyImageAlignment(block);
@@ -1031,6 +1040,14 @@
       block.classList.toggle('has-link', !!url);
     }
 
+    // Price for a standalone image block. Mirrors gallery's slide price:
+    // stored on the block's data-price, emitted as a cap-price span at
+    // publish time when both caption + price are filled.
+    function updateImagePrice(input) {
+      const block = input.closest('.content-block');
+      block.dataset.price = input.value.trim();
+    }
+
     // ===== GALLERY (slideshow — 1 to 5 images at a time) =====
     let activeGalleryBlock = null;
 
@@ -1058,31 +1075,46 @@
       event.target.value = '';
     }
 
-    // Pull the canonical "Title, $Price" string out of a <figcaption>,
-    // whether it was emitted in the new <span> form (cap-title + cap-price)
-    // or the legacy single-text-node form. Used by the parser so posts
-    // round-trip cleanly — the editor canvas always stores the figcaption
-    // as plain text; the spans are only baked back in at publish time.
-    function extractCaptionText(capEl) {
-      if (!capEl) return '';
-      const title = capEl.querySelector('.cap-title');
-      const price = capEl.querySelector('.cap-price');
-      if (title && price) {
-        const t = (title.textContent || '').trim();
-        const p = (price.textContent || '').trim();
-        if (t && p) return `${t}, ${p}`;
-        return t || p;
+    // Split a caption element (figcaption or image-caption <p>) into its
+    // title and price parts. Recognises three input shapes:
+    //   - New: <span class="cap-title">A</span><span class="cap-price">B</span>
+    //   - Legacy: plain text "Title, $Price"
+    //   - Anything else: treat whole text as title, empty price
+    // The editor canvas stores caption as plain text + price on data-price,
+    // so this only runs at parse time when loading a published post.
+    function extractCaptionParts(capEl) {
+      if (!capEl) return { title: '', price: '' };
+      const t = capEl.querySelector('.cap-title');
+      const p = capEl.querySelector('.cap-price');
+      if (t || p) {
+        return {
+          title: t ? (t.textContent || '').trim() : '',
+          price: p ? (p.textContent || '').trim() : ''
+        };
       }
-      return (capEl.textContent || '').trim();
+      const text = (capEl.textContent || '').trim();
+      const m = text.match(/^(.+?),\s*(\$.+)$/);
+      if (m) return { title: m[1].trim(), price: m[2].trim() };
+      return { title: text, price: '' };
+    }
+
+    // Back-compat: existing callers that still want the combined string.
+    function extractCaptionText(capEl) {
+      const parts = extractCaptionParts(capEl);
+      if (parts.title && parts.price) return `${parts.title}, ${parts.price}`;
+      return parts.title || parts.price || '';
     }
 
     // Build a single <figure class="gallery-figure"> containing the image
     // and its caption. The link (if any) is stored on the figure's
     // data-link and used to wrap the image in an <a> only at publish time.
-    function createGalleryFigure(src, link, caption) {
+    // Price is stored on data-price separately from the caption text so
+    // the publisher can emit it as its own cap-price line.
+    function createGalleryFigure(src, link, caption, price) {
       const fig = document.createElement('figure');
       fig.className = 'gallery-figure';
       fig.dataset.link = link || '';
+      fig.dataset.price = price || '';
       const img = document.createElement('img');
       img.src = src;
       img.alt = caption || 'Gallery image';
@@ -1152,18 +1184,21 @@
         hint.remove();
       }
 
-      // Sync link + caption inputs to whichever figure is "current" (idx).
+      // Sync link + caption + price inputs to whichever figure is "current".
       const linkInput = block.querySelector('input[oninput*="updateSlideLink"]');
       const capInput = block.querySelector('input[oninput*="updateSlideCaption"]');
+      const priceInput = block.querySelector('input[oninput*="updateSlidePrice"]');
       if (total > 0) {
         if (linkInput) linkInput.value = figures[idx].dataset.link || '';
         if (capInput) {
           const cap = figures[idx].querySelector('figcaption');
           capInput.value = cap ? cap.textContent : '';
         }
+        if (priceInput) priceInput.value = figures[idx].dataset.price || '';
       } else {
         if (linkInput) linkInput.value = '';
         if (capInput) capInput.value = '';
+        if (priceInput) priceInput.value = '';
       }
     }
 
@@ -1221,6 +1256,18 @@
         figures[idx].appendChild(cap);
       }
       cap.textContent = input.value;
+    }
+
+    // Price is stored on the figure's data-price (separate from caption
+    // text). The publisher reads both and emits cap-title + cap-price.
+    function updateSlidePrice(input) {
+      const block = input.closest('.content-block');
+      const gallery = block.querySelector('.post-gallery');
+      const figures = gallery.querySelectorAll('.gallery-figure');
+      const idx = parseInt(gallery.dataset.slide || '0', 10);
+      if (figures[idx]) {
+        figures[idx].dataset.price = input.value.trim();
+      }
     }
 
     // ===== HERO =====
@@ -1406,6 +1453,7 @@
           const captionAlign = block.dataset.captionAlign || 'center';
           const caption = block.querySelector('.caption');
           const captionText = caption && caption.textContent.trim() !== 'Add caption' ? caption.textContent.trim() : '';
+          const priceText = (block.dataset.price || '').trim();
           const sideTextEl = block.querySelector('.img-side-text');
           const hasSideText = block.classList.contains('has-side-text') && sideTextEl;
           const sideTextHtml = hasSideText ? sideTextEl.innerHTML.trim() : '';
@@ -1427,8 +1475,15 @@
           } else {
             contentHTML += `          ${imgHtml}\n`;
           }
-          if (captionText) {
-            contentHTML += `          <p style="font-size:0.85rem; color:#888; font-style:italic; text-align:${captionAlign}; margin-top:6px;">${captionText}</p>\n`;
+          // Caption emit: if both caption + price are filled, render two
+          // stacked lines via cap-title/cap-price spans. Otherwise fall
+          // back to a single-line italic paragraph.
+          if (captionText && priceText) {
+            contentHTML += `          <p class="image-caption" style="text-align:${captionAlign};"><span class="cap-title">${escapeHtmlText(captionText)}</span><span class="cap-price">${escapeHtmlText(priceText)}</span></p>\n`;
+          } else if (captionText) {
+            contentHTML += `          <p class="image-caption" style="text-align:${captionAlign};">${escapeHtmlText(captionText)}</p>\n`;
+          } else if (priceText) {
+            contentHTML += `          <p class="image-caption" style="text-align:${captionAlign};"><span class="cap-price">${escapeHtmlText(priceText)}</span></p>\n`;
           }
           contentHTML += `        </div>\n\n`;
         } else if (type === 'gallery') {
@@ -1444,7 +1499,8 @@
               const img = fig.querySelector('img');
               const capEl = fig.querySelector('figcaption');
               const capText = capEl ? capEl.textContent.trim() : '';
-              const altText = capText || 'Gallery image';
+              const priceText = (fig.dataset.price || '').trim();
+              const altText = (capText && priceText) ? `${capText}, ${priceText}` : (capText || 'Gallery image');
               const cls = isActive ? 'gallery-figure active' : 'gallery-figure';
               contentHTML += `          <figure class="${cls}">\n`;
               if (link) {
@@ -1452,19 +1508,14 @@
               } else {
                 contentHTML += `            <img src="${img.src}" alt="${escapeHtmlText(altText)}">\n`;
               }
-              if (capText) {
-                // Split "Title, $Price" into two stacked lines. Splits on the
-                // FIRST ", $" so prices that contain commas (e.g. $1,230) stay
-                // intact on the right-hand side. Captions without a $-price
-                // fall back to a single-line figcaption.
-                const splitMatch = capText.match(/^(.+?),\s*(\$.+)$/);
-                if (splitMatch) {
-                  const titlePart = escapeHtmlText(splitMatch[1].trim());
-                  const pricePart = escapeHtmlText(splitMatch[2].trim());
-                  contentHTML += `            <figcaption><span class="cap-title">${titlePart}</span><span class="cap-price">${pricePart}</span></figcaption>\n`;
-                } else {
-                  contentHTML += `            <figcaption>${escapeHtmlText(capText)}</figcaption>\n`;
-                }
+              // Emit figcaption with separate title + price spans when both are
+              // present; otherwise fall back to a single-line caption.
+              if (capText && priceText) {
+                contentHTML += `            <figcaption><span class="cap-title">${escapeHtmlText(capText)}</span><span class="cap-price">${escapeHtmlText(priceText)}</span></figcaption>\n`;
+              } else if (capText) {
+                contentHTML += `            <figcaption>${escapeHtmlText(capText)}</figcaption>\n`;
+              } else if (priceText) {
+                contentHTML += `            <figcaption><span class="cap-price">${escapeHtmlText(priceText)}</span></figcaption>\n`;
               }
               contentHTML += `          </figure>\n`;
             });
@@ -2325,12 +2376,17 @@ ${contentHTML}
         const widthStr = anchorWidth || imgWidth || '100%';
         const capAlignRaw = cap && cap.style && cap.style.textAlign ? cap.style.textAlign : '';
         const captionAlign = ['left', 'center', 'right'].includes(capAlignRaw) ? capAlignRaw : 'center';
+        // Split caption into title + price so the editor can show them in
+        // separate inputs. Handles both new (cap-title/cap-price spans)
+        // and legacy ("Title, $Price" plain text) formats.
+        const capParts = extractCaptionParts(cap);
         return {
           type: 'image',
           src: img ? img.getAttribute('src') : '',
           align: alignCls ? alignCls.replace('align-', '') : 'center',
           width: widthStr.replace('%', '') || '100',
-          caption: cap ? (cap.textContent || '').trim() : '',
+          caption: capParts.title,
+          price: capParts.price,
           captionAlign,
           hasSideText,
           sideTextHtml: sideTextEl ? sideTextEl.innerHTML.trim() : '',
@@ -2358,10 +2414,12 @@ ${contentHTML}
             const a = fig.querySelector(':scope > a');
             const img = fig.querySelector('img');
             const capEl = fig.querySelector(':scope > figcaption');
+            const parts = extractCaptionParts(capEl);
             slides.push({
               src: img ? img.getAttribute('src') : '',
               link: a ? (a.getAttribute('href') || '') : '',
-              caption: extractCaptionText(capEl)
+              caption: parts.title,
+              price: parts.price
             });
           });
         } else {
@@ -2508,6 +2566,7 @@ ${contentHTML}
           block.dataset.align = pb.align || 'center';
           block.dataset.captionAlign = pb.captionAlign || 'center';
           block.dataset.link = pb.link || '';
+          block.dataset.price = pb.price || '';
           if (pb.link) block.classList.add('has-link');
           block.innerHTML = controlsHTML() + `
             <div class="img-container" style="width:${pb.width || '100'}%;">
@@ -2536,6 +2595,10 @@ ${contentHTML}
               <input type="url" placeholder="https://... (optional, makes image clickable to shop)" value="${(pb.link || '').replace(/"/g, '&quot;')}" oninput="updateImageLink(this)">
             </div>
             <div class="caption" contenteditable="true" style="text-align:${pb.captionAlign || 'center'};">${pb.caption || 'Add caption'}</div>
+            <div class="image-link-row">
+              <label>Price</label>
+              <input type="text" placeholder="e.g. $120 (optional)" value="${(pb.price || '').replace(/"/g, '&quot;')}" oninput="updateImagePrice(this)">
+            </div>
           `;
           insertBlockInCanvas(block);
           applyImageAlignment(block);
@@ -2555,7 +2618,7 @@ ${contentHTML}
           // and caption. Legacy slides (no caption parsed) get an empty
           // figcaption that the user can fill in via the caption input.
           (pb.slides || []).forEach(slide => {
-            const fig = createGalleryFigure(slide.src || '', slide.link || '', slide.caption || '');
+            const fig = createGalleryFigure(slide.src || '', slide.link || '', slide.caption || '', slide.price || '');
             gallery.insertBefore(fig, firstNav);
           });
           gallery.dataset.slide = '0';
