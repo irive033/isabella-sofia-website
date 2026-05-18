@@ -398,6 +398,44 @@
     .image-block.has-side-text .img-side-text:empty::before {
       content: 'Type text here...'; color: #bbb; font-style: italic;
     }
+    /* In-editor note callout — same look as published .image-callout
+       so Isabella sees what it will look like while editing. */
+    .image-block .image-callout {
+      margin: 20px auto 0;
+      padding: 16px 22px;
+      background: rgba(138, 111, 74, 0.06);
+      max-width: 85%;
+      border-radius: 6px;
+    }
+    .image-block .image-callout .callout-label,
+    .image-block .image-callout .callout-body {
+      outline: none; padding: 4px 6px;
+      border: 1px dashed transparent; border-radius: 3px;
+    }
+    .image-block .image-callout .callout-label {
+      font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif;
+      font-style: italic;
+      font-size: 1.15rem;
+      color: #888;
+      margin-bottom: 0.4rem;
+    }
+    .image-block .image-callout .callout-body {
+      font-size: 0.95rem; line-height: 1.75; color: #555;
+    }
+    .image-block .image-callout .callout-label:focus,
+    .image-block .image-callout .callout-body:focus { border-color: #0969da; }
+    .image-block .image-callout .callout-label:empty::before {
+      content: 'Note title...'; color: #bbb; font-style: italic;
+    }
+    .image-block .image-callout .callout-body:empty::before {
+      content: 'Type note here...'; color: #bbb; font-style: italic;
+    }
+    .image-block .note-btn {
+      background: #fff; border: 1px solid #ccc; padding: 4px 10px;
+      cursor: pointer; font-size: 0.8rem; border-radius: 3px;
+      font-family: inherit; color: #444;
+    }
+    .image-block .note-btn:hover { background: #f0f7ff; border-color: #0969da; color: #0969da; }
     .image-block .caption {
       font-size: 0.85rem; color: #888; font-style: italic;
       text-align: center; margin-top: 8px;
@@ -1148,6 +1186,7 @@
             <button onclick="setCaptionAlign(this, 'right')">R</button>
           </div>
           <button class="side-text-btn" onclick="toggleSideText(this)">+ Side text</button>
+          <button class="note-btn" onclick="toggleCallout(this)">+ Note</button>
         </div>
         <div class="image-link-row">
           <label>Link</label>
@@ -1255,6 +1294,47 @@
       const btn = block.querySelector('.side-text-btn');
       if (!btn) return;
       btn.textContent = block.classList.contains('has-side-text') ? '× Side text' : '+ Side text';
+    }
+
+    // Toggle a "One honest note"–style callout on an image block. The
+    // callout sits below the image (and side text, if present) and spans
+    // the full width of the published .img-wrap.
+    function toggleCallout(btn) {
+      const block = btn.closest('.content-block');
+      if (block.querySelector(':scope > .image-callout')) {
+        removeCallout(block);
+      } else {
+        addCallout(block);
+        const body = block.querySelector(':scope > .image-callout .callout-body');
+        if (body) body.focus();
+      }
+      syncCalloutButton(block);
+    }
+
+    function addCallout(block, label = 'Worth Flagging', bodyHtml = '') {
+      if (block.querySelector(':scope > .image-callout')) return;
+      const aside = document.createElement('aside');
+      aside.className = 'image-callout';
+      aside.innerHTML =
+        `<div class="callout-label" contenteditable="true">${label}</div>` +
+        `<div class="callout-body" contenteditable="true">${bodyHtml}</div>`;
+      // Insert right before the editor toolbar so the callout sits
+      // visually beneath the image but above the editor controls.
+      const toolbar = block.querySelector(':scope > .image-toolbar');
+      if (toolbar) block.insertBefore(aside, toolbar);
+      else block.appendChild(aside);
+      syncCalloutButton(block);
+    }
+
+    function removeCallout(block) {
+      const callout = block.querySelector(':scope > .image-callout');
+      if (callout) callout.remove();
+    }
+
+    function syncCalloutButton(block) {
+      const btn = block.querySelector('.note-btn');
+      if (!btn) return;
+      btn.textContent = block.querySelector(':scope > .image-callout') ? '× Note' : '+ Note';
     }
 
     function updateImageLink(input) {
@@ -1839,6 +1919,21 @@
             contentHTML += `          </div>\n`;
           } else {
             contentHTML += `          ${imgHtml}\n`;
+          }
+          // Optional callout — emitted only when label or body has content,
+          // so a toggled-on-but-empty callout doesn't ship.
+          const calloutEl = block.querySelector(':scope > .image-callout');
+          if (calloutEl) {
+            const calloutLabelEl = calloutEl.querySelector('.callout-label');
+            const calloutBodyEl = calloutEl.querySelector('.callout-body');
+            const calloutLabel = calloutLabelEl ? calloutLabelEl.innerHTML.trim() : '';
+            const calloutBody = calloutBodyEl ? calloutBodyEl.innerHTML.trim() : '';
+            if (calloutLabel || calloutBody) {
+              contentHTML += `          <aside class="image-callout">\n`;
+              contentHTML += `            <div class="callout-label">${calloutLabel}</div>\n`;
+              contentHTML += `            <div class="callout-body">${calloutBody}</div>\n`;
+              contentHTML += `          </aside>\n`;
+            }
           }
           // Caption emit: if both caption + price are filled, render two
           // stacked lines via cap-title/cap-price spans. Otherwise fall
@@ -2886,6 +2981,9 @@ ${contentHTML}
         // Caption is always a direct child <p> of .img-wrap, not anything inside .img-side-text
         const cap = el.querySelector(':scope > p');
         const sideTextEl = hasSideText ? el.querySelector(':scope > .img-side-row > .img-side-text') : null;
+        const calloutEl = el.querySelector(':scope > .image-callout');
+        const calloutLabelEl = calloutEl ? calloutEl.querySelector(':scope > .callout-label') : null;
+        const calloutBodyEl = calloutEl ? calloutEl.querySelector(':scope > .callout-body') : null;
         const alignCls = Array.from(el.classList).find(c => c.startsWith('align-'));
         // Width may live on the <a> wrapper (current emitter) or on the <img>
         // (legacy/no-link path). Prefer the wrapper's width when both are set.
@@ -2908,6 +3006,9 @@ ${contentHTML}
           captionAlign,
           hasSideText,
           sideTextHtml: sideTextEl ? sideTextEl.innerHTML.trim() : '',
+          hasCallout: !!calloutEl,
+          calloutLabel: calloutLabelEl ? calloutLabelEl.innerHTML.trim() : '',
+          calloutBody: calloutBodyEl ? calloutBodyEl.innerHTML.trim() : '',
           link
         };
       }
@@ -3180,6 +3281,7 @@ ${contentHTML}
                 <button class="${pb.captionAlign === 'right' ? 'active' : ''}" onclick="setCaptionAlign(this, 'right')">R</button>
               </div>
               <button class="side-text-btn" onclick="toggleSideText(this)">+ Side text</button>
+              <button class="note-btn" onclick="toggleCallout(this)">+ Note</button>
             </div>
             <div class="image-link-row">
               <label>Link</label>
@@ -3196,6 +3298,9 @@ ${contentHTML}
           applyCaptionAlignment(block);
           if (pb.hasSideText) {
             addSideText(block, pb.sideTextHtml || '');
+          }
+          if (pb.hasCallout) {
+            addCallout(block, pb.calloutLabel || 'Worth Flagging', pb.calloutBody || '');
           }
         } else if (pb.type === 'gallery') {
           const block = addBlock('gallery');

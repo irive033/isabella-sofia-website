@@ -1178,6 +1178,31 @@ p {
 .post-content .img-wrap.has-side-text .img-side-text > *:first-child { margin-top: 0; }
 .post-content .img-wrap.has-side-text .img-side-text > *:last-child { margin-bottom: 0; }
 
+/* Editorial callout that sits below the image (and side text, if present),
+   spanning the full width of the .img-wrap. Mirrors the "One honest note"
+   pattern from product hero pages. */
+.post-content .img-wrap .image-callout {
+  margin: 24px auto 0;
+  padding: 18px 24px;
+  background: rgba(138, 111, 74, 0.06);
+  max-width: 85%;
+  border-radius: 6px;
+}
+.post-content .img-wrap .image-callout .callout-label {
+  font-family: 'Cormorant Garamond', 'Didot', 'Georgia', serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+.post-content .img-wrap .image-callout .callout-body {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: #555;
+}
+.post-content .img-wrap .image-callout .callout-body > *:first-child { margin-top: 0; }
+.post-content .img-wrap .image-callout .callout-body > *:last-child { margin-bottom: 0; }
+
 @media (max-width: 768px) {
   .post-content .post-hero,
   .post-content .post-hero.ratio-60-40,
