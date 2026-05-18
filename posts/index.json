@@ -1,6 +1,14 @@
 {
   "posts": [
     {
+      "title": "My Window Shopping Philosophy: How I Curate Purchases in an Over-Consumption Era",
+      "date": "2026-05-18T00:56:34.359Z",
+      "category": "lifestyle",
+      "image": "",
+      "path": "posts/lifestyle/my-window-shopping-philosophy-how-i-curate-purchases-in-an-o.html",
+      "folder": "lifestyle"
+    },
+    {
       "title": "Low-Waste Wellness Guide",
       "date": "2026-05-18T00:49:45.794Z",
       "category": "lifestyle",
@@ -97,5 +105,5 @@
       "folder": "beauty"
     }
   ],
-  "updated": "2026-05-18T00:49:49.087Z"
+  "updated": "2026-05-18T00:56:35.505Z"
 }
