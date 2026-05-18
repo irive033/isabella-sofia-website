@@ -1,6 +1,14 @@
 {
   "posts": [
     {
+      "title": "Low-Waste Wellness Guide",
+      "date": "2026-05-18T00:49:45.794Z",
+      "category": "lifestyle",
+      "image": "../../images/uploads/2026/05/622b57a5e77e.jpg",
+      "path": "posts/lifestyle/low-waste-wellness-guide.html",
+      "folder": "lifestyle"
+    },
+    {
       "title": "5 Acne-Safe Sunscreens I actually Wear Daily",
       "date": "2026-05-18T00:32:05.058Z",
       "category": "beauty",
@@ -89,5 +97,5 @@
       "folder": "beauty"
     }
   ],
-  "updated": "2026-05-18T00:32:06.259Z"
+  "updated": "2026-05-18T00:49:49.087Z"
 }
