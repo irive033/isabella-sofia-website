@@ -401,7 +401,7 @@
     /* In-editor note callout — same look as published .image-callout
        so Isabella sees what it will look like while editing. */
     .image-block .image-callout {
-      margin: 20px auto 0;
+      margin: 20px 0 0;
       padding: 16px 22px;
       background: rgba(138, 111, 74, 0.06);
       max-width: 85%;
@@ -439,6 +439,28 @@
     .image-block .caption {
       font-size: 0.85rem; color: #888; font-style: italic;
       text-align: center; margin-top: 8px;
+    }
+
+    /* ===== SPACER BLOCK ===== */
+    .spacer-block .post-spacer {
+      background: repeating-linear-gradient(45deg, #f5f5f5, #f5f5f5 6px, #fafafa 6px, #fafafa 12px);
+      border: 1px dashed #ccc; border-radius: 4px;
+    }
+    .spacer-block .spacer-controls {
+      display: flex; gap: 8px; align-items: center;
+      padding: 6px 12px; background: #f4f4f4; border-radius: 6px;
+      margin-top: 8px; font-size: 0.85rem;
+    }
+    .spacer-block .spacer-controls button {
+      background: #fff; border: 1px solid #ccc; padding: 2px 12px;
+      cursor: pointer; font-size: 1rem; border-radius: 3px;
+      font-family: inherit; min-width: 36px; color: #444;
+    }
+    .spacer-block .spacer-controls button:hover {
+      background: #f0f7ff; border-color: #0969da; color: #0969da;
+    }
+    .spacer-block .spacer-height-label {
+      min-width: 50px; text-align: center; color: #555;
     }
 
     /* ===== GALLERY BLOCK (slideshow) ===== */
@@ -680,7 +702,9 @@
     body.preview-mode .content-block .block-controls { display: none !important; }
     body.preview-mode .image-block .image-toolbar,
     body.preview-mode .hero-block .hero-options,
+    body.preview-mode .spacer-block .spacer-controls,
     body.preview-mode .gallery-block .gallery-editor-controls { display: none !important; }
+    body.preview-mode .spacer-block .post-spacer { background: none; border: none; }
     body.preview-mode .editor-toolbar { display: none; }
     body.preview-mode .editor-meta input,
     body.preview-mode .editor-meta select { border-bottom-color: transparent; pointer-events: none; }
@@ -714,6 +738,7 @@
       <button class="toolbar-btn" onclick="addBlock('h3')">+ H3</button>
       <button class="toolbar-btn" onclick="addBlock('h4')">+ H4</button>
       <button class="toolbar-btn" onclick="addBlock('divider')">+ Divider</button>
+      <button class="toolbar-btn" onclick="addBlock('spacer')">+ Spacer</button>
       <button class="toolbar-btn" onclick="addBlock('cta')">+ CTA</button>
       <button class="toolbar-btn" onclick="addBlock('blockquote')">+ Quote</button>
       <button class="toolbar-btn" onclick="addBlock('ul')">+ List</button>
@@ -980,6 +1005,17 @@
         block.innerHTML = controlsHTML() + `<${type} contenteditable="true"><li>${content || 'List item'}</li></${type}>`;
       } else if (type === 'divider') {
         block.innerHTML = controlsHTML() + `<hr class="post-divider">`;
+      } else if (type === 'spacer') {
+        block.classList.add('spacer-block');
+        block.dataset.height = '40';
+        block.innerHTML = controlsHTML() + `
+          <div class="post-spacer" style="height:40px;"></div>
+          <div class="spacer-controls">
+            <button onclick="adjustSpacer(this, -8)" title="Decrease space">−</button>
+            <span class="spacer-height-label">40px</span>
+            <button onclick="adjustSpacer(this, 8)" title="Increase space">+</button>
+          </div>
+        `;
       } else if (type === 'cta') {
         block.classList.add('cta-block');
         block.innerHTML = controlsHTML() + `
@@ -1335,6 +1371,19 @@
       const btn = block.querySelector('.note-btn');
       if (!btn) return;
       btn.textContent = block.querySelector(':scope > .image-callout') ? '× Note' : '+ Note';
+    }
+
+    // Spacer block: step the vertical height by ±8px. Clamped to 8–240 so
+    // the block stays sensible and the canvas never collapses to nothing.
+    function adjustSpacer(btn, delta) {
+      const block = btn.closest('.content-block');
+      const current = parseInt(block.dataset.height || '40', 10);
+      const next = Math.max(8, Math.min(240, current + delta));
+      block.dataset.height = String(next);
+      const spacer = block.querySelector('.post-spacer');
+      if (spacer) spacer.style.height = next + 'px';
+      const label = block.querySelector('.spacer-height-label');
+      if (label) label.textContent = next + 'px';
     }
 
     function updateImageLink(input) {
@@ -2038,6 +2087,9 @@
           }
         } else if (type === 'divider') {
           contentHTML += `        <hr class="post-divider">\n\n`;
+        } else if (type === 'spacer') {
+          const h = parseInt(block.dataset.height || '40', 10);
+          contentHTML += `        <div class="post-spacer" style="height: ${h}px;"></div>\n\n`;
         } else if (type === 'cta') {
           const eyebrow = block.querySelector('.post-cta-eyebrow');
           const eyebrow2 = block.querySelector('.post-cta-eyebrow-2');
@@ -3122,6 +3174,12 @@ ${contentHTML}
         return { type: 'divider' };
       }
 
+      // Vertical spacer — <div class="post-spacer" style="height:Npx"></div>
+      if (el.classList.contains('post-spacer')) {
+        const m = (el.getAttribute('style') || '').match(/height\s*:\s*(\d+)px/i);
+        return { type: 'spacer', height: m ? parseInt(m[1], 10) : 40 };
+      }
+
       // Call-to-action block — pulled apart into its eyebrow / optional
       // second eyebrow / title / subtitle / 2 buttons (each with optional
       // href) so the editor can restore them into separate contenteditable
@@ -3213,6 +3271,14 @@ ${contentHTML}
           }
         } else if (pb.type === 'divider') {
           addBlock('divider');
+        } else if (pb.type === 'spacer') {
+          const block = addBlock('spacer');
+          const h = parseInt(pb.height || 40, 10);
+          block.dataset.height = String(h);
+          const spacer = block.querySelector('.post-spacer');
+          if (spacer) spacer.style.height = h + 'px';
+          const label = block.querySelector('.spacer-height-label');
+          if (label) label.textContent = h + 'px';
         } else if (pb.type === 'cta') {
           const block = addBlock('cta');
           const eyebrow = block.querySelector('.post-cta-eyebrow');

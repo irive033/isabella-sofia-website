@@ -1182,7 +1182,7 @@ p {
    spanning the full width of the .img-wrap. Mirrors the "One honest note"
    pattern from product hero pages. */
 .post-content .img-wrap .image-callout {
-  margin: 24px auto 0;
+  margin: 24px 0 0;
   padding: 18px 24px;
   background: rgba(138, 111, 74, 0.06);
   max-width: 85%;
