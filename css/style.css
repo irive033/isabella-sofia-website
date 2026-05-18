@@ -830,6 +830,14 @@ p {
   opacity: 0.6;
 }
 
+/* Image-wrapping anchors should be invisible — they're just click targets,
+   not text links, so the 1px text-link underline doesn't apply. */
+.post-content a.img-link,
+.post-content a.gallery-figure-link,
+.post-content a.gallery-slide-link {
+  border-bottom: none;
+}
+
 /* --- Post Gallery (slideshow — 1 image at a time, left/right chevrons) --- */
 /* Intentionally NOT scoped to .post-content so the blog editor preview,
    which imports this stylesheet, renders galleries identically. */
