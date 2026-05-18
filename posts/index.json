@@ -1,6 +1,14 @@
 {
   "posts": [
     {
+      "title": "Resortwear Capsule Collection",
+      "date": "2026-05-18T00:29:19.825Z",
+      "category": "style",
+      "image": "../../images/uploads/2026/05/9470b48af78c.jpg",
+      "path": "posts/style/resortwear-capsule-collection.html",
+      "folder": "style"
+    },
+    {
       "title": "Minimal SPF Makeup Routine",
       "date": "2026-05-17T22:44:43.055Z",
       "category": "beauty",
@@ -73,5 +81,5 @@
       "folder": "beauty"
     }
   ],
-  "updated": null
+  "updated": "2026-05-18T00:31:06.265Z"
 }
