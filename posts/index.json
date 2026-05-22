@@ -1,6 +1,14 @@
 {
   "posts": [
     {
+      "title": "Makeup Routine For Your Next Night Out",
+      "date": "2026-05-22T01:05:24.828Z",
+      "category": "beauty",
+      "image": "../../images/uploads/2026/05/60f008558f11.jpg",
+      "path": "posts/beauty/makeup-routine-for-your-next-night-out.html",
+      "folder": "beauty"
+    },
+    {
       "title": "My Window Shopping Philosophy: How I Curate Purchases in an Over-Consumption Era",
       "date": "2026-05-18T00:56:34.359Z",
       "category": "lifestyle",
@@ -105,5 +113,5 @@
       "folder": "beauty"
     }
   ],
-  "updated": "2026-05-22T00:45:32.078Z"
+  "updated": "2026-05-22T01:05:27.911Z"
 }
